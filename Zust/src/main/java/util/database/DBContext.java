@@ -11,6 +11,7 @@ import java.util.logging.Logger;
  * It loads configuration from an external file and provides method to get a new connection.
  */
 public class DBContext {
+	protected Connection connection;
 	private static final String NAME_CLASS = "DBContext";
 	private static final Properties properties = new Properties();
 
@@ -24,17 +25,15 @@ public class DBContext {
 		}
 	}
 
-	/**
-	 * Get a new database connection.
-	 *
-	 * @return new Connection object
-	 * @throws SQLException if a database access error occurs
-	 */
-	public static Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(
-				properties.getProperty("DB_URL"),
-				properties.getProperty("DB_USERNAME"),
-				properties.getProperty("DB_PASSWORD")
-		);
+	public DBContext() {
+		String url = properties.getProperty("DB_URL");
+		String user = properties.getProperty("DB_USER");
+		String password = properties.getProperty("DB_PASSWORD");
+		try {
+			connection = DriverManager.getConnection(url, user, password);
+			Logger.getLogger(NAME_CLASS).info("Database connection established successfully.");
+		} catch (SQLException e) {
+			Logger.getLogger(NAME_CLASS).severe("Failed to establish database connection: " + e.getMessage());
+		}
 	}
 }
