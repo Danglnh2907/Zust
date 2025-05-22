@@ -27,7 +27,7 @@ public class DBContext {
 
 	public DBContext() {
 		String url = properties.getProperty("DB_URL");
-		String user = properties.getProperty("DB_USER");
+		String user = properties.getProperty("DB_USERNAME");
 		String password = properties.getProperty("DB_PASSWORD");
 		try {
 			connection = DriverManager.getConnection(url, user, password);
