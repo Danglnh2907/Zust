@@ -101,7 +101,8 @@ CREATE TABLE hashtag
 (
   hashtag_id INT IDENTITY(1,1),
   hashtag_name VARCHAR(50) NOT NULL,
-  PRIMARY KEY (hashtag_id)
+  PRIMARY KEY (hashtag_id),
+  UNIQUE(hashtag_name)
 );
 
 CREATE TABLE like_post
@@ -153,8 +154,7 @@ CREATE TABLE tag_hashtag
   hashtag_id INT NOT NULL,
   PRIMARY KEY (hashtag_index, post_id, hashtag_id),
   FOREIGN KEY (post_id) REFERENCES post(post_id),
-  FOREIGN KEY (hashtag_id) REFERENCES hashtag(hashtag_id),
-  UNIQUE (post_id)
+  FOREIGN KEY (hashtag_id) REFERENCES hashtag(hashtag_id)
 );
 
 CREATE TABLE interact
@@ -295,6 +295,25 @@ INSERT INTO post(post_content, account_id, post_create_date, post_status, post_p
 ('<p>post 19</p>', 3, '2025-06-11', 'rejected', 'public'),
 ('<p>post 20</p>', 3, '2025-06-12', 'rejected', 'public');
 
+INSERT INTO post_image(post_id, post_image) VALUES
+(1, 'default.png'),
+(1, 'default2.png'),
+(2, 'default.png');
+
+INSERT INTO hashtag(hashtag_name) VALUES
+('fptu'),
+('j4f'),
+('it');
+
+INSERT INTO tag_hashtag(hashtag_id, post_id, hashtag_index) VALUES
+(1, 1, 1),
+(2, 1, 9),
+(3, 1, 4);
+
+INSERT INTO post_mention(account_id, post_id, mention_index) VALUES
+(2, 1, 2),
+(3, 1, 9);
+
 INSERT INTO like_post(post_id, account_id) VALUES (1, 1);
 INSERT INTO like_post(post_id, account_id) VALUES (1, 2);
 INSERT INTO like_post(post_id, account_id) VALUES (1, 3);
@@ -356,5 +375,32 @@ INSERT INTO comment(comment_content, account_id, post_id, reply_comment_id) VALU
 INSERT INTO comment(comment_content, account_id, post_id, reply_comment_id) VALUES ('<p>comment 6</p>', 7, 1, 1);
 INSERT INTO comment(comment_content, account_id, post_id, reply_comment_id) VALUES ('<p>comment 7</p>', 8, 1, 2);
 INSERT INTO comment(comment_content, account_id, post_id, reply_comment_id) VALUES ('<p>comment 8</p>', 9, 1, 2);
+
+INSERT INTO comment_mention(account_id, comment_id, mention_index) VALUES
+(1, 1, 1),
+(2, 2, 1);
+
+INSERT INTO notification(notification_title, notification_content) VALUES
+('TEST', '<p> notification 1 </p>'),
+('TEST2', '<p> notification 2 </p>');
+
+INSERT INTO check_notification(account_id, notification_id) VALUES
+(1, 1),
+(1, 2),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(6, 1),
+(7, 1),
+(8, 1);
+
+INSERT INTO friend_request(friend_request_content, send_account_id, receive_account_id, friend_request_status) VALUES
+('would to be my friend', 1, 2, 'accepted'),
+('I see your post is interesting', 3, 2, 'sended');
+
+INSERT INTO message(message_content, send_account_id, receive_account_id, message_status) VALUES
+('<p>Good day</p>', 1, 2, 'received'),
+('<p>Good morning</p>', 2, 1, 'received');
 
 GO
