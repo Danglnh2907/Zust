@@ -134,26 +134,26 @@ CREATE TABLE repost
 
 CREATE TABLE report_post
 (
+  report_id INT IDENTITY(1,1),
   report_feedback VARCHAR(250) NOT NULL,
   account_id INT NOT NULL,
   post_id INT NOT NULL,
   report_create_date DATETIME NOT NULL DEFAULT GETDATE(),
-  report_last_update DATETIME,
-  comment_status BIT,--('0 accepted', '1 discarded')
-  PRIMARY KEY (account_id, post_id),
+  report_status BIT,--('0 accepted', '1 discarded')
+  PRIMARY KEY (report_id),
   FOREIGN KEY (account_id) REFERENCES account(account_id),
   FOREIGN KEY (post_id) REFERENCES post(post_id)
 );
 
 CREATE TABLE report_account
 (
+  report_id INT IDENTITY(1,1),
   report_feedback VARCHAR(250) NOT NULL,
   account_id INT NOT NULL,
   reported_account_id INT NOT NULL,
   report_create_date DATETIME NOT NULL DEFAULT GETDATE(),
-  report_last_update DATETIME,
-  comment_status BIT,--('0 accepted', '1 discarded')
-  PRIMARY KEY (account_id, reported_account_id),
+  report_status BIT,--('0 accepted', '1 discarded')
+  PRIMARY KEY (report_id),
   FOREIGN KEY (account_id) REFERENCES account(account_id),
   FOREIGN KEY (reported_account_id) REFERENCES account(account_id)
 );
@@ -270,6 +270,19 @@ CREATE TABLE like_comment
   account_id INT NOT NULL,
   comment_id INT NOT NULL,
   PRIMARY KEY (account_id, comment_id),
+  FOREIGN KEY (account_id) REFERENCES account(account_id),
+  FOREIGN KEY (comment_id) REFERENCES comment(comment_id)
+);
+
+CREATE TABLE report_comment
+(
+  report_id INT IDENTITY(1,1),
+  report_feedback VARCHAR(250) NOT NULL,
+  account_id INT NOT NULL,
+  comment_id INT NOT NULL,
+  report_create_date DATETIME NOT NULL DEFAULT GETDATE(),
+  report_status BIT,--('0 accepted', '1 discarded')
+  PRIMARY KEY (report_id),
   FOREIGN KEY (account_id) REFERENCES account(account_id),
   FOREIGN KEY (comment_id) REFERENCES comment(comment_id)
 );
@@ -449,5 +462,10 @@ INSERT INTO like_comment(account_id, comment_id) VALUES
 (5, 2),
 (3, 2),
 (4, 2);
+
+INSERT INTO report_comment(report_feedback, account_id, comment_id) VALUES ('feedback comment 1', 3, 5);
+INSERT INTO report_comment(report_feedback, account_id, comment_id) VALUES ('feedback comment 2', 4, 5);
+INSERT INTO report_comment(report_feedback, account_id, comment_id) VALUES ('feedback comment 3', 5, 5);
+INSERT INTO report_comment(report_feedback, account_id, comment_id) VALUES ('feedback comment 4', 6, 5);
 
 GO
