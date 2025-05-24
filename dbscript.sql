@@ -87,7 +87,6 @@ CREATE TABLE post
   FOREIGN KEY (account_id) REFERENCES account(account_id)
 );
 
-
 CREATE TABLE post_image
 (
   post_image_id INT IDENTITY(1,1),
@@ -103,6 +102,15 @@ CREATE TABLE hashtag
   hashtag_name VARCHAR(50) NOT NULL,
   PRIMARY KEY (hashtag_id),
   UNIQUE(hashtag_name)
+);
+
+CREATE TABLE view_post
+(
+  account_id INT NOT NULL,
+  post_id INT NOT NULL,
+  PRIMARY KEY (account_id, post_id),
+  FOREIGN KEY (account_id) REFERENCES account(account_id),
+  FOREIGN KEY (post_id) REFERENCES post(post_id)
 );
 
 CREATE TABLE like_post
@@ -124,16 +132,30 @@ CREATE TABLE repost
   FOREIGN KEY (post_id) REFERENCES post(post_id)
 );
 
-CREATE TABLE report
+CREATE TABLE report_post
 (
   report_feedback VARCHAR(250) NOT NULL,
   account_id INT NOT NULL,
   post_id INT NOT NULL,
   report_create_date DATETIME NOT NULL DEFAULT GETDATE(),
   report_last_update DATETIME,
+  comment_status BIT,--('0 accepted', '1 discarded')
   PRIMARY KEY (account_id, post_id),
   FOREIGN KEY (account_id) REFERENCES account(account_id),
   FOREIGN KEY (post_id) REFERENCES post(post_id)
+);
+
+CREATE TABLE report_account
+(
+  report_feedback VARCHAR(250) NOT NULL,
+  account_id INT NOT NULL,
+  reported_account_id INT NOT NULL,
+  report_create_date DATETIME NOT NULL DEFAULT GETDATE(),
+  report_last_update DATETIME,
+  comment_status BIT,--('0 accepted', '1 discarded')
+  PRIMARY KEY (account_id, reported_account_id),
+  FOREIGN KEY (account_id) REFERENCES account(account_id),
+  FOREIGN KEY (reported_account_id) REFERENCES account(account_id)
 );
 
 CREATE TABLE post_mention
@@ -242,6 +264,16 @@ CREATE TABLE comment_mention
   FOREIGN KEY (account_id) REFERENCES account(account_id),
   UNIQUE (comment_id)
 );
+
+CREATE TABLE like_comment
+(
+  account_id INT NOT NULL,
+  comment_id INT NOT NULL,
+  PRIMARY KEY (account_id, comment_id),
+  FOREIGN KEY (account_id) REFERENCES account(account_id),
+  FOREIGN KEY (comment_id) REFERENCES comment(comment_id)
+);
+
 GO
 
 /*******************************************************************************
@@ -355,10 +387,15 @@ INSERT INTO repost(post_id, account_id) VALUES (1, 4);
 INSERT INTO repost(post_id, account_id) VALUES (2, 3);
 INSERT INTO repost(post_id, account_id) VALUES (2, 4); 
 
-INSERT INTO report(report_feedback, account_id, post_id) VALUES ('feedback 1', 3, 14);
-INSERT INTO report(report_feedback, account_id, post_id) VALUES ('feedback 2', 4, 14);
-INSERT INTO report(report_feedback, account_id, post_id) VALUES ('feedback 3', 5, 15);
-INSERT INTO report(report_feedback, account_id, post_id) VALUES ('feedback 4', 6, 15);
+INSERT INTO report_post(report_feedback, account_id, post_id) VALUES ('feedback 1', 3, 14);
+INSERT INTO report_post(report_feedback, account_id, post_id) VALUES ('feedback 2', 4, 14);
+INSERT INTO report_post(report_feedback, account_id, post_id) VALUES ('feedback 3', 5, 15);
+INSERT INTO report_post(report_feedback, account_id, post_id) VALUES ('feedback 4', 6, 15);
+
+INSERT INTO report_account(report_feedback, account_id, reported_account_id) VALUES ('feedback account 1', 3, 14);
+INSERT INTO report_account(report_feedback, account_id, reported_account_id) VALUES ('feedback account 2', 4, 14);
+INSERT INTO report_account(report_feedback, account_id, reported_account_id) VALUES ('feedback account 3', 5, 15);
+INSERT INTO report_account(report_feedback, account_id, reported_account_id) VALUES ('feedback account 4', 6, 15);
 
 INSERT INTO interact(account_id_1, account_id_2, interact_status) VALUES (1, 2, 'friend');
 INSERT INTO interact(account_id_1, account_id_2, interact_status) VALUES (1, 3, 'follow');
@@ -402,5 +439,15 @@ INSERT INTO friend_request(friend_request_content, send_account_id, receive_acco
 INSERT INTO message(message_content, send_account_id, receive_account_id, message_status) VALUES
 ('<p>Good day</p>', 1, 2, 'received'),
 ('<p>Good morning</p>', 2, 1, 'received');
+
+INSERT INTO like_comment(account_id, comment_id) VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(5, 2),
+(3, 2),
+(4, 2);
 
 GO
