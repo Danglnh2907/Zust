@@ -1,7 +1,7 @@
 USE social_media
 
 --View posts in news feed
-SELECT post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
+SELECT account.*, post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
 JOIN account ON post.account_id = account.account_id
 LEFT JOIN post_image ON post.post_id = post_image.post_id
 LEFT JOIN tag_hashtag ON post.post_id = tag_hashtag.post_id
@@ -21,7 +21,7 @@ AS comment ON post.post_id = comment.post_id
 WHERE post.post_status = 'published' AND NOT post.post_id IN (SELECT post_id FROM view_post WHERE account_id = 1)
 
 --View post
-SELECT post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
+SELECT account.*, post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
 JOIN account ON post.account_id = account.account_id
 LEFT JOIN post_image ON post.post_id = post_image.post_id
 LEFT JOIN tag_hashtag ON post.post_id = tag_hashtag.post_id
@@ -87,7 +87,7 @@ INSERT INTO post(account_id, post_content, post_status, post_privacy) VALUES
 (20, '<p>new post</p>', 'published', 'public');
 
 --View all posts
-SELECT post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
+SELECT account.*, post.*, post_image.post_image, like_number, repost_number, comment_number, tag_hashtag.hashtag_id, tag_hashtag.hashtag_index, post_mention.account_id, post_mention.mention_index FROM post
 JOIN account ON post.account_id = account.account_id
 LEFT JOIN post_image ON post.post_id = post_image.post_id
 LEFT JOIN tag_hashtag ON post.post_id = tag_hashtag.post_id
@@ -188,6 +188,7 @@ JOIN account ON  account.account_id = interact.account_id_2
 WHERE interact_status = 'friend' AND account.account_status = 'active'
 GROUP BY account_id_1)
 AS [friend] ON account.account_id = friend.account_id_1
+WHERE account.account_id = 1
 
 --Add friend
 INSERT INTO friend_request(send_account_id, receive_account_id, friend_request_content) VALUES
@@ -247,7 +248,7 @@ AS comment_number ON post.post_id = comment_number.post_id
 WHERE hashtag.hashtag_name = 'j4f'
 
 --View all liked posts
-SELECT post.*, post_image.post_image, like_number, repost_number, comment_number FROM post
+SELECT account.*, post.*, post_image.post_image, like_number, repost_number, comment_number FROM post
 JOIN account ON post.account_id = account.account_id
 LEFT JOIN post_image ON post.post_id = post_image.post_id
 LEFT JOIN 

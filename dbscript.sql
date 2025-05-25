@@ -185,6 +185,7 @@ CREATE TABLE interact
   account_id_2 INT NOT NULL,
   interact_status VARCHAR(10),
   CHECK (interact_status IN ('follow', 'friend', 'block')),
+  PRIMARY KEY (account_id_1, account_id_2),
   FOREIGN KEY (account_id_1) REFERENCES account(account_id),
   FOREIGN KEY (account_id_2) REFERENCES account(account_id)
 );
