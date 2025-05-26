@@ -24,7 +24,7 @@ public class DBContext {
 					LOGGER.severe("DB_DRIVER property is missing in database.properties.");
 				} else {
 					Class.forName(driver);
-					LOGGER.info("Database driver loaded successfully: " + driver);
+					LOGGER.info("Database driver loaded successfully");
 				}
 			}
 		} catch (IOException | ClassNotFoundException e) {

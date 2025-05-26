@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- status="WARN" có thể đổi thành "DEBUG" hoặc "TRACE" để xem log nội bộ của Log4j2 khi khởi tạo -->
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- Pattern đơn giản hơn để bắt đầu -->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%throwable"/>
+        </Console>
+        <!-- Bạn có thể thêm FileAppender nếu muốn ghi log ra file -->
+        <!--
+        <File name="FileAppender" fileName="logs/mailservice-app.log" append="false">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%throwable"/>
+        </File>
+        -->
+    </Appenders>
+    <Loggers>
+        <!-- Đặt mức log DEBUG cho package chứa MailService và FileService -->
+        <Logger name="util.service" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <!-- <AppenderRef ref="FileAppender"/> -->
+        </Logger>
+
+        <!-- Giảm log của các thư viện ồn ào nếu cần -->
+        <Logger name="com.github.benmanes.caffeine" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.github.bucket4j" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.thymeleaf" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="jakarta.mail" level="WARN" additivity="false"> <!-- Để WARN cho Jakarta Mail trừ khi bạn thực sự cần debug nó -->
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.github.cdimascio.dotenv" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+
+        <!-- Root logger, bắt tất cả các log không được xử lý bởi logger cụ thể -->
+        <Root level="INFO"> <!-- Đặt INFO để không quá nhiều log từ các thư viện khác -->
+            <AppenderRef ref="Console"/>
+            <!-- <AppenderRef ref="FileAppender"/> -->
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng bạn đến với UniAcad!</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .header img.logo {
+            max-width: 150px; /* Điều chỉnh kích thước logo nếu cần */
+            margin-bottom: 10px;
+        }
+        .banner img {
+            width: 100%;
+            max-height: 200px; /* Giới hạn chiều cao banner */
+            object-fit: cover; /* Đảm bảo ảnh banner vừa vặn */
+            border-radius: 4px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .content h1 {
+            color: #2c3e50;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+            font-size: 0.9em;
+            color: #777777;
+        }
+        ul.item-list {
+            list-style-type: square;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <!-- Sử dụng Content-ID 'companyLogo' cho hình ảnh logo -->
+        <img src="cid:companyLogoCID" alt="Logo UniAcad" class="logo"/>
+        <h1>Chào mừng bạn đến với Zust!</h1>
+    </div>
+
+    <div class="banner" th:if="${promoBanner != null}"> <!-- Chỉ hiển thị nếu có banner -->
+        <!-- Sử dụng Content-ID 'promoBanner' cho hình ảnh banner -->
+        <img src="cid:mainBannerCID" alt="Ưu đãi đặc biệt"/>
+    </div>
+
+    <div class="content">
+        <p>Xin chào <strong th:text="${name}">Quý khách</strong>,</p>
+
+        <p>Cảm ơn bạn đã đăng ký với Zust. Chúng tôi rất vui mừng chào đón bạn vào cộng đồng của chúng tôi!</p>
+
+        <p>Để hoàn tất quá trình đăng ký và kích hoạt tài khoản của bạn, vui lòng nhấp vào nút bên dưới:</p>
+        <p style="text-align: center;">
+            <a th:href="${verificationLink}" class="button">Kích hoạt tài khoản</a>
+        </p>
+
+        <p>Nếu nút trên không hoạt động, bạn cũng có thể sao chép và dán đường dẫn sau vào trình duyệt của mình:</p>
+        <p><a th:href="${verificationLink}" th:text="${verificationLink}">Đường dẫn xác thực</a></p>
+
+        <p>Mã token của bạn là: <strong th:text="${token}"></strong> (Vui lòng giữ bí mật mã này nếu được yêu cầu).</p>
+
+        <div th:if="${items != null and not #lists.isEmpty(items)}">
+            <p>Dưới đây là một số mục bạn có thể quan tâm hoặc đã đăng ký:</p>
+            <ul class="item-list">
+                <li th:each="item : ${items}" th:text="${item}">Mục ví dụ</li>
+            </ul>
+        </div>
+
+        <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
+
+        <p>Trân trọng,<br/>Đội ngũ Zust</p>
+    </div>
+
+    <div class="footer">
+        <p>© <span th:text="${#dates.year(#dates.createNow())}">2024</span> UniAcad. Bảo lưu mọi quyền.</p>
+        <p>Bạn nhận được email này vì đã đăng ký tại <a th:href="${baseUrl}" th:text="${baseUrl}">Zust</a>.</p>
+        <!-- Thêm link hủy đăng ký nếu cần -->
+        <!-- <p><a href="#">Hủy đăng ký</a></p> -->
+    </div>
+</div>
+</body>
+</html>
