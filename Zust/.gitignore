@@ -36,3 +36,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Ignore all .env files ###
+*.env
+
+### Ignore all .properties files ###
+*.properties
