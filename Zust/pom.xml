@@ -17,24 +17,24 @@
         <junit.version>5.11.0</junit.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
         <jakarta.websocket.version>2.2.0</jakarta.websocket.version>
-        <mssql.jdbc.version>12.6.1.jre11</mssql.jdbc.version> <!-- Hoặc bản mới nhất bạn tìm được -->
+        <mssql.jdbc.version>12.6.1.jre11</mssql.jdbc.version>
         <gson.version>2.10.1</gson.version>
-        <google.api.client.version>2.7.0</google.api.client.version> <!-- Giữ nguyên nếu chưa muốn nâng cấp -->
-        <google.oauth.client.version>1.39.0</google.oauth.client.version> <!-- Giữ nguyên -->
-        <google.http.client.version>1.44.2</google.http.client.version> <!-- Giữ nguyên -->
+        <google.api.client.version>2.7.0</google.api.client.version>
+        <google.oauth.client.version>1.39.0</google.oauth.client.version>
+        <google.http.client.version>1.44.2</google.http.client.version>
         <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
         <caffeine.version>3.1.8</caffeine.version>
-        <bucket4j.version>8.10.0</bucket4j.version> <!-- Nâng cấp bucket4j -->
+        <bucket4j.version>8.10.0</bucket4j.version>
         <jsoup.version>1.18.1</jsoup.version>
         <jbcrypt.version>0.4</jbcrypt.version>
         <commons.fileupload.version>1.5</commons.fileupload.version>
         <commons.io.version>2.16.1</commons.io.version>
         <dotenv.java.version>3.0.0</dotenv.java.version>
-        <log4j.version>2.23.1</log4j.version> <!-- Nâng cấp Log4j2 -->
-        <slf4j.version>2.0.13</slf4j.version> <!-- SLF4J API 2.x -->
-        <jakarta.mail.version>2.1.3</jakarta.mail.version> <!-- Angus Mail -->
-        <jakarta.activation.version>2.1.3</jakarta.activation.version> <!-- Angus Activation -->
-        <google.genai.version>0.7.0</google.genai.version> <!-- Nâng cấp Gemini -->
+        <log4j.version>2.23.1</log4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
+        <jakarta.mail.version>2.1.3</jakarta.mail.version>
+        <jakarta.activation.version>2.1.3</jakarta.activation.version>
+        <google.genai.version>0.7.0</google.genai.version>
     </properties>
 
     <dependencies>
@@ -139,7 +139,7 @@
         </dependency>
         <!-- Bucket4j -->
         <dependency>
-            <groupId>com.bucket4j</groupId> <!-- GroupId đã thay đổi -->
+            <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>

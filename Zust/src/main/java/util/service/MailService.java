@@ -11,7 +11,6 @@ import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import jakarta.mail.util.ByteArrayDataSource;
 import jakarta.servlet.ServletContext;
-// Sử dụng Log4j2 API trực tiếp
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.thymeleaf.TemplateEngine;
@@ -716,7 +715,7 @@ public class MailService {
         }
 
         if (ex instanceof SendFailedException) {
-            Exception next = ((SendFailedException) ex).getNextException();
+            Exception next = (ex).getNextException();
             return next instanceof java.net.SocketTimeoutException || next instanceof java.net.ConnectException || next instanceof java.io.EOFException;
         }
         return cause instanceof java.net.SocketTimeoutException || cause instanceof java.net.ConnectException || cause instanceof java.io.EOFException;
@@ -737,7 +736,7 @@ public class MailService {
         executor.shutdown();
         try {
             if (!executor.awaitTermination(3, TimeUnit.SECONDS)) { // Tăng thời gian chờ một chút
-                logger.warn("[{}] Executor did not terminate in 15 seconds, forcing shutdown...", mailServiceInstanceId);
+                logger.warn("[{}] Executor did not terminate in 3 seconds, forcing shutdown...", mailServiceInstanceId);
                 List<Runnable> droppedTasks = executor.shutdownNow();
                 logger.warn("[{}] {} tasks were dropped due to forced shutdown.", mailServiceInstanceId, droppedTasks.size());
                 if (!executor.awaitTermination(3, TimeUnit.SECONDS)) {

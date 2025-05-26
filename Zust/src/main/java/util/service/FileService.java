@@ -25,7 +25,6 @@ public class FileService {
     private final Path storageRoot;
     private final long maxFileSizeForValidation;
 
-
     public enum FileType {
         IMAGE("img"),
         VIDEO("video"), // Giữ lại phòng khi cần
