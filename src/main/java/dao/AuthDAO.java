@@ -47,7 +47,7 @@ public class AuthDAO {
 
 			String tokenContent = generateToken();
 			Instant now = Instant.now();
-			Instant expiresAt = now.plusSeconds(24 * 60 * 60); // 24 hours
+			Instant expiresAt = now.plusSeconds((long) 24 * 60 * 60); // 24 hours
 
 			Token token = new Token();
 			token.setAccount(account);
