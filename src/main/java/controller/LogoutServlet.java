@@ -5,24 +5,19 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
 /**
  * A custom Servlet for handling HTTP requests.
- * Mapped to /emailverification by default.
+ * Mapped to /logout by default.
  */
 @WebServlet(
-		name = "EmailVerification",
-		value = "/emailverification"
+		name = "Logout",
+		value = "/logout"
 )
-public class EmailVerification extends HttpServlet {
-	/**
-	 * Initialize the servlet.
-	 */
-	@Override
-	public void init() throws ServletException {
-	}
+public class LogoutServlet extends HttpServlet {
 
 	/**
 	 * Handle GET requests.
@@ -30,6 +25,11 @@ public class EmailVerification extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		HttpSession session = request.getSession(false); // Get existing session, don't create new
+		if (session != null) {
+			session.invalidate(); // Invalidate the session
+		}
+		response.sendRedirect(request.getContextPath() + "/login?message=" + java.net.URLEncoder.encode("You have been logged out.", "UTF-8"));
 	}
 
 	/**
@@ -38,12 +38,7 @@ public class EmailVerification extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		doGet(request, response);
 	}
 
-	/**
-	 * Clean up resources.
-	 */
-	@Override
-	public void destroy() {
-	}
 }

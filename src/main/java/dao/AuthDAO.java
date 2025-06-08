@@ -244,4 +244,33 @@ public class AuthDAO {
 			}
 		}
 	}
+
+	public Account getAccountByUsername(String username) throws SQLException {
+		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role FROM account WHERE username = ?";
+		try (Connection conn = new DBContext().getConnection();
+		     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, username);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) {
+					Account account = new Account();
+					account.setId(rs.getInt("account_id"));
+					account.setUsername(rs.getString("username"));
+					account.setPassword(rs.getString("password"));
+					account.setFullname(rs.getString("fullname"));
+					account.setEmail(rs.getString("email"));
+					account.setPhone(rs.getString("phone"));
+					account.setGender(rs.getBoolean("gender"));
+					java.sql.Date sqlDate = rs.getDate("dob");
+					account.setDob(sqlDate != null ? sqlDate.toLocalDate() : null);
+					account.setAvatar(rs.getString("avatar"));
+					account.setBio(rs.getString("bio"));
+					account.setCredit(rs.getInt("credit"));
+					account.setAccountStatus(rs.getString("account_status"));
+					account.setAccountRole(rs.getString("account_role"));
+					return account;
+				}
+			}
+		}
+		return null;
+	}
 }

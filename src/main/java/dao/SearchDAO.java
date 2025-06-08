@@ -3,7 +3,6 @@ package dao;
 import model.Account;
 import model.Post;
 import model.Group;
-import model.Hashtag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +33,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Instant; // Import Instant
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SearchDAO {
@@ -61,7 +57,7 @@ public class SearchDAO {
 			IndexWriterConfig config = new IndexWriterConfig(analyzer);
 			config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			this.indexWriter = new IndexWriter(directory, config);
-			this.indexWriter.commit(); // Ensures a segments file exists even if index is empty
+			this.indexWriter.commit();
 
 			this.indexReader = DirectoryReader.open(directory);
 
@@ -204,7 +200,6 @@ public class SearchDAO {
 		}
 	}
 
-	// --- Helper methods to fetch full objects from DB by ID ---
 	private Account getAccountById(int accountId) throws SQLException {
 		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role FROM account WHERE account_id = ?";
 		try (Connection conn = new DBContext().getConnection();
@@ -247,12 +242,12 @@ public class SearchDAO {
 
 					int accountId = rs.getInt("account_id");
 					Account associatedAccount = getAccountById(accountId);
-					post.setAccount(associatedAccount); // Correct: Use setAccount for Account object
+					post.setAccount(associatedAccount);
 
 					java.sql.Timestamp createTimestamp = rs.getTimestamp("post_create_date");
-					post.setPostCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null); // Correct: toInstant() for Instant field
+					post.setPostCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null);
 					java.sql.Timestamp updateTimestamp = rs.getTimestamp("post_last_update");
-					post.setPostLastUpdate(updateTimestamp != null ? updateTimestamp.toInstant() : null); // Correct: toInstant() for Instant field
+					post.setPostLastUpdate(updateTimestamp != null ? updateTimestamp.toInstant() : null);
 
 					post.setPostPrivacy(rs.getString("post_privacy"));
 					post.setPostStatus(rs.getString("post_status"));
@@ -260,7 +255,7 @@ public class SearchDAO {
 					Integer groupId = rs.getObject("group_id", Integer.class);
 					if (groupId != null) {
 						Group associatedGroup = getGroupById(groupId);
-						post.setGroup(associatedGroup); // Correct: Use setGroup for Group object
+						post.setGroup(associatedGroup);
 					} else {
 						post.setGroup(null);
 					}
@@ -279,13 +274,13 @@ public class SearchDAO {
 			try (ResultSet rs = pstmt.executeQuery()) {
 				if (rs.next()) {
 					Group group = new Group();
-					group.setId(rs.getInt("group_id")); // Correct: maps to Group's 'id' field
+					group.setId(rs.getInt("group_id"));
 					group.setGroupName(rs.getString("group_name"));
 					group.setGroupCoverImage(rs.getString("group_cover_image"));
 					group.setGroupDescription(rs.getString("group_description"));
 
 					java.sql.Timestamp createTimestamp = rs.getTimestamp("group_create_date");
-					group.setGroupCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null); // Correct: toInstant() for Instant field
+					group.setGroupCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null);
 
 					group.setGroupStatus(rs.getString("group_status"));
 					return group;
@@ -294,8 +289,6 @@ public class SearchDAO {
 		}
 		return null;
 	}
-
-	// --- Search Methods ---
 
 	public List<Account> searchUsers(String keyword) {
 		List<Account> accounts = new ArrayList<>();
@@ -413,16 +406,19 @@ public class SearchDAO {
 		return posts;
 	}
 
-	public static void main(String[] args) {
-		SearchDAO searchDAO = new SearchDAO();
-		for(Post post: searchDAO.searchPostsByHashtag("java"))
-		{
-			System.out.println(post.getPostContent());
+	public Map<String, List<?>> searchAll(String keyword) {
+		Map<String, List<?>> allResults = new HashMap<>();
+		if (keyword == null || keyword.trim().isEmpty()) {
+			LOGGER.warn("Combined search keyword is empty or null");
+			return allResults;
 		}
 
-		for(Group group: searchDAO.searchGroups("java"))
-		{
-			System.out.println(group.getGroupName());
-		}
+		LOGGER.info("Performing combined search for keyword: '{}'", keyword);
+		allResults.put("users", searchUsers(keyword));
+		allResults.put("posts_content", searchPostsByContent(keyword));
+		allResults.put("posts_hashtag", searchPostsByHashtag(keyword)); // Posts found by hashtag
+		allResults.put("groups", searchGroups(keyword));
+
+		return allResults;
 	}
 }
