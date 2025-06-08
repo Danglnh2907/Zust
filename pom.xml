@@ -113,6 +113,27 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
+        <!-- Apache Lucene Core -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>9.9.0</version>
+        </dependency>
+
+        <!-- Lucene Query Parser -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>9.9.0</version>
+        </dependency>
+
+        <!-- Lucene Analyzers (Đồng bộ phiên bản) -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analysis-common</artifactId>
+            <version>9.9.0</version> <!-- Đã đổi từ 10.2.1 xuống 9.9.0 -->
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -244,15 +244,4 @@ public class AuthDAO {
 			}
 		}
 	}
-
-	public static void main(String[] args) throws Exception {
-		Account account = new Account();
-		account.setUsername("username2");
-		account.setPassword("password1");
-		account.setFullname("fullname1");
-		account.setEmail("email1@gmail.com");
-		AuthDAO authDAO = new AuthDAO(new FileService());
-		authDAO.registerAccount(account);
-		authDAO.loginByForm(account.getUsername(), account.getPassword());
-	}
 }
