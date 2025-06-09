@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
- * DTO object for packaging data for create post operation
+ * DTO object for packaging data from View to database: Post
  */
-public class CreatePostDTO {
+public class ReqPostDTO {
     private String postContent;
     private int accountID;
     private LocalDateTime createdAt;
@@ -17,7 +17,7 @@ public class CreatePostDTO {
     private final ArrayList<String> hashtags = new ArrayList<>();
     private final ArrayList<String> images = new ArrayList<>();
 
-    public CreatePostDTO() {
+    public ReqPostDTO() {
         this.postContent = "";
         this.accountID = -1;
         this.createdAt = null;
@@ -27,7 +27,7 @@ public class CreatePostDTO {
         this.groupID = -1;
     }
 
-    public CreatePostDTO(int accountID, LocalDateTime createdAt, int groupID, LocalDateTime lastModified, String postContent, String privacy, String status) {
+    public ReqPostDTO(int accountID, LocalDateTime createdAt, int groupID, LocalDateTime lastModified, String postContent, String privacy, String status) {
         this.accountID = accountID;
         this.createdAt = createdAt;
         this.groupID = groupID;

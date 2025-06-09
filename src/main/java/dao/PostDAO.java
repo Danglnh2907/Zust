@@ -1,6 +1,7 @@
 package dao;
 
-import dto.CreatePostDTO;
+import dto.ReqPostDTO;
+import dto.RespPostsDTO;
 import util.database.DBContext;
 
 import java.sql.Connection;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 public class PostDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public boolean createPost(CreatePostDTO dto) throws SQLException {
+    public boolean createPost(ReqPostDTO dto) throws SQLException {
         /*
          * Explain SQL flows:
          * 1: Insert the post into 'post' table
@@ -108,6 +109,72 @@ public class PostDAO extends DBContext {
         } catch (SQLException e) {
             logger.warning(e.getMessage());
             return false;
+        }
+    }
+
+    public ArrayList<RespPostsDTO> getPosts(int userID) throws SQLException {
+        String sql = "SELECT p.post_id, p.post_content, a.username, p.post_last_update, " +
+                "(SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, " +
+                "(SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, " +
+                "(SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count " +
+                "FROM post p JOIN account a ON p.account_id = a.account_id " +
+                "WHERE p.post_status = 'published' ORDER BY p.post_create_date DESC";
+        ArrayList<RespPostsDTO> posts = new ArrayList<>();
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                RespPostsDTO post = new RespPostsDTO();
+                post.setPostId(rs.getInt("post_id"));
+                post.setPostContent(rs.getString("post_content"));
+                post.setUsername(rs.getString("username"));
+                post.setLastModified(rs.getTimestamp("post_last_update") != null
+                        ? rs.getTimestamp("post_last_update").toLocalDateTime() : null);
+                post.setLikeCount(rs.getInt("like_count"));
+                post.setCommentCount(rs.getInt("comment_count"));
+                post.setRepostCount(rs.getInt("repost_count"));
+
+                // Fetch images
+                String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
+                try (PreparedStatement imageStmt = conn.prepareStatement(imageSql)) {
+                    imageStmt.setInt(1, post.getPostId());
+                    ResultSet imageRs = imageStmt.executeQuery();
+                    while (imageRs.next()) {
+                        post.getImages().add(imageRs.getString("post_image"));
+                    }
+                }
+
+                // Fetch hashtags
+                String hashtagSql = "SELECT h.hashtag_name " +
+                        "FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id " +
+                        "WHERE th.post_id = ? ORDER BY th.hashtag_index";
+                try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql)) {
+                    hashtagStmt.setInt(1, post.getPostId());
+                    ResultSet hashtagRs = hashtagStmt.executeQuery();
+                    while (hashtagRs.next()) {
+                        post.getHashtags().add(hashtagRs.getString("hashtag_name"));
+                    }
+                }
+
+                posts.add(post);
+            }
+
+            return posts;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return posts;
+        }
+    }
+
+    public static void main(String[] args) {
+        PostDAO dao = new PostDAO();
+        try {
+            ArrayList<RespPostsDTO> posts = dao.getPosts(1);
+            for (RespPostsDTO post : posts) {
+                System.out.println(post.getPostContent());
+            }
+        } catch (SQLException e) {
+            System.out.printf("SQLException: %s%n", e.getMessage());
         }
     }
 }

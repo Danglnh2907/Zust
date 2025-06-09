@@ -11,7 +11,8 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import dao.PostDAO;
-import dto.CreatePostDTO;
+import dto.ReqPostDTO;
+import dto.RespPostsDTO;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -62,9 +63,24 @@ public class PostController extends HttpServlet {
         return null;
     }
 
+    private String formatContent(String htmlContent, ArrayList<String> imagePaths) {
+        //Change later if frontend done
+        return htmlContent;
+    }
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        request.getRequestDispatcher("/WEB-INF/post.jsp").forward(request, response);
+        //Get list of posts from user
+        PostDAO dao = new PostDAO();
+        ArrayList<RespPostsDTO> posts = null;
+        try {
+            posts = dao.getPosts(1); //Hardcode, change later with session/cookie
+            request.setAttribute("posts", posts);
+            request.getRequestDispatcher("/WEB-INF/post.jsp").forward(request, response);
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            handleError(response, 404);
+        }
     }
 
     @Override
@@ -124,8 +140,11 @@ public class PostController extends HttpServlet {
                 }
             }
 
+            //Format the HTML (replace image byte with path, add CSS styling, ...)
+            htmlContent = formatContent(htmlContent, imagePaths);
+
             // Create DTO objects
-            CreatePostDTO dto = new CreatePostDTO();
+            ReqPostDTO dto = new ReqPostDTO();
             dto.setAccountID(1); //Change later if login is implemented
             dto.setPostContent(htmlContent);
             dto.setPrivacy(postPrivacy);
@@ -148,19 +167,14 @@ public class PostController extends HttpServlet {
                 }
             }
 
-            // Call PostDAO
+            // Call PostDAO and create post
             PostDAO dao = new PostDAO();
-            boolean success;
             try {
-                success = dao.createPost(dto);
+                boolean success = dao.createPost(dto);
             } catch (SQLException e) {
                 logger.warning("Error executing SQL to update database: " + e.getMessage());
                 handleError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                return;
             }
-
-            // Set response status
-            response.setStatus(success ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }

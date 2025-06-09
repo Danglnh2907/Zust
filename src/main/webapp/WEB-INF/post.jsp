@@ -1,3 +1,5 @@
+<%@ page import="dto.RespPostsDTO" %>
+<%@ page import="java.util.ArrayList" %>
 <%--
   Created by IntelliJ IDEA.
   User: Asus
@@ -18,7 +20,11 @@
         <style>
             #editor { height: 300px; }
             .error { color: red; }
-            .success { color: green; }
+            .post {
+                padding: 10px;
+                border: black 1px solid;
+                margin: 0 20px;
+            }
         </style>
     </head>
     <body>
@@ -37,12 +43,39 @@
                         </select>
                         <button type="button" onclick="submitContent()">Create Post</button>
                     </form>
-                    <div id="message"></div>
+                    <div id="message">
+                    </div>
                 </div>
 
                 <!-- Posts section -->
-                <div class="col-sm-6">
-                    Posts
+                <div class="col-sm-6" id="post_section">
+
+                    <%
+                        ArrayList<RespPostsDTO> posts = (ArrayList<RespPostsDTO>)(request.getAttribute("posts"));
+
+                        if (posts.isEmpty()) {
+                            out.println("<p style=\"color=red\">No posts found</p>");
+                        } else {
+                            String template = "                    <div class=\"post\">\n" +
+                                    "                        <p class=\"username\">%s</p>\n" +
+                                    "                        <p class=\"last-update\">%s</p>\n" +
+                                    "                        <div class=\"post-content\">%s</div>\n" +
+                                    "                        <p class=\"like-count\">%d</p>\n" +
+                                    "                        <p class=\"comment-count\">%d</p>\n" +
+                                    "                        <p class=\"repost-count\">%d</p>\n" +
+                                    "                    </div>";
+                            for (RespPostsDTO post : posts) {
+                                out.println(String.format(template,
+                                        post.getUsername(),
+                                        post.getLastModified().toString(),
+                                        post.getPostContent(),
+                                        post.getLikeCount(),
+                                        post.getCommentCount(),
+                                        post.getRepostCount()));
+                            }
+                        }
+                    %>
+
                 </div>
             </div>
         </div>
@@ -94,17 +127,10 @@
 
                 // Send to Servlet
                 try {
-                    const response = await fetch('/zust/post?action=create', {
+                    await fetch('/zust/post?action=create', {
                         method: 'POST',
                         body: formData
                     });
-                    if (response.ok) {
-                        messageDiv.innerHTML = '<p class="success">Post created successfully!</p>';
-                        quill.setContents([]); // Clear editor
-                        document.getElementById('post_privacy').value = 'public'; // Reset privacy
-                    } else {
-                        messageDiv.innerHTML = '<p class="error">Failed to create post.</p>';
-                    }
                 } catch (error) {
                     console.error('Error:', error);
                     messageDiv.innerHTML = '<p class="error">Error: ' + error.message + '</p>';
