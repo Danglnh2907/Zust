@@ -9,13 +9,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.ResultSet;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class PostDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public boolean createPost(ReqPostDTO dto) throws SQLException {
+    public boolean createPost(ReqPostDTO dto) {
         /*
          * Explain SQL flows:
          * 1: Insert the post into 'post' table
@@ -25,7 +27,7 @@ public class PostDAO extends DBContext {
          * 3.2. If no, insert the new hashtags into the 'hashtag' table before insert into 'tag_hashtag' table
          */
 
-        Connection conn = null;
+        Connection conn;
         try {
             //Get connection
             conn = getConnection();
@@ -112,15 +114,16 @@ public class PostDAO extends DBContext {
         }
     }
 
-    public ArrayList<RespPostsDTO> getPosts(int userID) throws SQLException {
+    public ArrayList<RespPostsDTO> getPosts(int userID) {
         String sql = "SELECT p.post_id, p.post_content, a.username, p.post_last_update, " +
                 "(SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, " +
                 "(SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, " +
                 "(SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count " +
                 "FROM post p JOIN account a ON p.account_id = a.account_id " +
-                "WHERE p.post_status = 'published' ORDER BY p.post_create_date DESC";
+                "WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC";
         ArrayList<RespPostsDTO> posts = new ArrayList<>();
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userID);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -166,15 +169,217 @@ public class PostDAO extends DBContext {
         }
     }
 
+
+    public boolean editPost(int postId, ReqPostDTO postDTO) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // Update post table
+//            String postSql = "UPDATE post SET post_content = ?, post_privacy = ?, post_last_update = ?, post_status = ? " +
+//                    "WHERE post_id = ? AND account_id = ? AND post_status = 'published'";
+            String postSql = "UPDATE post SET post_content = ?, post_privacy = ?, post_last_update = ?, post_status = ? " +
+                    "WHERE post_id = ? AND account_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(postSql)) {
+                stmt.setString(1, postDTO.getPostContent());
+                stmt.setString(2, postDTO.getPrivacy() != null ? postDTO.getPrivacy() : "public");
+                stmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setString(4, postDTO.getStatus() != null ? postDTO.getStatus() : "published");
+                stmt.setInt(5, postId);
+                stmt.setInt(6, postDTO.getAccountID());
+                int affectedRows = stmt.executeUpdate();
+                System.out.println(affectedRows);
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    System.out.println("No rows affected");
+                    return false; // Post not found or unauthorized
+                }
+            }
+
+            // Delete existing images
+            String deleteImageSql = "DELETE FROM post_image WHERE post_id = ?";
+            try (PreparedStatement deleteImageStmt = conn.prepareStatement(deleteImageSql)) {
+                deleteImageStmt.setInt(1, postId);
+                deleteImageStmt.executeUpdate();
+            }
+
+            // Insert new images
+            String imageSql = "INSERT INTO post_image (post_image, post_id) VALUES (?, ?)";
+            try (PreparedStatement imageStmt = conn.prepareStatement(imageSql)) {
+                ArrayList<String> images = postDTO.getImages();
+                for (String imagePath : images) {
+                    if (imagePath != null && !imagePath.trim().isEmpty()) {
+                        imageStmt.setString(1, imagePath);
+                        imageStmt.setInt(2, postId);
+                        imageStmt.addBatch();
+                    }
+                }
+                imageStmt.executeBatch();
+            }
+
+            // Delete existing hashtags
+            String deleteTagHashtagSql = "DELETE FROM tag_hashtag WHERE post_id = ?";
+            try (PreparedStatement deleteTagStmt = conn.prepareStatement(deleteTagHashtagSql)) {
+                deleteTagStmt.setInt(1, postId);
+                deleteTagStmt.executeUpdate();
+            }
+
+            // Insert new hashtags
+            String hashtagSql = "MERGE INTO hashtag AS target " +
+                    "USING (SELECT ? AS hashtag_name) AS source " +
+                    "ON target.hashtag_name = source.hashtag_name " +
+                    "WHEN NOT MATCHED THEN " +
+                    "INSERT (hashtag_name) VALUES (source.hashtag_name)";
+            String tagHashtagSql = "INSERT INTO tag_hashtag (hashtag_index, post_id, hashtag_id) " +
+                    "SELECT ?, ?, hashtag_id FROM hashtag WHERE hashtag_name = ?";
+            try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql);
+                 PreparedStatement tagHashtagStmt = conn.prepareStatement(tagHashtagSql)) {
+                ArrayList<String> hashtags = postDTO.getHashtags();
+                for (int i = 0; i < hashtags.size(); i++) {
+                    String hashtag = hashtags.get(i);
+                    if (hashtag != null && !hashtag.trim().isEmpty()) {
+                        hashtagStmt.setString(1, hashtag.trim());
+                        hashtagStmt.executeUpdate();
+                        tagHashtagStmt.setInt(1, i);
+                        tagHashtagStmt.setInt(2, postId);
+                        tagHashtagStmt.setString(3, hashtag.trim());
+                        tagHashtagStmt.addBatch();
+                    }
+                }
+                tagHashtagStmt.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                logger.warning(ex.getMessage());
+                System.out.println(ex.getMessage());
+            }
+            return false;
+        }
+    }
+
+    public boolean deletePost(int postId, int accountId) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // Soft delete post
+            String postSql = "UPDATE post SET post_status = 'deleted', post_last_update = ? " +
+                    "WHERE post_id = ? AND account_id = ? AND post_status = 'published'";
+            try (PreparedStatement stmt = conn.prepareStatement(postSql)) {
+                stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setInt(2, postId);
+                stmt.setInt(3, accountId);
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    return false; // Post not found or unauthorized
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                logger.warning(ex.getMessage());
+            }
+        }
+
+        return false;
+    }
+
     public static void main(String[] args) {
         PostDAO dao = new PostDAO();
-        try {
-            ArrayList<RespPostsDTO> posts = dao.getPosts(1);
-            for (RespPostsDTO post : posts) {
-                System.out.println(post.getPostContent());
+        Scanner sc = new Scanner(System.in);
+        if (args.length == 1) {
+            switch (args[0]) {
+                case "create": {
+                    //Get data
+                    ReqPostDTO dto = new ReqPostDTO();
+                    dto.setAccountID(1); //Hardcode
+                    dto.setCreatedAt(LocalDateTime.now());
+                    dto.setLastModified(LocalDateTime.now());
+                    dto.setPrivacy("public"); //Hardcode
+                    dto.setStatus("published"); //Hardcode
+                    dto.setGroupID(-1); //Hardcode
+
+                    //Get content from user (no image/hashtags for now)
+                    System.out.print("Enter post content: ");
+                    String content = sc.nextLine();
+                    dto.setPostContent(content);
+
+                    boolean success = dao.createPost(dto);
+                    if (success) {
+                        System.out.println("Create post successful");
+                    } else {
+                        System.out.println("Create post failed");
+                    }
+                    break;
+                }
+                case "update": {
+                    //Read post ID
+                    System.out.print("Enter post ID: ");
+                    int postId = sc.nextInt();
+                    sc.nextLine(); //Swallow '\n' in the input buffer
+
+                    //Read post content
+                    System.out.print("Enter post content: ");
+                    String content = sc.nextLine();
+
+                    //Read post status -> Normally, this should be changed by group manager/admin, but test just in case
+                    System.out.print("Enter new status: ");
+                    String status = sc.nextLine();
+
+                    //Read post privacy
+                    System.out.print("Enter new privacy: ");
+                    String privacy = sc.nextLine();
+
+                    ReqPostDTO dto = new ReqPostDTO();
+                    dto.setAccountID(1); //Hardcode
+                    //dto.setCreatedAt(LocalDateTime.now()); -> Edit method ignore this field, so setting it or not don't matter
+                    dto.setLastModified(LocalDateTime.now());
+                    dto.setPrivacy(privacy); //Hardcode
+                    dto.setStatus(status); //Hardcode
+                    dto.setGroupID(-1); //Hardcode
+                    dto.setPostContent(content);
+
+                    boolean success = dao.editPost(postId, dto);
+                    if (success) {
+                        System.out.println("Update post successful");
+                    } else {
+                        System.out.println("Update post failed");
+                    }
+                    break;
+                }
+                case "delete": {
+                    System.out.print("Enter post ID: ");
+                    int postId = sc.nextInt();
+                    boolean success = dao.deletePost(postId, 1); //Hardcode account ID for now
+                    if (success) {
+                        System.out.println("Delete post successful");
+                    } else {
+                        System.out.println("Delete post failed");
+                    }
+                    break;
+                }
+                case "get": {
+                    ArrayList<RespPostsDTO> posts = dao.getPosts(1);
+                    for (RespPostsDTO post : posts) {
+                        System.out.printf("Post content: %s\n", post.getPostContent()); //You can choose to print more
+                    }
+                    break;
+                }
             }
-        } catch (SQLException e) {
-            System.out.printf("SQLException: %s%n", e.getMessage());
         }
+
     }
 }

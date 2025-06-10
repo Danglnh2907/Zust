@@ -73,14 +73,9 @@ public class PostController extends HttpServlet {
         //Get list of posts from user
         PostDAO dao = new PostDAO();
         ArrayList<RespPostsDTO> posts = null;
-        try {
-            posts = dao.getPosts(1); //Hardcode, change later with session/cookie
-            request.setAttribute("posts", posts);
-            request.getRequestDispatcher("/WEB-INF/post.jsp").forward(request, response);
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            handleError(response, 404);
-        }
+        posts = dao.getPosts(1); //Hardcode, change later with session/cookie
+        request.setAttribute("posts", posts);
+        request.getRequestDispatcher("/WEB-INF/post.jsp").forward(request, response);
     }
 
     @Override
@@ -169,12 +164,7 @@ public class PostController extends HttpServlet {
 
             // Call PostDAO and create post
             PostDAO dao = new PostDAO();
-            try {
-                boolean success = dao.createPost(dto);
-            } catch (SQLException e) {
-                logger.warning("Error executing SQL to update database: " + e.getMessage());
-                handleError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
+            boolean success = dao.createPost(dto);
         }
     }
 }
