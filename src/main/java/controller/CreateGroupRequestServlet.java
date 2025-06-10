@@ -25,10 +25,12 @@ public class CreateGroupRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         CreateGroupRequestDAO dao = new CreateGroupRequestDAO();
         String action = request.getParameter("action");
-        if(action.equals("rejected")) {
-
-        }else if(action.equals("accepted")) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        if(action.equals("reject")) {
+            dao.rejectCreateGroupRequest(id);
+        }else if(action.equals("accept")) {
 
         }
+        doGet(request, response);
     }
 }

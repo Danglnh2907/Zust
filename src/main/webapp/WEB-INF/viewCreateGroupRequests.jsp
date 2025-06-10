@@ -52,6 +52,24 @@
         .btn-approve { background-color: #31a24c; }
         .btn-reject { background-color: #fa383e; }
         .no-data-message { text-align: center; padding: 40px; color: #606770; font-size: 16px; }
+
+        .action-forms-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px; /* Creates space between the buttons */
+        }
+        .action-form {
+            margin: 0; /* Reset default form margin */
+        }
+        .action-button {
+            padding: 8px 16px; border-radius: 6px; color: #ffffff; font-weight: bold; text-decoration: none;
+            border: none; cursor: pointer; transition: opacity 0.2s;
+            font-size: 14px;
+        }
+        .action-button:hover { opacity: 0.85; }
+        .btn-approve { background-color: #31a24c; }
+        .btn-reject { background-color: #fa383e; }
+        .no-data-message { text-align: center; padding: 40px; color: #606770; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -120,8 +138,18 @@
             <td><%= req.getCreateDate() %></td>
             <td class="col-actions">
                 <div class="action-buttons">
-                    <a href="/createGroupRequest?action=approve&id=<%= req.getId() %>" class="btn-approve">Approve</a>
-                    <a href="/createGroupRequest?action=reject&id=<%= req.getId() %>" class="btn-reject">Reject</a>
+                    <form action="createGroupRequest" method="POST" class="action-form">
+                        <input type="hidden" name="id" value="<%= req.getId() %>">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="action-button btn-approve">Approve</button>
+                    </form>
+
+                    <!-- Reject Form -->
+                    <form action="createGroupRequest" method="POST" class="action-form">
+                        <input type="hidden" name="id" value="<%= req.getId() %>">
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="action-button btn-reject">Reject</button>
+                    </form>
                 </div>
             </td>
         </tr>

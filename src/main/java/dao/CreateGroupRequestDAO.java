@@ -67,11 +67,33 @@ public class CreateGroupRequestDAO extends DBContext {
         }
     }
 
+    public boolean rejectCreateGroupRequest(int id) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+
+            String sql = "UPDATE create_group_request\n" +
+                    "SET create_group_request_status = 'rejected'\n" +
+                    "WHERE create_group_request_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, id);
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows != 0) {
+                    return true;
+                }
+        } catch (SQLException e) {
+                logger.warning(e.getMessage());
+        }
+        return false;
+    }
+
+
 
     public static void main(String[] args) {
         CreateGroupRequestDAO dao = new CreateGroupRequestDAO();
 //        System.out.println(dao.sendCreateGroupRequest("<UNK>", 1));
 //        System.out.println(dao.getCreateGroupRequests().get(0));
+//        System.out.println(dao.rejectCreateGroupRequest(3));
     }
 
 }
