@@ -7,19 +7,19 @@ public class ResGroupDTO {
     private String name;
     private String description;
     private String image;
-    private LocalDateTime create_date;
+    private LocalDateTime createDate;
     private String status;
     private int numberParticipants;
     private int numberPosts;
 
     public ResGroupDTO() {}
 
-    public ResGroupDTO(int id, String name, String description, String image, LocalDateTime create_date, String status, int numberParticipants, int numberPosts) {
+    public ResGroupDTO(int id, String name, String description, String image, LocalDateTime createDate, String status, int numberParticipants, int numberPosts) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.image = image;
-        this.create_date = create_date;
+        this.createDate = createDate;
         this.status = status;
         this.numberParticipants = numberParticipants;
         this.numberPosts = numberPosts;
@@ -49,11 +49,11 @@ public class ResGroupDTO {
     public void setImage(String image) {
         this.image = image;
     }
-    public LocalDateTime getCreate_date() {
-        return create_date;
+    public LocalDateTime getCreateDate() {
+        return createDate;
     }
-    public void setCreate_date(LocalDateTime create_date) {
-        this.create_date = create_date;
+    public void setCreateDate(LocalDateTime createDate) {
+        this.createDate = createDate;
     }
     public String getStatus() {
         return status;

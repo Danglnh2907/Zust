@@ -3,13 +3,12 @@ package dao;
 import util.database.DBContext;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.ResultSet;
-import java.time.LocalDateTime;
-import model.Group;
+
 import dto.ReqGroupDTO;
 import dto.ResGroupDTO;
 
@@ -58,7 +57,7 @@ public class GroupDAO extends DBContext {
                 "(SELECT group_id, COUNT(*) AS number_of_post FROM post \n" +
                 "GROUP BY post.group_id) AS post\n" +
                 "ON post.group_id = [group].group_id\n" +
-                "WHERE [group].group_id = ?\n";
+                "WHERE [group].group_id = ? AND [group].group_status = 'active'\n";
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, groupId);
@@ -70,7 +69,7 @@ public class GroupDAO extends DBContext {
                 group.setName(rs.getString("group_name"));
                 group.setImage(rs.getString("group_cover_image"));
                 group.setDescription(rs.getString("group_description"));
-                group.setCreate_date(rs.getTimestamp("group_create_date") != null
+                group.setCreateDate(rs.getTimestamp("group_create_date") != null
                         ? rs.getTimestamp("group_create_date").toLocalDateTime() : null);
                 group.setNumberParticipants(rs.getInt("number_of_participant"));
                 group.setNumberPosts(rs.getInt("number_of_post"));
@@ -84,9 +83,44 @@ public class GroupDAO extends DBContext {
         }
     }
 
+    public List<ResGroupDTO> getGroups() {
+        String sql = "SELECT [group].*, number_of_participant, number_of_post FROM [group]\n" +
+                "LEFT JOIN \n" +
+                "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +
+                "GROUP BY participate.group_id) AS participant\n" +
+                "ON [group].group_id = participant.group_id\n" +
+                "LEFT JOIN\n" +
+                "(SELECT group_id, COUNT(*) AS number_of_post FROM post \n" +
+                "GROUP BY post.group_id) AS post\n" +
+                "ON post.group_id = [group].group_id\n" +
+                "WHERE [group].group_status = 'active'\n";
+        List<ResGroupDTO> groups = new ArrayList<ResGroupDTO>();
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                ResGroupDTO group = new ResGroupDTO();
+                group.setId(rs.getInt("group_id"));
+                group.setName(rs.getString("group_name"));
+                group.setImage(rs.getString("group_cover_image"));
+                group.setDescription(rs.getString("group_description"));
+                group.setCreateDate(rs.getTimestamp("group_create_date") != null
+                        ? rs.getTimestamp("group_create_date").toLocalDateTime() : null);
+                group.setNumberParticipants(rs.getInt("number_of_participant"));
+                group.setNumberPosts(rs.getInt("number_of_post"));
+                groups.add(group);
+            }
+
+            return groups;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return null;
+        }
+    }
+
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-        System.out.println(dao.getGroup(1));
+        System.out.println(dao.getGroups().get(1));
     }
 
 }

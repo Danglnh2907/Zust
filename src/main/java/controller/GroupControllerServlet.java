@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.annotation.MultipartConfig;
+
+import java.util.List;
 import java.util.logging.Logger;
 import java.io.IOException;
 import jakarta.servlet.http.Part;
@@ -33,8 +35,6 @@ public class GroupControllerServlet extends HttpServlet {
             action = "list";
         }
         switch (action) {
-            case "list":
-                break;
             case "view":
                 int id = Integer.parseInt(request.getParameter("id"));
                 ResGroupDTO group = dao.getGroup(id);
@@ -46,7 +46,10 @@ public class GroupControllerServlet extends HttpServlet {
                 break;
             case "disband":
                 break;
-            case "delete":
+            default:
+                List<ResGroupDTO> groups = dao.getGroups();
+                request.setAttribute("groups", groups);
+                request.getRequestDispatcher("/WEB-INF/viewGroups.jsp").forward(request, response);
                 break;
         }
     }
@@ -60,7 +63,6 @@ public class GroupControllerServlet extends HttpServlet {
         }
         switch (action) {
             case "list":
-
                 break;
             case "create":
                 try {
