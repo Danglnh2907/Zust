@@ -3,24 +3,18 @@ package controller;
 import java.io.IOException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 
 import dao.PostDAO;
 import dto.ReqPostDTO;
-import dto.RespPostsDTO;
+import dto.RespPostDTO;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024) //5MB
@@ -34,137 +28,313 @@ public class PostController extends HttpServlet {
     //File storage directory (load from save.env)
     private final String FILE_STORAGE_DIR = dotenv.get("FILE_STORAGE_PATH") == null ? "C:\\" : dotenv.get("FILE_STORAGE_PATH");
 
-    /**
-     * Util method for return error status for operations
-     * @param resp - HTTPServletResponse object for setting status code
-     * @param statusCode - Status code
-     */
-    private void handleError(HttpServletResponse resp, int statusCode) throws IOException {
-        resp.setStatus(statusCode);
-        //Print writer for output return value
-        resp.getWriter().println("Error occurred while executing! Please try again.");
-    }
-
-    /**
-     * Util method for extracting file name from multipart form
-     * @param part - Part object of multipart form that need extraction
-     * @return - The String file name of the extracted file
-     */
-    private String getFileName(Part part) {
-        String contentDisposition = part.getHeader("content-disposition");
-        if (contentDisposition != null) {
-            for (String cd : contentDisposition.split(";")) {
-                if (cd.trim().startsWith("filename")) {
-                    String fileName = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
-                    return fileName.substring(fileName.lastIndexOf('/') + 1).substring(fileName.lastIndexOf('\\') + 1);
-                }
-            }
-        }
-        return null;
-    }
-
-    private String formatContent(String htmlContent, ArrayList<String> imagePaths) {
-        //Change later if frontend done
-        return htmlContent;
-    }
-
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        //Get list of posts from user
-        PostDAO dao = new PostDAO();
-        ArrayList<RespPostsDTO> posts = null;
-        posts = dao.getPosts(1); //Hardcode, change later with session/cookie
-        request.setAttribute("posts", posts);
-        request.getRequestDispatcher("/WEB-INF/post.jsp").forward(request, response);
+        /*
+         * Handle all post related GET action:
+         * /post: Get all post created by a users (UserID fetch in sessions)
+         * /post?id=post_id: Get view a certain post by ID (include comments)
+         * /post?action=create: create post form
+         */
+
+        //Fetch userID in sessions
+        HttpSession session = request.getSession();
+        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
+        int userID;
+        try {
+            userID = Integer.parseInt(userIDRaw);
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid userID: " + userIDRaw);
+            //Redirect to error.jsp
+            //response.sendRedirect("/error"); //Implement later
+            userID = 1;
+        }
+
+        String action = request.getParameter("action");
+        String idRaw = request.getParameter("id");
+        PostDAO postDAO = new PostDAO();
+
+        //No provided id or action -> View all posts belong to a user
+        if (action == null && idRaw == null) {
+            ArrayList<RespPostDTO> posts = postDAO.getPosts(userID);
+            if (posts.isEmpty()) {
+                request.setAttribute("message", "No posts found");
+            } else {
+                logger.info("Found " + posts.size() + " posts");
+                request.setAttribute("posts", posts);
+            }
+            request.getRequestDispatcher("/WEB-INF/views/post/post.jsp").forward(request, response);
+            return;
+        }
+
+        //If the action is create, serve the create form (post_upload.jsp)
+        if (action != null && action.toLowerCase().trim().equals("create")) {
+            request.getRequestDispatcher("/WEB-INF/views/post/post_upload.jsp").forward(request, response);
+            return;
+        }
+
+        //If id exist, then fetch the only post with that post_id
+        if (idRaw != null) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                RespPostDTO post = postDAO.getPost(id);
+                if (post == null) {
+                    request.setAttribute("message", "No post found");
+                } else {
+                    request.setAttribute("post", post);
+                }
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid postID: " + idRaw);
+                //Redirect to error.jsp
+                response.sendRedirect("/error"); //Implement later
+            }
+            request.getRequestDispatcher("/WEB-INF/views/post/post.jsp").forward(request, response);
+        }
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        /*
+         * Handle all post related POST action:
+         * /post?action=create: Create new post (UserID fetch in sessions)
+         * /post?action=edit&id=post_id: Edit a post by ID (UserID fetch in sessions)
+         * /post?action=delete&id=post_id: Delete a post by ID (UserID fetch in session)
+         */
+
+        //Fetch userID in sessions
+        HttpSession session = request.getSession();
+        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
+        int userID;
+        try {
+            userID = Integer.parseInt(userIDRaw);
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid userID: " + userIDRaw);
+            //Redirect to error.jsp
+            //response.sendRedirect("/error"); //Implement later
+            userID = 1;
+            //return;
+        }
+
         //Get request parameter: action
         String action = request.getParameter("action");
         action = action == null ? "" : action.toLowerCase().trim();
+        PostDAO postDAO = new PostDAO();
 
         //Work base on action
-        if (action.equals("create")) {
-            //Variables declaration
-            String htmlContent = null;
-            String postPrivacy = null;
-            String hashtagsJson = null;
-            ArrayList<String> imagePaths = new ArrayList<>();
-
-            //Create storage directory if not exist
-            File uploadDir = new File(FILE_STORAGE_DIR);
-            if (!uploadDir.exists()) {
-                //Create directory and check if it success
-                if (!uploadDir.mkdir()) {
-                    logger.severe("Failed to create upload directory: " + FILE_STORAGE_DIR + "\n");
-                    handleError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        switch (action) {
+            case "create" -> {
+                ReqPostDTO dto = extractData(userID, request.getParts());
+                if (dto == null) {
+                    response.sendRedirect("/error");
+                } else {
+                    boolean success = postDAO.createPost(dto);
+                    if (success) {
+                        request.setAttribute("message", "Post created successfully");
+                    } else {
+                        request.setAttribute("message", "Post creation failed");
+                    }
+                    request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
+                }
+            }
+            case "edit" -> {
+                //Extract postID
+                String idRaw = request.getParameter("id");
+                if (idRaw == null || idRaw.toLowerCase().trim().isEmpty()) {
+                    response.sendRedirect("/error");
                     return;
                 }
+                try {
+                    int id = Integer.parseInt(idRaw);
+                    ReqPostDTO dto = extractData(userID, request.getParts());
+                    if (dto == null) {
+                        response.sendRedirect("/error");
+                    } else {
+                        boolean success = postDAO.editPost(id, dto);
+                        if (success) {
+                            request.setAttribute("message", "Post edited successfully");
+                        } else {
+                            request.setAttribute("message", "Post edition failed");
+                        }
+                        request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid postID: " + idRaw);
+                    response.sendRedirect("/error");
+                }
             }
+            case "delete" -> {
+                //Extract postID
+                String idRaw = request.getParameter("id");
+                if (idRaw == null || idRaw.toLowerCase().trim().isEmpty()) {
+                    response.sendRedirect("/error");
+                    return;
+                }
+                try {
+                    int id = Integer.parseInt(idRaw);
+                    boolean success = postDAO.deletePost(id, userID);
+                    if (success) {
+                        request.setAttribute("message", "Post deleted successfully");
+                    } else {
+                        request.setAttribute("message", "Post deletion failed");
+                    }
+                    request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid postID: " + idRaw);
+                    response.sendRedirect("/error");
+                }
+            }
+        }
+    }
 
-            //Extract data
-            for (Part part : request.getParts()) {
-                String fieldName = part.getName();
-                String fileName = getFileName(part);
+    private ReqPostDTO extractData(int userID, Collection<Part> parts) {
+        //Variables declaration
+        String htmlContent = null;
+        String postPrivacy = null;
+        String hashtags = null;
+        int groupID = -1;
+        String postStatus = "public";
+        ArrayList<String> imagePaths = new ArrayList<>();
+        ReqPostDTO dto = new ReqPostDTO();
 
-                //Get HTML content
-                if (fieldName.equals("htmlContent")) {
+        //Create storage directory if not exist
+        File uploadDir = new File(FILE_STORAGE_DIR + File.separator + "images");
+        if (!uploadDir.exists()) {
+            //Create directory and check if it success
+            if (!uploadDir.mkdir()) {
+                logger.severe("Failed to create upload directory: " + FILE_STORAGE_DIR + File.separator + "images\n");
+                //Redirect to error.jsp
+                return null;
+            }
+        }
+
+        //Extract data
+        for (Part part : parts) {
+            String fieldName = part.getName();
+
+            //Get HTML content
+            if (fieldName.equals("htmlContent")) {
+                try {
                     htmlContent = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
                             .useDelimiter("\\A").next();
+                } catch (Exception e) {
+                    logger.severe(String.format("Failed to read HTML from part\nError: %s", e.getMessage()));
+                    return null;
                 }
-                //Get list of hashtags
-                else if (fieldName.equals("hashtags")) {
-                    //The format should be a JSON array: [#123, #hello]
-                    hashtagsJson = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
+            }
+            //Get list of hashtags
+            else if (fieldName.equals("hashtags")) {
+                try {
+                    hashtags = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
                             .useDelimiter("\\A").next();
+                } catch (Exception e) {
+                    logger.severe(String.format("Failed to read hashtags from part\nError: %s", e.getMessage()));
+                    //return null;
                 }
-                //Get post_privacy
-                else if (fieldName.equals("post_privacy")) {
+            }
+            //Get post_privacy
+            else if (fieldName.equals("post_privacy")) {
+                try {
                     postPrivacy = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
                             .useDelimiter("\\A").next();
+                } catch (Exception e) {
+                    logger.severe(String.format("Failed to read post privacy from part\nError: %s", e.getMessage()));
+                    //return null;
                 }
-                //Get list of images
-                else if (fieldName.startsWith("image")) {
-                    if (fileName != null && !fileName.isEmpty()) {
-                        //Include random UUID to prevent duplicate
-                        String filePath = FILE_STORAGE_DIR + File.separator + UUID.randomUUID() + "_" + fileName;
+            }
+            //Get list of images
+            else if (fieldName.startsWith("image")) {
+                //Get original images' name
+                String fileName = "";
+                String contentDisposition = part.getHeader("content-disposition");
+                if (contentDisposition != null) {
+                    //Content disposition format: form-data; name="file"; filename="C:\Users\John\Desktop\my_file.txt"
+                    for (String cd : contentDisposition.split(";")) {
+                        if (cd.trim().startsWith("filename")) { //Extract the filename header -> filename="C:\Users\John\Desktop\my_file.txt"
+                            //Extract the full path -> C:\Users\John\Desktop\my_file.txt
+                            fileName = cd.substring(cd.indexOf('=') + 1)
+                                    .trim().replace("\"", "");
+                            //Extract the filename from the full path: C:\Users\John\Desktop\my_file.txt -> my_file.txt
+                            fileName = fileName
+                                    .substring(fileName.lastIndexOf('/') + 1) //Unix filepath style
+                                    .substring(fileName.lastIndexOf('\\') + 1); //Windows filepath style
+                        }
+                    }
+                }
+
+                if (!fileName.isEmpty()) {
+                    //Include random UUID to prevent duplicate
+                    String filename = UUID.randomUUID() + "_" + fileName;
+                    String filePath = FILE_STORAGE_DIR + File.separator + "images" + File.separator + filename;
+                    logger.info(filePath);
+                    try {
                         part.write(filePath);
-                        imagePaths.add(filePath);
+                    } catch (Exception e) {
+                        logger.severe(String.format("Failed to write image from part\nError: %s", e.getMessage()));
                     }
+                    imagePaths.add(filename);
                 }
             }
-
-            //Format the HTML (replace image byte with path, add CSS styling, ...)
-            htmlContent = formatContent(htmlContent, imagePaths);
-
-            // Create DTO objects
-            ReqPostDTO dto = new ReqPostDTO();
-            dto.setAccountID(1); //Change later if login is implemented
-            dto.setPostContent(htmlContent);
-            dto.setPrivacy(postPrivacy);
-            dto.setStatus("published"); //Change later
-            dto.setCreatedAt(LocalDateTime.now());
-            dto.setLastModified(LocalDateTime.now());
-            dto.setGroupID(-1); //Personal post -> change later
-            //Add images path
-            for (String imagePath : imagePaths) {
-                dto.getImages().add(imagePath);
-            }
-            //Add hashtags
-            if (hashtagsJson != null && !hashtagsJson.isEmpty()) {
-                //Split the JSON into array
-                String[] hashtagArray = hashtagsJson.replaceAll("[\\[\\]\"]", "").split(",");
-                for (String hashtag : hashtagArray) {
-                    if (!hashtag.trim().isEmpty()) {
-                        dto.getHashtags().add(hashtag);
-                    }
+            //Get group_id (if this post is uploaded in a group)
+            else if (fieldName.equals("group_id")) {
+                try {
+                    String groupIDRaw = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
+                            .useDelimiter("\\A").next();
+                    groupID = Integer.parseInt(groupIDRaw);
+                } catch (Exception e) {
+                    logger.severe(String.format("Failed to read group_id from part\nError: %s", e.getMessage()));
+                    //return null;
                 }
             }
-
-            // Call PostDAO and create post
-            PostDAO dao = new PostDAO();
-            boolean success = dao.createPost(dto);
+            //Get posts_status
+            else if (fieldName.equals("is_drafted")) {
+                String isDraftedRaw;
+                try {
+                    isDraftedRaw = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
+                            .useDelimiter("\\A").next();
+                    boolean isDrafted = Boolean.parseBoolean(isDraftedRaw);
+                    if (isDrafted) {
+                        postStatus = "drafted";
+                    }
+                } catch (Exception e) {
+                    logger.warning(e.getMessage());
+                }
+            }
         }
+
+        //Format the HTML (remove all img tags, the frontend will gather them in a different section)
+        htmlContent = formatContent(htmlContent);
+
+        // Create DTO objects
+        dto.setAccountID(userID);
+        dto.setPostContent(htmlContent);
+        dto.setPrivacy(postPrivacy);
+        dto.setStatus(postStatus);
+        dto.setCreatedAt(LocalDateTime.now());
+        dto.setLastModified(LocalDateTime.now());
+        dto.setGroupID(groupID);
+        //Add images path
+        for (String imagePath : imagePaths) {
+            dto.getImages().add(imagePath);
+        }
+        //Add hashtags
+        if (hashtags != null && !hashtags.isEmpty()) {
+            //Split the format String into array (format: #123#hello#first_time -> [123, hello, first_time])
+            String[] hashtagArray = hashtags.split("#");
+            for (String hashtag : hashtagArray) {
+                if (!hashtag.trim().isEmpty()) {
+                    dto.getHashtags().add(hashtag);
+                }
+            }
+        }
+        return dto;
+    }
+
+    private String formatContent(String htmlContent) {
+        if (htmlContent == null || htmlContent.trim().isEmpty()) {
+            return htmlContent;
+        }
+        // Matches <img> tags with any attributes, e.g., <img src="..." alt="...">
+        String imgTagRegex = "<img\\s*[^>]*>";
+        return htmlContent.replaceAll(imgTagRegex, "").trim();
     }
 }

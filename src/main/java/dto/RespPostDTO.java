@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * DTO class for carrying data from database to View: Post
  */
-public class RespPostsDTO {
+public class RespPostDTO {
     private int postId;
     private String postContent;
     private String username;
@@ -18,7 +18,7 @@ public class RespPostsDTO {
     private int commentCount;
     private int repostCount;
 
-    public RespPostsDTO() {
+    public RespPostDTO() {
         this.hashtags = new ArrayList<>();
         this.images = new ArrayList<>();
     }
