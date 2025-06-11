@@ -142,7 +142,6 @@
             <artifactId>lucene-analysis-common</artifactId>
             <version>9.9.0</version> <!-- Đã đổi từ 10.2.1 xuống 9.9.0 -->
         </dependency>
-
     </dependencies>
 
     <build>
