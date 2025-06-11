@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/login", "/register", "/verify"}) // Removed /logout mapping from here
+@WebServlet(urlPatterns = {"/auth", "/verify"})
 @MultipartConfig(
 		fileSizeThreshold = 1024 * 1024 * 2,
 		maxFileSize = 1024 * 1024 * 10,
@@ -35,7 +35,6 @@ public class AuthServlet extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		// Initialize FileService. It will now handle path resolution using Dotenv internally.
 		this.fileService = new FileService();
 		this.authDAO = new AuthDAO(fileService);
 	}
@@ -43,52 +42,35 @@ public class AuthServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String path = request.getServletPath();
-		switch (path) {
-			case "/login":
-				showLoginPage(request, response);
-				break;
-			case "/register":
-				showRegisterPage(request, response);
-				break;
-			case "/verify":
-				handleEmailVerification(request, response);
-				break;
-			default:
-				response.sendRedirect(request.getContextPath() + "/");
-				break;
+		if ("/verify".equals(path)) {
+			handleEmailVerification(request, response);
+		} else {
+			showAuthPage(request, response);
 		}
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String path = request.getServletPath();
-		switch (path) {
-			case "/login":
-				handleLogin(request, response);
-				break;
-			case "/register":
-				handleRegistration(request, response);
-				break;
-			default:
-				response.sendRedirect(request.getContextPath() + "/");
-				break;
+		String action = request.getParameter("action");
+		if ("login".equals(action)) {
+			handleLogin(request, response);
+		} else if ("register".equals(action)) {
+			handleRegistration(request, response);
+		} else {
+			response.sendRedirect(request.getContextPath() + "/auth");
 		}
 	}
 
-	private void showLoginPage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void showAuthPage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if (request.getSession().getAttribute("loggedInAccount") != null) {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
-		request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
-	}
-
-	private void showRegisterPage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (request.getSession().getAttribute("loggedInAccount") != null) {
-			response.sendRedirect(request.getContextPath() + "/");
-			return;
+		String successMessage = request.getParameter("successMessage");
+		if (successMessage != null && !successMessage.trim().isEmpty()) {
+			request.setAttribute("successMessage", successMessage);
 		}
-		request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 	}
 
 	private void handleLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -123,30 +105,29 @@ public class AuthServlet extends HttpServlet {
 		}
 		request.setAttribute("errorMessage", errorMessage);
 		request.setAttribute("username", username);
-		request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+		request.setAttribute("activeTab", "login");
+		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 	}
 
 	private void handleRegistration(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Account account = new Account();
 		String errorMessage = null;
 		String successMessage = null;
-		String avatarSavedPath = null; // To store the path of the saved avatar
+		String avatarSavedPath = null;
 
 		try {
-			// Retrieve form fields
 			account.setUsername(request.getParameter("username"));
 			account.setPassword(request.getParameter("password"));
 			account.setFullname(request.getParameter("fullname"));
 			account.setEmail(request.getParameter("email"));
 			account.setPhone(request.getParameter("phone"));
 			String genderStr = request.getParameter("gender");
-			account.setGender(genderStr != null ? Boolean.parseBoolean(genderStr) : null);
+			account.setGender(genderStr != null && !genderStr.isEmpty() ? Boolean.parseBoolean(genderStr) : null);
 			String dobStr = request.getParameter("dob");
 			account.setDob(dobStr != null && !dobStr.isEmpty() ? LocalDate.parse(dobStr) : null);
 			account.setBio(request.getParameter("bio"));
 
-			// Handle avatar file upload
-			Part avatarPart = request.getPart("avatar"); // "avatar" is the name of the file input in JSP
+			Part avatarPart = request.getPart("avatar");
 			if (avatarPart != null && avatarPart.getSize() > 0) {
 				String submittedFileName = avatarPart.getSubmittedFileName();
 				if (submittedFileName != null && !submittedFileName.isEmpty()) {
@@ -159,7 +140,7 @@ public class AuthServlet extends HttpServlet {
 
 					try (InputStream fileContent = avatarPart.getInputStream()) {
 						avatarSavedPath = fileService.saveFile(uniqueFileName, fileContent);
-						account.setAvatar(avatarSavedPath); // Store the file path in the account object
+						account.setAvatar(avatarSavedPath);
 						LOGGER.info("Avatar saved to: {}", avatarSavedPath);
 					} catch (IOException e) {
 						LOGGER.error("Failed to save avatar file: {}", e.getMessage(), e);
@@ -168,35 +149,34 @@ public class AuthServlet extends HttpServlet {
 				}
 			}
 
-			// If avatar upload failed, we might not want to proceed with registration
 			if (errorMessage != null) {
 				request.setAttribute("errorMessage", errorMessage);
 				request.setAttribute("account", account);
-				request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+				request.setAttribute("activeTab", "register");
+				request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 				return;
 			}
 
-			// Proceed with account registration
 			authDAO.registerAccount(account);
 			successMessage = "Registration successful! A verification email has been sent to " + account.getEmail() + ". Please check your inbox.";
-			response.sendRedirect(request.getContextPath() + "/login?successMessage=" + java.net.URLEncoder.encode(successMessage, "UTF-8"));
+			response.sendRedirect(request.getContextPath() + "/auth?successMessage=" + java.net.URLEncoder.encode(successMessage, "UTF-8"));
 			return;
 
 		} catch (IllegalArgumentException e) {
-			errorMessage = e.getMessage(); // Username/email/phone already exists or invalid file
+			errorMessage = e.getMessage();
 			LOGGER.warn("Registration failed due to invalid argument: {}", e.getMessage());
 		} catch (DateTimeParseException e) {
 			errorMessage = "Invalid Date of Birth format. Please use YYYY-MM-DD.";
 			LOGGER.warn("Registration failed due to DOB parsing error: {}", e.getMessage());
-		} catch (Exception e) { // Catch generic Exception to handle IOException, SQLException, etc.
+		} catch (Exception e) {
 			LOGGER.error("Error during account registration for user: {}", account.getUsername(), e);
 			errorMessage = "Registration failed: " + e.getMessage();
 		}
 
-		// If registration fails (and not redirected), set attributes and forward back to form
 		request.setAttribute("errorMessage", errorMessage);
-		request.setAttribute("account", account); // Pre-fill form fields
-		request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+		request.setAttribute("account", account);
+		request.setAttribute("activeTab", "register");
+		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 	}
 
 	private void handleEmailVerification(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
