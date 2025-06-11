@@ -10,23 +10,19 @@ import java.util.logging.Logger;
 import dao.PostDAO;
 import dto.ReqPostDTO;
 import dto.RespPostDTO;
-import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
+import util.service.FileService;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024) //5MB
 public class PostController extends HttpServlet {
     //Logger for debug
     private final Logger logger = Logger.getLogger(this.getClass().getName());
-    //dotenv for loading configurations in .env files
-    Dotenv dotenv = Dotenv.configure()
-            .filename("save.env")
-            .load();
-    //File storage directory (load from save.env)
-    private final String FILE_STORAGE_DIR = dotenv.get("FILE_STORAGE_PATH") == null ? "C:\\" : dotenv.get("FILE_STORAGE_PATH");
+    //FileService
+    private final FileService fileService = new FileService();
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
@@ -197,11 +193,11 @@ public class PostController extends HttpServlet {
         ReqPostDTO dto = new ReqPostDTO();
 
         //Create storage directory if not exist
-        File uploadDir = new File(FILE_STORAGE_DIR + File.separator + "images");
+        File uploadDir = new File(fileService.getLocationPath() + File.separator + "images");
         if (!uploadDir.exists()) {
             //Create directory and check if it success
             if (!uploadDir.mkdir()) {
-                logger.severe("Failed to create upload directory: " + FILE_STORAGE_DIR + File.separator + "images\n");
+                logger.severe("Failed to create upload directory: " + fileService.getLocationPath() + File.separator + "images\n");
                 //Redirect to error.jsp
                 return null;
             }
@@ -264,7 +260,7 @@ public class PostController extends HttpServlet {
                 if (!fileName.isEmpty()) {
                     //Include random UUID to prevent duplicate
                     String filename = UUID.randomUUID() + "_" + fileName;
-                    String filePath = FILE_STORAGE_DIR + File.separator + "images" + File.separator + filename;
+                    String filePath = fileService.getLocationPath() + File.separator + "images" + File.separator + filename;
                     logger.info(filePath);
                     try {
                         part.write(filePath);
