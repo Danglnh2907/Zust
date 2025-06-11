@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.Arrays;
 
 public class AuthDAO {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuthDAO.class);
@@ -31,7 +33,7 @@ public class AuthDAO {
 		LOGGER.info("Registering account: {}", account.getUsername());
 
 		try (Connection conn = new DBContext().getConnection()) {
-
+			// Check for existing data
 			if (isUsernameExists(account.getUsername(), conn)) {
 				throw new IllegalArgumentException("Username already exists.");
 			}
@@ -42,12 +44,14 @@ public class AuthDAO {
 				throw new IllegalArgumentException("Phone number already exists.");
 			}
 
+			// Save account
 			int accountId = saveAccount(account, conn);
 			account.setId(accountId);
 
+			// Generate and save verification token
 			String tokenContent = generateToken();
 			Instant now = Instant.now();
-			Instant expiresAt = now.plusSeconds((long) 24 * 60 * 60); // 24 hours
+			Instant expiresAt = now.plusSeconds(24 * 60 * 60); // 24 hours
 
 			Token token = new Token();
 			token.setAccount(account);
@@ -57,9 +61,17 @@ public class AuthDAO {
 			token.setTokenStatus(false);
 
 			saveToken(token, conn);
-			sendVerificationEmail(account, tokenContent);
 
-			LOGGER.info("Registration complete and verification email sent to {}", account.getEmail());
+			// Send verification email with improved error handling
+			try {
+				sendVerificationEmail(account, tokenContent);
+				LOGGER.info("Registration complete and verification email sent to {}", account.getEmail());
+			} catch (Exception emailException) {
+				LOGGER.error("Failed to send verification email to {}: {}", account.getEmail(), emailException.getMessage());
+				// Optionally, you might want to rollback the registration or mark it as pending email
+				throw new Exception("Account created but failed to send verification email. Please contact support.", emailException);
+			}
+
 		} catch (SQLException e) {
 			LOGGER.error("Registration failed: {}", e.getMessage(), e);
 			throw e;
@@ -122,37 +134,71 @@ public class AuthDAO {
 	}
 
 	private void sendVerificationEmail(Account account, String tokenContent) throws Exception {
-		String baseUrl = dotenv.get("APP_BASE_URL", "");
+		// Validate inputs
+		if (account == null) {
+			throw new IllegalArgumentException("Account cannot be null.");
+		}
+		if (account.getEmail() == null || account.getEmail().trim().isEmpty()) {
+			throw new IllegalArgumentException("Account email cannot be null or empty.");
+		}
+		if (tokenContent == null || tokenContent.trim().isEmpty()) {
+			throw new IllegalArgumentException("Token content cannot be null or empty.");
+		}
+
+		// Get base URL from environment
+		String baseUrl = dotenv.get("APP_BASE_URL", "http://localhost:8080");
 		if (baseUrl.isBlank()) {
-			LOGGER.warn("APP_BASE_URL is not configured properly.");
+			LOGGER.warn("APP_BASE_URL is not configured, using default: http://localhost:8080");
+			baseUrl = "http://localhost:8080";
 		}
 
+		// Prepare template variables
 		Map<String, Object> variables = new HashMap<>();
-		variables.put("name", account.getFullname());
+		variables.put("fullName", account.getFullname() != null ? account.getFullname() : account.getUsername());
+		variables.put("username", account.getUsername());
 		variables.put("verificationLink", baseUrl + "/verify?token=" + tokenContent);
+		variables.put("supportEmail", dotenv.get("SUPPORT_EMAIL", "uniacad@gmail.com"));
+		variables.put("companyName", "Zust Social Media");
+		variables.put("currentYear", String.valueOf(java.time.Year.now().getValue()));
 
-		String recipient = account.getEmail();
-		if (recipient == null || recipient.isBlank()) {
-			throw new IllegalArgumentException("Email cannot be null or blank.");
-		}
-
-		emailService.sendEmail(
-				recipient.trim(),
-				"Verify Your Email",
-				"verify-email",
-				variables,
-				null
+		// Prepare image attachments for email template
+		List<String> imageAttachments = Arrays.asList(
+				"948015252763872ed01b79cbbbb7c68b.png", // Header background
+				"f8d71b6c42f7300871f9e091c6a737e3.jpg", // Email icon
+				"4d3b20f647cbdeb288013a15cce39fdf.jpg", // Text/SMS icon
+				"1cd2ff272e2531b8041264de38db1b5f.png", // X/Twitter icon
+				"51a2644c1491853d60a9688ed8f4fa9e.png", // Instagram icon
+				"7575b9251670cd15f3423fd911239179.png"  // Facebook icon
 		);
+
+		try {
+			emailService.sendEmail(
+					account.getEmail().trim(),
+					"Verify Your Zust Social Media Account",
+					"email-verification", // Template name (will look for email-verification.html)
+					variables,
+					imageAttachments
+			);
+			LOGGER.info("Verification email sent successfully to: {}", account.getEmail());
+		} catch (Exception e) {
+			LOGGER.error("Failed to send verification email to {}: {}", account.getEmail(), e.getMessage(), e);
+			throw new Exception("Failed to send verification email: " + e.getMessage(), e);
+		}
 	}
 
 	public boolean verifyToken(String tokenContent) throws SQLException {
+		if (tokenContent == null || tokenContent.trim().isEmpty()) {
+			LOGGER.warn("Token content is null or empty");
+			return false;
+		}
+
 		try (Connection conn = new DBContext().getConnection()) {
 			String query = "SELECT token_id, account_id, expires_at FROM token WHERE token_content = ? AND token_status = 0 AND expires_at > CURRENT_TIMESTAMP";
 
 			Token token = null;
 
 			try (PreparedStatement stmt = conn.prepareStatement(query)) {
-				stmt.setString(1, tokenContent);
+				stmt.setString(1, tokenContent.trim());
 				try (ResultSet rs = stmt.executeQuery()) {
 					if (rs.next()) {
 						token = new Token();
@@ -166,15 +212,20 @@ public class AuthDAO {
 			}
 
 			if (token == null) {
-				LOGGER.warn("Invalid or expired token");
+				LOGGER.warn("Invalid or expired token: {}", tokenContent);
 				return false;
 			}
 
+			// Activate account
 			try (PreparedStatement stmt = conn.prepareStatement("UPDATE account SET account_status = 'active' WHERE account_id = ?")) {
 				stmt.setInt(1, token.getAccount().getId());
-				if (stmt.executeUpdate() == 0) return false;
+				if (stmt.executeUpdate() == 0) {
+					LOGGER.error("Failed to activate account with ID: {}", token.getAccount().getId());
+					return false;
+				}
 			}
 
+			// Mark token as used
 			try (PreparedStatement stmt = conn.prepareStatement("UPDATE token SET token_status = 1, updated_at = CURRENT_TIMESTAMP WHERE token_id = ?")) {
 				stmt.setInt(1, token.getId());
 				stmt.executeUpdate();
@@ -182,15 +233,27 @@ public class AuthDAO {
 
 			LOGGER.info("Token verified successfully for account ID: {}", token.getAccount().getId());
 			return true;
+		} catch (SQLException e) {
+			LOGGER.error("Database error during token verification: {}", e.getMessage(), e);
+			throw e;
 		}
 	}
 
 	public boolean loginByForm(String username, String password) throws SQLException {
+		if (username == null || username.trim().isEmpty()) {
+			LOGGER.warn("Username is null or empty");
+			return false;
+		}
+		if (password == null || password.isEmpty()) {
+			LOGGER.warn("Password is null or empty");
+			return false;
+		}
+
 		String sql = "SELECT password, account_status FROM account WHERE username = ?";
 		try (Connection conn = new DBContext().getConnection();
 		     PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-			stmt.setString(1, username);
+			stmt.setString(1, username.trim());
 			try (ResultSet rs = stmt.executeQuery()) {
 				if (rs.next()) {
 					String hashed = rs.getString("password");
@@ -201,7 +264,7 @@ public class AuthDAO {
 							LOGGER.info("Login successful for user: {}", username);
 							return true;
 						} else {
-							LOGGER.warn("Account is not active: {}", username);
+							LOGGER.warn("Account is not active: {} (status: {})", username, status);
 						}
 					} else {
 						LOGGER.warn("Invalid password for user: {}", username);
@@ -211,6 +274,9 @@ public class AuthDAO {
 				}
 				return false;
 			}
+		} catch (SQLException e) {
+			LOGGER.error("Database error during login: {}", e.getMessage(), e);
+			throw e;
 		}
 	}
 
@@ -246,10 +312,14 @@ public class AuthDAO {
 	}
 
 	public Account getAccountByUsername(String username) throws SQLException {
+		if (username == null || username.trim().isEmpty()) {
+			return null;
+		}
+
 		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role FROM account WHERE username = ?";
 		try (Connection conn = new DBContext().getConnection();
 		     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, username);
+			pstmt.setString(1, username.trim());
 			try (ResultSet rs = pstmt.executeQuery()) {
 				if (rs.next()) {
 					Account account = new Account();
@@ -270,7 +340,74 @@ public class AuthDAO {
 					return account;
 				}
 			}
+		} catch (SQLException e) {
+			LOGGER.error("Database error while fetching account by username: {}", e.getMessage(), e);
+			throw e;
 		}
 		return null;
+	}
+
+	/**
+	 * Resend verification email for inactive accounts
+	 */
+	public boolean resendVerificationEmail(String email) throws Exception {
+		if (email == null || email.trim().isEmpty()) {
+			throw new IllegalArgumentException("Email cannot be null or empty");
+		}
+
+		try (Connection conn = new DBContext().getConnection()) {
+			// Get account by email
+			String accountSql = "SELECT account_id, username, fullname, email, account_status FROM account WHERE email = ?";
+			Account account = null;
+
+			try (PreparedStatement stmt = conn.prepareStatement(accountSql)) {
+				stmt.setString(1, email.trim());
+				try (ResultSet rs = stmt.executeQuery()) {
+					if (rs.next()) {
+						account = new Account();
+						account.setId(rs.getInt("account_id"));
+						account.setUsername(rs.getString("username"));
+						account.setFullname(rs.getString("fullname"));
+						account.setEmail(rs.getString("email"));
+						account.setAccountStatus(rs.getString("account_status"));
+					}
+				}
+			}
+
+			if (account == null) {
+				LOGGER.warn("No account found with email: {}", email);
+				return false;
+			}
+
+			if ("active".equalsIgnoreCase(account.getAccountStatus())) {
+				LOGGER.info("Account is already active for email: {}", email);
+				return false; // Account is already verified
+			}
+
+			// Deactivate old tokens
+			String deactivateTokensSql = "UPDATE token SET token_status = 1 WHERE account_id = ? AND token_status = 0";
+			try (PreparedStatement stmt = conn.prepareStatement(deactivateTokensSql)) {
+				stmt.setInt(1, account.getId());
+				stmt.executeUpdate();
+			}
+
+			// Generate new token
+			String tokenContent = generateToken();
+			Instant now = Instant.now();
+			Instant expiresAt = now.plusSeconds(24 * 60 * 60); // 24 hours
+
+			Token newToken = new Token();
+			newToken.setAccount(account);
+			newToken.setTokenContent(tokenContent);
+			newToken.setExpiresAt(expiresAt);
+			newToken.setCreatedAt(now);
+			newToken.setTokenStatus(false);
+
+			saveToken(newToken, conn);
+			sendVerificationEmail(account, tokenContent);
+
+			LOGGER.info("Verification email resent successfully to: {}", email);
+			return true;
+		}
 	}
 }
