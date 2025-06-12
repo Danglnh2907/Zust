@@ -60,7 +60,7 @@ public class GroupDAO extends DBContext {
         }
     }
 
-    public ResGroupDTO getGroup(int groupId) {
+    public ResGroupDTO getActiveGroup(int groupId) {
         String sql = "SELECT [group].*, number_of_participant, number_of_post FROM [group]\n" +
                 "LEFT JOIN \n" +
                 "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +

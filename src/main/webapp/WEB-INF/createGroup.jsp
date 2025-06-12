@@ -141,6 +141,11 @@
         }
         request.setAttribute("listAccount", mockList);
     }
+    int requestId;
+    boolean isRequest = request.getAttribute("requestAccepted") != null;
+    if(isRequest){
+
+    }
 %>
 
 <div class="form-container">

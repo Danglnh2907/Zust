@@ -21,7 +21,7 @@ import util.service.FileService;
         name = "GroupControllerServlet",
         value = "/group"
 )
-@MultipartConfig(maxFileSize = 1024 * 1024 * 10)
+@MultipartConfig(maxFileSize = 1024 * 1024 * 5)
 public class GroupControllerServlet extends HttpServlet {
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -35,7 +35,9 @@ public class GroupControllerServlet extends HttpServlet {
             case "view":
                 try{
                     int id = Integer.parseInt(request.getParameter("id"));
-                    ResGroupDTO group = dao.getGroup(id);
+                    ResGroupDTO group = dao.getActiveGroup(id);
+                    request.setAttribute("group", group);
+                    request.getRequestDispatcher("/WEB-INF/viewGroup.jsp").forward(request, response);
                 } catch (Exception e) {
                     response.sendRedirect("/error");
                 }
@@ -69,7 +71,6 @@ public class GroupControllerServlet extends HttpServlet {
                     }
                     try (InputStream fileContent = filePart.getInputStream()) {
                         String savedPath = fileService.saveFile(fileName, fileContent);
-
                         String groupName = request.getParameter("groupName");
                         String groupDescription = request.getParameter("groupDescription");
                         ReqGroupDTO group = new ReqGroupDTO(groupName, groupDescription, savedPath);

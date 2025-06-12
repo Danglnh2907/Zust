@@ -78,7 +78,13 @@
     <div class="dashboard-header">
         <h1>Group Creation Requests</h1>
     </div>
-
+    <%
+        if(request.getAttribute("msg") != null){
+    %>
+    <p>Message: <%= request.getAttribute("msg")%></p>
+    <%
+        }
+    %>
     <table class="requests-table">
         <thead>
         <tr>

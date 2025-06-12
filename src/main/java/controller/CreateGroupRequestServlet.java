@@ -27,9 +27,30 @@ public class CreateGroupRequestServlet extends HttpServlet {
         String action = request.getParameter("action");
         int id = Integer.parseInt(request.getParameter("id"));
         if(action.equals("reject")) {
-            dao.rejectCreateGroupRequest(id);
-        }else if(action.equals("accept")) {
+            try {
+                if (dao.rejectCreateGroupRequest(id)){
+                    request.setAttribute("msg", "Request rejected");
+                } else {
+                    request.setAttribute("msg", "Request rejected fail");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect("/error");
+            }
 
+        }else if(action.equals("approve")) {
+            try {
+                int senderId = dao.getSenderId(id);
+                    if(dao.approveCreateGroupRequest(id, senderId)) {
+                        request.setAttribute("msg", "Request approved");
+                    } else {
+                        request.setAttribute("msg", "Request approved fail");
+                    }
+
+            }catch (Exception e){
+                e.printStackTrace();
+                response.sendRedirect("/error");
+            }
         }
         doGet(request, response);
     }
