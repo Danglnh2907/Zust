@@ -1,3 +1,5 @@
 /.idea
 /.mvn
 src/main/resources/save.env
+/target/zust-1.0-SNAPSHOT/WEB-INF/classes/oauth.properties
+
