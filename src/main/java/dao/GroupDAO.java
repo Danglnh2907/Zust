@@ -1,13 +1,11 @@
 package dao;
 
 import util.database.DBContext;
-import java.sql.Connection;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
 
 import dto.ReqGroupDTO;
 import dto.ResGroupDTO;
@@ -19,18 +17,14 @@ public class GroupDAO extends DBContext {
     public boolean createGroup(ReqGroupDTO group) {
         Connection conn;
         try {
-            //Get connection
             conn = getConnection();
             if (conn == null) {
                 return false;
             }
-            //Start transaction
             conn.setAutoCommit(false);
-
-            //Insert into post table
-            String postSql = "INSERT INTO [group](group_name, group_description, group_cover_image) VALUES\n" +
+            String groupSql = "INSERT INTO [group](group_name, group_description, group_cover_image) VALUES\n" +
                              "(?, ?, ?)";
-            PreparedStatement groupSt = conn.prepareStatement(postSql, PreparedStatement.RETURN_GENERATED_KEYS);
+            PreparedStatement groupSt = conn.prepareStatement(groupSql, PreparedStatement.RETURN_GENERATED_KEYS);
             groupSt.setString(1, group.getGroupName());
             groupSt.setString(2, group.getGroupDescription());
             groupSt.setString(3, group.getCoverImage());
@@ -39,6 +33,25 @@ public class GroupDAO extends DBContext {
                 conn.rollback();
                 return false;
             }
+
+            ResultSet rs = groupSt.getGeneratedKeys();
+            int groupId;
+            if (rs.next()) {
+                groupId = rs.getInt(1);
+            } else {
+                conn.rollback();
+                return false;
+            }
+
+            String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
+            PreparedStatement manageSt = conn.prepareStatement(manageSql);
+            List<Integer> managers = group.getManagers();
+            for (Integer manager : managers) {
+                manageSt.setInt(1, groupId);
+                manageSt.setInt(2, manager);
+                manageSt.addBatch();
+            }
+            manageSt.executeBatch();
             conn.commit();
             return true;
         } catch (SQLException e) {
@@ -83,7 +96,7 @@ public class GroupDAO extends DBContext {
         }
     }
 
-    public List<ResGroupDTO> getGroups() {
+    public List<ResGroupDTO> getActiveGroups() {
         String sql = "SELECT [group].*, number_of_participant, number_of_post FROM [group]\n" +
                 "LEFT JOIN \n" +
                 "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +
@@ -120,7 +133,10 @@ public class GroupDAO extends DBContext {
 
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-        System.out.println(dao.getGroups().get(1));
+        ReqGroupDTO dto = new ReqGroupDTO("Helo", "Test", "image");
+        dto.addManager(1);
+
+        System.out.println(dao.createGroup(dto));
     }
 
 }

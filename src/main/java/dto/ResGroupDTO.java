@@ -1,6 +1,10 @@
 package dto;
 
+import model.Account;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ResGroupDTO {
     private int id;
@@ -8,6 +12,7 @@ public class ResGroupDTO {
     private String description;
     private String image;
     private LocalDateTime createDate;
+    private List<Account> managers;
     private String status;
     private int numberParticipants;
     private int numberPosts;
@@ -23,6 +28,7 @@ public class ResGroupDTO {
         this.status = status;
         this.numberParticipants = numberParticipants;
         this.numberPosts = numberPosts;
+        this.managers = new ArrayList<Account>();
     }
 
     public int getId() {
@@ -72,5 +78,15 @@ public class ResGroupDTO {
     }
     public void setNumberPosts(int numberPosts) {
         this.numberPosts = numberPosts;
+    }
+
+    public List<Account> getManagers() {
+        return managers;
+    }
+    public void setManagers(List<Account> managers) {
+        this.managers = managers;
+    }
+    public void addManager(Account manager) {
+        this.managers.add(manager);
     }
 }

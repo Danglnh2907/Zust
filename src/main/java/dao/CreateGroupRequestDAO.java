@@ -1,13 +1,11 @@
 package dao;
 
 import dto.ResCreateGroupRequestDTO;
-import model.CreateGroupRequest;
 import util.database.DBContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +37,7 @@ public class CreateGroupRequestDAO extends DBContext {
         }
     }
 
-    public List<ResCreateGroupRequestDTO> getCreateGroupRequests() {
+    public List<ResCreateGroupRequestDTO> getSendedCreateGroupRequests() {
         String sql = "SELECT * FROM create_group_request\n" +
                 "JOIN account ON account.account_id = create_group_request.account_id\n" +
                 "WHERE create_group_request_status = 'sended'\n" +
