@@ -142,7 +142,7 @@ public class RespPostDTO {
         } else {
             lastTimeUpdate = timeDiff.toDays() + " days";
         }
-        String header = String.format(templates[1], getUsername(), lastTimeUpdate);
+        String header = String.format(templates[1], getUsername(), lastTimeUpdate, getPostId(), getPostId(), getPostId());
 
         //Get post content
         String content = String.format(templates[2], getPostContent());
@@ -161,6 +161,6 @@ public class RespPostDTO {
         //Get likes, comment and repost count
         String action = String.format(templates[4], getLikeCount(), getCommentCount(), getRepostCount());
 
-        return String.format(templates[0], header, content, carousel, action);
+        return String.format(templates[0], getPostId(), header, content, carousel, action);
     }
 }

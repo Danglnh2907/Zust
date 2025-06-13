@@ -3,56 +3,264 @@
 
 /* --- General Styling & Variables --- */
 :root {
+    /* Colors from original design */
     --primary-color: #1da1f2;
     --like-color: #e0245e;
     --repost-color: #17bf63;
+
+    /* NEW: Colors from the new design image */
+    --accent-color: #f56a00;
+    /* The orange color */
     --light-gray: #e1e8ed;
+    --medium-gray: #f0f2f5;
+    /* Background for active nav item */
     --dark-gray: #657786;
-    --background-color: #f5f8fa;
+    --background-color: #ffffff;
+    /* Main background is now white */
+    --page-background: #f0f2f5;
+    /* Lighter gray for the body background */
     --white: #ffffff;
     --border-radius: 16px;
+    --sidebar-width: 280px;
 }
 
-/* Body styling */
+/* --- Basic Body & Font Setup --- */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--background-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background-color: var(--page-background);
     margin: 0;
-    padding: 20px;
+    color: #14171a;
 }
 
-/* Posts container */
-.posts {
-    width: 100%;
-    max-width: 600px; /* Increased from 600px */
+/* --- Main App Layout (Grid) --- */
+.app-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    min-height: 100vh;
+}
+
+/* --- Left Sidebar --- */
+.left-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background-color: var(--background-color);
+    border-right: 1px solid var(--light-gray);
+    padding: 24px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 24px; /* Space between posts */
-    margin: 0 auto;
-    padding: 16px;
 }
 
-/* --- Post Container --- */
+.logo {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 30px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.sidebar-nav li a.active,
+.sidebar-nav li a:hover {
+    background-color: var(--medium-gray);
+    font-weight: bold;
+}
+
+.sidebar-nav li a.active {
+    color: #14171a;
+}
+
+.sidebar-divider {
+    border-bottom: 1px solid var(--light-gray);
+    margin: 20px 0;
+}
+
+.groups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.groups-header h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.groups-count {
+    background-color: var(--accent-color);
+    color: var(--white);
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.group-list .group-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 0.9rem;
+}
+
+.group-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+.group-item-info span {
+    display: block;
+}
+
+.group-item-info .members {
+    font-size: 0.8rem;
+    color: var(--dark-gray);
+}
+
+.see-all-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    background: none;
+    border-radius: 9999px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: auto;
+    /* Pushes button to the bottom */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.see-all-btn:hover {
+    background-color: var(--accent-color);
+    color: var(--white);
+}
+
+/* --- Main Content Area --- */
+.main-content {
+    grid-column: 2 / 3;
+    /* Place it in the second grid column */
+    background-color: var(--background-color);
+}
+
+/* --- Top Navbar --- */
+.top-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background-color: var(--background-color);
+    border-bottom: 1px solid var(--light-gray);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.create-post-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    /*Remove all default style of a tag*/
+    text-decoration: none;
+}
+
+.create-post-btn:hover {
+    color: white;
+}
+
+.search-bar {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    /* Left padding for icon */
+    border-radius: 20px;
+    border: none;
+    background-color: var(--medium-gray);
+}
+
+.search-bar .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    stroke: var(--dark-gray);
+}
+
+.nav-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 24px;
+}
+
+.nav-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+
+/* --- Feed Container --- */
+.feed {
+    padding: 24px;
+    max-width: 680px;
+    /* A bit wider for the main content area */
+    margin: 0 auto;
+    /* Center the feed column */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Post Component Styles --- */
 .post {
     background-color: var(--white);
     border: 1px solid var(--light-gray);
     border-radius: var(--border-radius);
     width: 100%;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-bottom: 24px; /* Additional space between posts */
 }
 
-/* --- Post Header --- */
 .post-header {
     display: flex;
     align-items: center;
     padding: 12px 16px;
     position: relative;
-    /* For the options menu */
 }
 
 .post-avatar {
@@ -83,7 +291,6 @@ body {
     margin-left: 8px;
 }
 
-/* --- Options Menu (3 dots) --- */
 .post-options {
     margin-left: auto;
 }
@@ -99,10 +306,10 @@ body {
     color: var(--dark-gray);
 }
 
-/*.options-btn:hover {*/
-/*    background-color: rgba(29, 161, 242, 0.1);*/
-/*    color: var(--primary-color);*/
-/*}*/
+.options-btn:hover {
+    background-color: rgba(29, 161, 242, 0.1);
+    color: var(--primary-color);
+}
 
 .options-menu {
     position: absolute;
@@ -114,7 +321,6 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     z-index: 10;
     display: none;
-    /* Hidden by default */
     overflow: hidden;
 }
 
@@ -131,19 +337,17 @@ body {
 }
 
 .options-menu a:hover {
-    background-color: var(--background-color);
+    background-color: var(--medium-gray);
 }
 
 .options-menu a.delete {
     color: var(--like-color);
 }
 
-
-/* --- Post Content --- */
 .post-content {
-    padding: 20px; /* Increased padding */
-    font-size: 1.1rem; /* Slightly larger text */
-    line-height: 1.6;
+    padding: 0 16px 16px 16px;
+    font-size: 1rem;
+    line-height: 1.5;
     color: #14171a;
 }
 
@@ -155,30 +359,9 @@ body {
     margin-bottom: 0;
 }
 
-.post-content .highlight {
-    color: var(--primary-color);
-}
-
-.post-content ul,
-.post-content ol {
-    padding-left: 20px;
-    margin-bottom: 1em;
-}
-
-.post-content a {
-    color: var(--primary-color);
-    text-decoration: none;
-}
-
-.post-content a:hover {
-    text-decoration: underline;
-}
-
-/* --- Image Carousel --- */
 .post-media {
     position: relative;
     overflow: hidden;
-    border-top: 1px solid var(--light-gray);
 }
 
 .carousel-track {
@@ -191,7 +374,7 @@ body {
     width: 100%;
     display: block;
     object-fit: cover;
-    max-height: 800px; /* Increased from 600px */
+    max-height: 600px;
 }
 
 .carousel-btn {
@@ -224,12 +407,11 @@ body {
     right: 10px;
 }
 
-/* --- Post Actions (Like, Comment, Repost) --- */
 .post-actions {
     display: flex;
     justify-content: space-around;
-    padding: 8px 16px;
-    border-top: 1px solid var(--light-gray);
+    padding: 12px 16px;
+    margin-top: 12px;
 }
 
 .action-btn-group {
@@ -247,7 +429,6 @@ body {
     align-items: center;
     padding: 8px;
     border-radius: 9999px;
-    /* Pill shape */
     transition: background-color 0.2s, color 0.2s;
 }
 
@@ -258,17 +439,24 @@ body {
 }
 
 .action-btn-group .count {
-    margin-left: 4px;
+    margin-left: 8px;
 }
 
-/* Like Button Specifics */
-.like-btn-group:hover .action-btn {
-    background-color: rgba(224, 36, 94, 0.1);
-    color: var(--like-color);
-}
-
+.like-btn-group:hover .action-btn,
 .like-btn.liked {
     color: var(--like-color);
+}
+
+.comment-btn-group:hover .action-btn {
+    color: var(--primary-color);
+}
+
+.repost-btn-group:hover .action-btn {
+    color: var(--repost-color);
+}
+
+.icon-heart-filled {
+    display: none;
 }
 
 .like-btn.liked .icon-heart-filled {
@@ -279,82 +467,95 @@ body {
     display: none;
 }
 
-.icon-heart-filled {
-    display: none;
-}
-
-/* Comment Button Specifics */
-.comment-btn-group:hover .action-btn {
-    background-color: rgba(29, 161, 242, 0.1);
-    color: var(--primary-color);
-}
-
-/* Repost Button Specifics */
-.repost-btn-group:hover .action-btn {
-    background-color: rgba(23, 191, 99, 0.1);
-    color: var(--repost-color);
-}
-
-/*==== Post editor styling ===*/
-/*============================*/
-
-/* --- UPLOAD PAGE STYLES --- */
-.upload-container {
-    background-color: var(--white);
-    border: 1px solid var(--light-gray);
-    border-radius: var(--border-radius);
-    max-width: 600px;
-    width: 100%;
+/* Edit Modal Styles */
+#edit_post .modal-body {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px); /* Account for header and footer */
     padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.upload-container h1 {
-    font-size: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #14171a;
-}
-
-/* Quill Editor Container */
-#editor-container {
+#edit-editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
     border: 1px solid var(--light-gray);
     border-radius: 8px;
     overflow: hidden;
-    /* To contain the toolbar and editor border-radius */
 }
 
-/* Quill Editor Itself */
-.ql-container.ql-snow {
+#edit-editor {
+    flex: 1;
+}
+
+#edit_post .ql-container.ql-snow {
+    flex: 1;
     border: none;
-    /* Remove default border, handled by our container */
-    min-height: 150px;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
-/* Quill Toolbar */
-.ql-toolbar.ql-snow {
+#edit_post .ql-toolbar.ql-snow {
     border: none;
     border-bottom: 1px solid var(--light-gray);
+    padding: 12px;
 }
 
-.post-button {
-    background-color: var(--primary-color);
-    color: var(--white);
+/* Make toolbar sticky */
+#edit_post .ql-toolbar {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+/* Lightbox Styles */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox-overlay.active {
+    display: flex;
+}
+
+.lightbox-image {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    color: #fff;
+    font-size: 30px;
+    background: none;
     border: none;
-    border-radius: 9999px;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: bold;
     cursor: pointer;
-    display: block;
-    width: 120px;
-    margin: 20px 0 0 auto;
-    /* Align to the right */
-    transition: background-color 0.2s;
+    z-index: 10000;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s;
 }
 
-.post-button:hover {
-    background-color: #1a91da;
+.lightbox-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
+body.lightbox-open {
+    overflow: hidden;
+}

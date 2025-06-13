@@ -13,15 +13,22 @@
     <head>
         <title>Post upload</title>
         <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post_upload.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+              crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+                integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+                crossorigin="anonymous"></script>
     </head>
     <body>
         <div class="upload-container">
             <h1>Create a New Post</h1>
-            <select id="post_privacy">
-                <option>Public</option>
-                <option>Private</option>
-                <option>Friend</option>
+            <select class="form-select" aria-label="Default select example" id="post_privacy">
+                <option selected>Choose post privacy</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="friend">Friend</option>
             </select>
             <!-- This div will be replaced by the Quill editor -->
             <div id="editor-container">
@@ -29,7 +36,8 @@
             </div>
             <button type="submit" class="post-button">Post</button>
         </div>
+
         <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-        <script src="${pageContext.request.contextPath}/js/post.js"></script>
+        <script src="${pageContext.request.contextPath}/js/post_upload.js"></script>
     </body>
 </html>

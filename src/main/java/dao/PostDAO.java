@@ -37,7 +37,10 @@ public class PostDAO extends DBContext {
             conn.setAutoCommit(false); //Start transaction
 
             //Insert into post table
-            String postSql = "INSERT INTO post (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String postSql = """
+                INSERT INTO post\
+                 (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id)\
+                 VALUES (?, ?, ?, ?, ?, ?, ?)""";
             PreparedStatement postStmt = conn.prepareStatement(postSql, PreparedStatement.RETURN_GENERATED_KEYS);
             postStmt.setString(1, dto.getPostContent());
             postStmt.setInt(2, dto.getAccountID());
@@ -79,14 +82,16 @@ public class PostDAO extends DBContext {
             }
             imageStmt.executeBatch();
 
-            // Insert into hashtag and tag_hashtag tables
-            String hashtagSql = "MERGE INTO hashtag AS target " +
-                    "USING (SELECT ? AS hashtag_name) AS source " +
-                    "ON target.hashtag_name = source.hashtag_name " +
-                    "WHEN NOT MATCHED THEN " +
-                    "INSERT (hashtag_name) VALUES (source.hashtag_name);";
-            String tagHashtagSql = "INSERT INTO tag_hashtag (hashtag_index, post_id, hashtag_id) " +
-                    "SELECT ?, ?, hashtag_id FROM hashtag WHERE hashtag_name = ?";
+            //Insert into hashtag and tag_hashtag tables
+            String hashtagSql = """
+                    MERGE INTO hashtag AS target \
+                    USING (SELECT ? AS hashtag_name) AS source \
+                    ON target.hashtag_name = source.hashtag_name \
+                    WHEN NOT MATCHED THEN \
+                    INSERT (hashtag_name) VALUES (source.hashtag_name);""";
+            String tagHashtagSql = """
+                    INSERT INTO tag_hashtag (hashtag_index, post_id, hashtag_id) \
+                    SELECT ?, ?, hashtag_id FROM hashtag WHERE hashtag_name = ?""";
             PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql);
             PreparedStatement tagHashtagStmt = conn.prepareStatement(tagHashtagSql);
             ArrayList<String> hashtags = dto.getHashtags();
@@ -98,7 +103,7 @@ public class PostDAO extends DBContext {
                     hashtagStmt.executeUpdate();
 
                     //Link hashtag to post
-                    tagHashtagStmt.setInt(1, i); // hashtag_index
+                    tagHashtagStmt.setInt(1, i); //hashtag_index
                     tagHashtagStmt.setInt(2, postId);
                     tagHashtagStmt.setString(3, hashtag.trim());
                     tagHashtagStmt.addBatch();
@@ -115,12 +120,13 @@ public class PostDAO extends DBContext {
     }
 
     public ArrayList<RespPostDTO> getPosts(int userID) {
-        String sql = "SELECT p.post_id, p.post_content, a.username, p.post_last_update, " +
-                "(SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, " +
-                "(SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, " +
-                "(SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count " +
-                "FROM post p JOIN account a ON p.account_id = a.account_id " +
-                "WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC";
+        String sql = """
+                SELECT p.post_id, p.post_content, a.username, p.post_last_update, \
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                FROM post p JOIN account a ON p.account_id = a.account_id \
+                WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
         ArrayList<RespPostDTO> posts = new ArrayList<>();
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userID);
@@ -137,7 +143,7 @@ public class PostDAO extends DBContext {
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
 
-                // Fetch images
+                //Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
                 try (PreparedStatement imageStmt = conn.prepareStatement(imageSql)) {
                     imageStmt.setInt(1, post.getPostId());
@@ -147,10 +153,11 @@ public class PostDAO extends DBContext {
                     }
                 }
 
-                // Fetch hashtags
-                String hashtagSql = "SELECT h.hashtag_name " +
-                        "FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id " +
-                        "WHERE th.post_id = ? ORDER BY th.hashtag_index";
+                //Fetch hashtags
+                String hashtagSql = """
+                        SELECT h.hashtag_name \
+                        FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id \
+                        WHERE th.post_id = ? ORDER BY th.hashtag_index""";
                 try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql)) {
                     hashtagStmt.setInt(1, post.getPostId());
                     ResultSet hashtagRs = hashtagStmt.executeQuery();
@@ -170,12 +177,13 @@ public class PostDAO extends DBContext {
     }
 
     public RespPostDTO getPost(int postId) {
-        String sql = "SELECT p.post_id, p.post_content, a.username, p.post_last_update, " +
-                "(SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, " +
-                "(SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, " +
-                "(SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count " +
-                "FROM post p JOIN account a ON p.account_id = a.account_id " +
-                "WHERE p.post_status = 'published' AND p.post_id = ? ORDER BY p.post_create_date DESC";
+        String sql = """
+                SELECT p.post_id, p.post_content, a.username, p.post_last_update, \
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                FROM post p JOIN account a ON p.account_id = a.account_id \
+                WHERE p.post_status = 'published' AND p.post_id = ? ORDER BY p.post_create_date DESC""";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, postId);
             ResultSet rs = stmt.executeQuery();
@@ -202,9 +210,10 @@ public class PostDAO extends DBContext {
                 }
 
                 // Fetch hashtags
-                String hashtagSql = "SELECT h.hashtag_name " +
-                        "FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id " +
-                        "WHERE th.post_id = ? ORDER BY th.hashtag_index";
+                String hashtagSql = """
+                        SELECT h.hashtag_name \
+                        FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id \
+                        WHERE th.post_id = ? ORDER BY th.hashtag_index""";
                 try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql)) {
                     hashtagStmt.setInt(1, post.getPostId());
                     ResultSet hashtagRs = hashtagStmt.executeQuery();
@@ -230,10 +239,9 @@ public class PostDAO extends DBContext {
             conn.setAutoCommit(false); // Start transaction
 
             // Update post table
-//            String postSql = "UPDATE post SET post_content = ?, post_privacy = ?, post_last_update = ?, post_status = ? " +
-//                    "WHERE post_id = ? AND account_id = ? AND post_status = 'published'";
-            String postSql = "UPDATE post SET post_content = ?, post_privacy = ?, post_last_update = ?, post_status = ? " +
-                    "WHERE post_id = ? AND account_id = ?";
+            String postSql = """
+                    UPDATE post SET post_content = ?, post_privacy = ?, post_last_update = ?, post_status = ? \
+                    WHERE post_id = ? AND account_id = ? AND post_status = 'published'""";
             try (PreparedStatement stmt = conn.prepareStatement(postSql)) {
                 stmt.setString(1, postDTO.getPostContent());
                 stmt.setString(2, postDTO.getPrivacy() != null ? postDTO.getPrivacy() : "public");
@@ -279,21 +287,26 @@ public class PostDAO extends DBContext {
             }
 
             // Insert new hashtags
-            String hashtagSql = "MERGE INTO hashtag AS target " +
-                    "USING (SELECT ? AS hashtag_name) AS source " +
-                    "ON target.hashtag_name = source.hashtag_name " +
-                    "WHEN NOT MATCHED THEN " +
-                    "INSERT (hashtag_name) VALUES (source.hashtag_name)";
-            String tagHashtagSql = "INSERT INTO tag_hashtag (hashtag_index, post_id, hashtag_id) " +
-                    "SELECT ?, ?, hashtag_id FROM hashtag WHERE hashtag_name = ?";
+            String hashtagSql = """
+                    MERGE hashtag AS target \
+                    USING (VALUES (?)) AS source (hashtag_name) \
+                    ON target.hashtag_name = source.hashtag_name \
+                    WHEN NOT MATCHED THEN \
+                    INSERT (hashtag_name) VALUES (source.hashtag_name);""";
+            String tagHashtagSql = """
+                    INSERT INTO tag_hashtag (hashtag_index, post_id, hashtag_id) \
+                    SELECT ?, ?, hashtag_id FROM hashtag WHERE hashtag_name = ?""";
             try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql);
                  PreparedStatement tagHashtagStmt = conn.prepareStatement(tagHashtagSql)) {
                 ArrayList<String> hashtags = postDTO.getHashtags();
                 for (int i = 0; i < hashtags.size(); i++) {
                     String hashtag = hashtags.get(i);
                     if (hashtag != null && !hashtag.trim().isEmpty()) {
+                        // Insert or merge hashtag
                         hashtagStmt.setString(1, hashtag.trim());
                         hashtagStmt.executeUpdate();
+
+                        // Link hashtag to post
                         tagHashtagStmt.setInt(1, i);
                         tagHashtagStmt.setInt(2, postId);
                         tagHashtagStmt.setString(3, hashtag.trim());
@@ -308,6 +321,7 @@ public class PostDAO extends DBContext {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             try {
+                logger.info("Failed to read hashtags from part");
                 conn.rollback();
             } catch (SQLException ex) {
                 logger.warning(ex.getMessage());
@@ -324,8 +338,9 @@ public class PostDAO extends DBContext {
             conn.setAutoCommit(false); // Start transaction
 
             // Soft delete post
-            String postSql = "UPDATE post SET post_status = 'deleted', post_last_update = ? " +
-                    "WHERE post_id = ? AND account_id = ? AND post_status = 'published'";
+            String postSql = """
+                    UPDATE post SET post_status = 'deleted', post_last_update = ? \
+                    WHERE post_id = ? AND account_id = ? AND post_status = 'published'""";
             try (PreparedStatement stmt = conn.prepareStatement(postSql)) {
                 stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
                 stmt.setInt(2, postId);
