@@ -60,7 +60,7 @@ public class GroupControllerServlet extends HttpServlet {
                 break;
             default:
                 List<ResGroupDTO> groups = dao.getActiveGroups();
-                request.setAttribute("groups", groups);
+                request.setAttribute("groupList", groups);
                 request.getRequestDispatcher("/WEB-INF/viewGroups.jsp").forward(request, response);
                 break;
         }

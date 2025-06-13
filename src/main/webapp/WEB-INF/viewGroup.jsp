@@ -280,6 +280,7 @@
 <div class="modal-overlay" id="assignAdminModal">
     <div class="modal-content">
         <form action="manage" method="POST">
+            <input type="hidden" value="add" name="action">
             <div class="modal-header">
                 <h3 class="modal-title">Assign New Administrators</h3>
                 <button type="button" class="modal-close-btn" id="closeAssignModalBtn">×</button>

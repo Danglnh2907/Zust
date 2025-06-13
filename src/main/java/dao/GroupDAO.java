@@ -97,6 +97,7 @@ public class GroupDAO extends DBContext {
                 group.setNumberPosts(rs.getInt("number_of_post"));
                 do{
                     Account account = new Account();
+                    account.setId(rs.getInt("account_id"));
                     account.setUsername(rs.getString("username"));
                     account.setAvatar(rs.getString("avatar"));
                     account.setFullname(rs.getString("fullname"));
@@ -149,6 +150,7 @@ public class GroupDAO extends DBContext {
                     mapGroups.put(groupId, group);
                 }
                 Account account = new Account();
+                account.setId(rs.getInt("account_id"));
                 account.setUsername(rs.getString("username"));
                 account.setAvatar(rs.getString("avatar"));
                 account.setFullname(rs.getString("fullname"));
@@ -226,6 +228,51 @@ public class GroupDAO extends DBContext {
         }
     }
 
+    public List<Account> getActiveAccountsManagers(int groupId) {
+        List<Account> accounts = new ArrayList<Account>();
+        String sql = "SELECT * FROM account\n" +
+                "JOIN manage ON account.account_id = manage.account_id\n" +
+                "WHERE account.account_role = 'user' AND account.account_status = 'active' AND manage.group_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, groupId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Account account = new Account();
+                account.setId(rs.getInt("account_id"));
+                account.setUsername(rs.getString("username"));
+                account.setFullname(rs.getString("fullname"));
+                account.setAvatar(rs.getString("avatar"));
+                account.setPhone(rs.getString("phone"));
+                account.setEmail(rs.getString("email"));
+                account.setDob(rs.getTimestamp("dob") != null
+                        ? rs.getTimestamp("dob").toLocalDateTime().toLocalDate() : null);
+                accounts.add(account);
+            }
+            return accounts;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return null;
+        }
+
+    }
+
+    public boolean deleteManager(int groupId, int managerId) {
+
+        String manageSql = "DELETE FROM manage\n" +
+                "WHERE group_id = ? AND account_id = ?";
+        try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
+                manageSt.setInt(1, groupId);
+                manageSt.setInt(2, managerId);
+
+                if(manageSt.executeUpdate() > 0){
+                    return true;
+                }
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return false;
+    }
+
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
 //        ReqGroupDTO dto = new ReqGroupDTO("Test", "Test", "image");
@@ -235,7 +282,9 @@ public class GroupDAO extends DBContext {
 //        System.out.println(dao.getActiveGroup(31).getManagers());
 //        List<ResGroupDTO> groups = dao.getActiveGroups();
 //        System.out.println(groups);
-        System.out.println(dao.assignManager(31, new int[] {1}));
+//        System.out.println(dao.assignManager(31, new int[] {1}));
+//        System.out.println(dao.deleteManager(31, 3));
     }
+
 
 }
