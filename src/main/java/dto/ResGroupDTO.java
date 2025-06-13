@@ -17,7 +17,9 @@ public class ResGroupDTO {
     private int numberParticipants;
     private int numberPosts;
 
-    public ResGroupDTO() {}
+    public ResGroupDTO() {
+        this.managers = new ArrayList<>();
+    }
 
     public ResGroupDTO(int id, String name, String description, String image, LocalDateTime createDate, String status, int numberParticipants, int numberPosts) {
         this.id = id;

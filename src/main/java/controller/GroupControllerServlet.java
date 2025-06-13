@@ -1,5 +1,6 @@
 package controller;
 
+import dao.AccountDAO;
 import dto.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +16,8 @@ import jakarta.servlet.http.Part;
 import dao.GroupDAO;
 import dto.ReqGroupDTO;
 import java.io.InputStream;
+
+import model.Account;
 import util.service.FileService;
 
 @WebServlet(
@@ -37,13 +40,23 @@ public class GroupControllerServlet extends HttpServlet {
                     int id = Integer.parseInt(request.getParameter("id"));
                     ResGroupDTO group = dao.getActiveGroup(id);
                     request.setAttribute("group", group);
+                    List<Account> groupMember = dao.getGroupMembers(id);
+                    request.setAttribute("groupMember", groupMember);
                     request.getRequestDispatcher("/WEB-INF/viewGroup.jsp").forward(request, response);
                 } catch (Exception e) {
                     response.sendRedirect("/error");
                 }
                 break;
             case "create":
-                request.getRequestDispatcher("/WEB-INF/createGroup.jsp").forward(request, response);
+                try {
+                    AccountDAO accountDAO = new AccountDAO();
+                    request.setAttribute("listAccount", accountDAO.getActiveAccounts());
+                    request.getRequestDispatcher("/WEB-INF/createGroup.jsp").forward(request, response);
+                } catch (Exception e){
+                    e.printStackTrace();
+                    response.sendRedirect("/error");
+                }
+
                 break;
             default:
                 List<ResGroupDTO> groups = dao.getActiveGroups();
@@ -103,6 +116,7 @@ public class GroupControllerServlet extends HttpServlet {
                     response.sendRedirect("/error");
                 }
                 break;
+
             default:
                 break;
         }
@@ -116,5 +130,4 @@ public class GroupControllerServlet extends HttpServlet {
                 lowerCaseFileName.endsWith(".png") ||
                 lowerCaseFileName.endsWith(".gif");
     }
-
 }

@@ -127,27 +127,6 @@
 </head>
 <body>
 
-<%-- Dữ liệu mẫu --%>
-<%
-    if (request.getAttribute("listAccount") == null) {
-        List<Account> mockList = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            Account acc = new Account();
-            acc.setId(i);
-            acc.setAvatar("avatar" + i);
-            acc.setUsername("usename" + i);
-            acc.setFullname("name" + i);
-            mockList.add(acc);
-        }
-        request.setAttribute("listAccount", mockList);
-    }
-    int requestId;
-    boolean isRequest = request.getAttribute("requestAccepted") != null;
-    if(isRequest){
-
-    }
-%>
-
 <div class="form-container">
     <div class="form-header">
         <h1>Create a New Group</h1>

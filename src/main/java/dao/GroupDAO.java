@@ -127,7 +127,7 @@ public class GroupDAO extends DBContext {
                 "ON post.group_id = [group].group_id\n" +
                 "LEFT JOIN manage ON [group].group_id = manage.group_id\n" +
                 "JOIN account ON manage.account_id = account.account_id\n" +
-                "WHERE [group].group_id = ? AND group_status = 'active' AND account.account_status = 'active'";
+                "WHERE group_status = 'active' AND account.account_status = 'active'";
         Map<Integer, ResGroupDTO> mapGroups = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
@@ -209,12 +209,33 @@ public class GroupDAO extends DBContext {
         }
     }
 
+    public boolean assignManager(int groupId, int managerId[]) {
+
+            String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
+            try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
+            for (int manager : managerId) {
+                manageSt.setInt(1, groupId);
+                manageSt.setInt(2, manager);
+                manageSt.addBatch();
+            }
+            manageSt.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-        ReqGroupDTO dto = new ReqGroupDTO("Helo", "Test", "image");
-        dto.addManager(1);
-
-        System.out.println(dao.createGroup(dto));
+//        ReqGroupDTO dto = new ReqGroupDTO("Test", "Test", "image");
+//        dto.addManager(1);
+//        System.out.println(dao.createGroup(dto));
+//        System.out.println(dao.getGroupMembers(31));
+//        System.out.println(dao.getActiveGroup(31).getManagers());
+//        List<ResGroupDTO> groups = dao.getActiveGroups();
+//        System.out.println(groups);
+        System.out.println(dao.assignManager(31, new int[] {1}));
     }
 
 }
