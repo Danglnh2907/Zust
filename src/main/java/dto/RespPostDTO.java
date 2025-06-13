@@ -1,11 +1,6 @@
 package dto;
 
-import util.service.FileService;
-
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,15 +30,17 @@ public class RespPostDTO {
 
         templates = new String[5];
         try {
-            FileService fileService = new FileService();
-            String root = fileService.getLocationPath() + File.separator + "templates" + File.separator;
-            templates[0] = Files.readString(Paths.get(root + "post.html"));
-            templates[1] = Files.readString(Paths.get(root + "post_header.html"));
-            templates[2] = Files.readString(Paths.get(root + "post_content.html"));
-            templates[3] = Files.readString(Paths.get(root + "post_image_carousel.html"));
-            templates[4] = Files.readString(Paths.get(root + "post_action.html"));
-        } catch (IOException e) {
-            logger.warning("Failed to read templates: " + e.getMessage());
+            // Get the ClassLoader to read from resources
+            ClassLoader classLoader = getClass().getClassLoader();
+
+            // Read templates from resources directory
+            templates[0] = new String(classLoader.getResourceAsStream("templates/post.html").readAllBytes());
+            templates[1] = new String(classLoader.getResourceAsStream("templates/post_header.html").readAllBytes());
+            templates[2] = new String(classLoader.getResourceAsStream("templates/post_content.html").readAllBytes());
+            templates[3] = new String(classLoader.getResourceAsStream("templates/post_image_carousel.html").readAllBytes());
+            templates[4] = new String(classLoader.getResourceAsStream("templates/post_action.html").readAllBytes());
+        } catch (IOException | NullPointerException e) {
+            logger.warning("Failed to read templates from resources: " + e.getMessage());
         }
     }
 
