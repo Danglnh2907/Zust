@@ -16,7 +16,7 @@ import java.io.IOException;
 public class SendCreateGroupRequestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-            request.getRequestDispatcher("WEB-INF/sendCreateGroupRequest.jsp").forward(request, response);
+            request.getRequestDispatcher("WEB-INF/views/sendCreateGroupRequest.jsp").forward(request, response);
     }
 
     @Override

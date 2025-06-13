@@ -28,7 +28,7 @@ public class ManageServlet extends HttpServlet {
             ResGroupDTO group = groupDAO.getActiveGroup(groupId);
             request.setAttribute("group", group);
             request.setAttribute("members", members);
-            request.getRequestDispatcher("WEB-INF/viewGroupManagers.jsp").forward(request, response);
+            request.getRequestDispatcher("WEB-INF/views/viewGroupManagers.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             e.printStackTrace();
             response.sendRedirect("/error");

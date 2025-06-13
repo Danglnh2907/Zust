@@ -100,7 +100,7 @@ public class CreateGroupRequestDAO extends DBContext {
         return 0;
     }
 
-    public boolean approveCreateGroupRequest(int id, int senderId) {
+    public boolean approveCreateGroupRequest(int requestId, int senderId) {
         Connection conn;
         try {
             conn = getConnection();
@@ -114,7 +114,7 @@ public class CreateGroupRequestDAO extends DBContext {
                     "WHERE create_group_request_id = ?";
 
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, id);
+            stmt.setInt(1, requestId);
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
                 return false;
@@ -123,7 +123,7 @@ public class CreateGroupRequestDAO extends DBContext {
             String groupSql = "INSERT INTO [group](group_name) VALUES\n" +
                             "(?)";
             PreparedStatement groupSt = conn.prepareStatement(groupSql, PreparedStatement.RETURN_GENERATED_KEYS);
-            groupSt.setString(1, "Approved Group ID" + id);
+            groupSt.setString(1, "Approved Group ID" + requestId);
             affectedRows = groupSt.executeUpdate();
             if (affectedRows == 0) {
                 conn.rollback();
@@ -138,12 +138,25 @@ public class CreateGroupRequestDAO extends DBContext {
                 return false;
             }
 
+            String participateSql = "INSERT INTO participate(group_id, account_id) VALUES(?, ?)";
+            PreparedStatement participateSt = conn.prepareStatement(participateSql);
+            participateSt.setInt(1, groupId);
+            participateSt.setInt(2, senderId);
+            affectedRows = participateSt.executeUpdate();
+            if (affectedRows == 0) {
+                conn.rollback();
+                return false;
+            }
+
             String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
             PreparedStatement manageSt = conn.prepareStatement(manageSql);
             manageSt.setInt(1, groupId);
             manageSt.setInt(2, senderId);
-            manageSt.executeUpdate();
-
+            affectedRows = manageSt.executeUpdate();
+            if (affectedRows == 0) {
+                conn.rollback();
+                return false;
+            }
             conn.commit();
             return true;
         } catch (SQLException e) {

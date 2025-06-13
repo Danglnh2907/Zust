@@ -18,7 +18,7 @@ public class CreateGroupRequestServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         CreateGroupRequestDAO dao = new CreateGroupRequestDAO();
         request.setAttribute("createGroupRequests", dao.getSendedCreateGroupRequests());
-        request.getRequestDispatcher("WEB-INF/viewCreateGroupRequests.jsp").forward(request, response);
+        request.getRequestDispatcher("WEB-INF/views/viewCreateGroupRequests.jsp").forward(request, response);
     }
 
     @Override

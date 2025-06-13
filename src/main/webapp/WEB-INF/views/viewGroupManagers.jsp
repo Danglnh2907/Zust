@@ -102,6 +102,14 @@
 %>
 
 <div class="container">
+    <%
+        if(group == null){
+    %>
+    <p class="no-data-message">Can find infomation of this group</p>
+    <%
+        } else {
+
+    %>
     <div class="manager-dashboard">
         <div class="dashboard-header">
             <div class="header-title">
@@ -183,6 +191,10 @@
             </table>
         </div>
     </div>
+    <%
+
+        }
+    %>
 </div>
 
 <div class="modal-overlay" id="assignManagerModal">

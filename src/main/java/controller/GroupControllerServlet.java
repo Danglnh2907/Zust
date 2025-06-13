@@ -42,7 +42,7 @@ public class GroupControllerServlet extends HttpServlet {
                     request.setAttribute("group", group);
                     List<Account> groupMember = dao.getGroupMembers(id);
                     request.setAttribute("groupMember", groupMember);
-                    request.getRequestDispatcher("/WEB-INF/viewGroup.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/viewGroup.jsp").forward(request, response);
                 } catch (Exception e) {
                     response.sendRedirect("/error");
                 }
@@ -51,7 +51,7 @@ public class GroupControllerServlet extends HttpServlet {
                 try {
                     AccountDAO accountDAO = new AccountDAO();
                     request.setAttribute("listAccount", accountDAO.getActiveAccounts());
-                    request.getRequestDispatcher("/WEB-INF/createGroup.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/createGroup.jsp").forward(request, response);
                 } catch (Exception e){
                     e.printStackTrace();
                     response.sendRedirect("/error");
@@ -61,7 +61,7 @@ public class GroupControllerServlet extends HttpServlet {
             default:
                 List<ResGroupDTO> groups = dao.getActiveGroups();
                 request.setAttribute("groupList", groups);
-                request.getRequestDispatcher("/WEB-INF/viewGroups.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/viewGroups.jsp").forward(request, response);
                 break;
         }
     }

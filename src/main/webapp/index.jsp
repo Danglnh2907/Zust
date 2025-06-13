@@ -7,6 +7,9 @@
 <body>
 <h1><%= "Hello World!" %></h1>
 <br/>
-<a href="hello-servlet">Hello Servlet</a>
+<a href="sendCreateGroupRequest">Create Request</a><br/>
+<a href="createGroupRequest">View Request</a><br/>
+<a href="group?action=create">Create Group</a><br/>
+<a href="group">List Group</a><br/>
 </body>
 </html>
