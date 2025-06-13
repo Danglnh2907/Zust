@@ -61,13 +61,13 @@ public class PostController extends HttpServlet {
                 //logger.info("Found " + posts.size() + " posts");
                 request.setAttribute("posts", posts);
             }
-            request.getRequestDispatcher("/WEB-INF/views/post/post.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/post.jsp").forward(request, response);
             return;
         }
 
         //If the action is create, serve the create form (post_upload.jsp)
         if (action != null && action.toLowerCase().trim().equals("create")) {
-            request.getRequestDispatcher("/WEB-INF/views/post/post_upload.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/post_upload.jsp").forward(request, response);
             return;
         }
 
@@ -84,7 +84,7 @@ public class PostController extends HttpServlet {
             } catch (NumberFormatException e) {
                 logger.warning("Invalid postID: " + idRaw);
             }
-            request.getRequestDispatcher("/WEB-INF/views/post/post.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/post.jsp").forward(request, response);
         }
     }
 
