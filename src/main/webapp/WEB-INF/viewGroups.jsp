@@ -176,8 +176,9 @@
                         <div class="action-cell">
                             <a href="group?action=view&id=<%= group.getId() %>" class="action-btn btn-view">View Details</a>
                             <a href="manage?id=<%= group.getId() %>" class="action-btn btn-manage">Assign Manager</a>
-                            <form action="group?action=disband" method="POST" onsubmit="return confirm('Are you sure you want to disband this group? This action cannot be undone.');">
+                            <form action="group" method="POST" onsubmit="return confirm('Are you sure you want to disband this group? This action cannot be undone.');">
                                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                                <input type="hidden" name="action" value="disband">
                                 <button type="submit" class="action-btn btn-disband">Disband</button>
                             </form>
                         </div>

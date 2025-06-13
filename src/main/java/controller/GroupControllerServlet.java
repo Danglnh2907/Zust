@@ -105,7 +105,7 @@ public class GroupControllerServlet extends HttpServlet {
                 break;
             case "disband":
                 try {
-                    int id = Integer.parseInt(request.getParameter("id"));
+                    int id = Integer.parseInt(request.getParameter("groupId"));
                     if(dao.disbandGroup(id)){
                         request.setAttribute("msg", "Disbanded group successfully.");
                     } else {
@@ -114,9 +114,9 @@ public class GroupControllerServlet extends HttpServlet {
                 } catch (Exception e) {
                     e.printStackTrace();
                     response.sendRedirect("/error");
+                    return;
                 }
                 break;
-
             default:
                 break;
         }
