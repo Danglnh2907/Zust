@@ -3,8 +3,7 @@ package dao;
 import model.Account;
 import model.Group;
 import model.JoinGroupRequest;
-import model.Participate;
-import util.database.DBContext;
+import util.DBContext;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -2,6 +2,7 @@
 package controller;
 
 // Import các lớp cần thiết
+import util.FileService;
 import dao.GroupDAO;
 import dto.GroupProfileDTO;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,8 @@ import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.io.InputStream;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -136,31 +139,18 @@ public class GroupProfileServlet extends HttpServlet {
 
         // Xử lý upload avatar
         String avatarPath = null;
-        Part avatarPart = req.getPart("avatar"); // Lấy phần file từ form
+        Part avatarPart = req.getPart("avatar");
         if (avatarPart != null && avatarPart.getSize() > 0) {
-            // Đường dẫn thư mục image (trong thư mục gốc webapp)
-            String uploadDir = req.getServletContext().getRealPath("/Image");
-            if (uploadDir == null) {
-                dto.addError("Upload directory not found");
-            } else {
-                Path uploadPath = Paths.get(uploadDir);
-                try {
-                    // Tạo thư mục nếu chưa có
-                    Files.createDirectories(uploadPath);
-                    // Tạo tên file ngẫu nhiên để tránh trùng
-                    String fileName = UUID.randomUUID().toString() + "_" + avatarPart.getSubmittedFileName();
-                    Path filePath = uploadPath.resolve(fileName);
-                    // Ghi file vào server
-                    avatarPart.write(filePath.toString());
-                    // Lưu đường dẫn tương đối để dùng trong hiển thị
-                    avatarPath = "/Image/" + fileName;
-                } catch (IOException e) {
-                    dto.addError("Failed to upload avatar: " + e.getMessage());
-                    System.err.println("Avatar upload error: " + e.getMessage());
-                }
+            FileService fileService = new FileService(req.getServletContext()); // sử dụng context để lấy thư mục lưu trữ
+            try (InputStream input = avatarPart.getInputStream()) {
+                String originalFileName = avatarPart.getSubmittedFileName();
+                String randomFileName = UUID.randomUUID() + "_" + originalFileName;
+                avatarPath = fileService.saveFile(randomFileName, input);
+            } catch (IOException e) {
+                dto.addError("Failed to upload avatar: " + e.getMessage());
+                System.err.println("Avatar upload error: " + e.getMessage());
             }
         }
-        // Lưu avatarPath vào DTO
         dto.setAvatarPath(avatarPath);
 
         // Gọi DAO để cập nhật profile trong database

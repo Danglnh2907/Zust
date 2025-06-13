@@ -3,13 +3,12 @@ package dao;
 
 // Import các lớp cần thiết
 import dto.GroupProfileDTO;
-import util.database.DBContext;
+import util.DBContext;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 // Lớp DAO dùng để thao tác với bảng "group" trong database
 public class GroupDAO {

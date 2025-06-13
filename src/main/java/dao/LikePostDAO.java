@@ -1,8 +1,6 @@
 package dao;
 
-import model.Account;
-import model.Post;
-import util.database.DBContext;
+import util.DBContext;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
