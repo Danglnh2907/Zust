@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
+
 @WebServlet("/likePost")
 public class LikePostServlet extends HttpServlet {
     private final LikePostDAO likePostDAO = new LikePostDAO();

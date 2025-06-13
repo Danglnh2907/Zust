@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
+
 @WebServlet("/repost")
 public class RepostServlet extends HttpServlet {
     private final RepostDAO repostDAO = new RepostDAO();
@@ -51,9 +52,11 @@ public class RepostServlet extends HttpServlet {
         try (PrintWriter out = resp.getWriter()) {
             int repostCount = repostDAO.getRepostCount(postId);
             if (success) {
-                out.write("{\"repostCount\": " + repostCount + ", \"isReposted\": " + !isReposted + ", \"status\": 200}");
+                out.write(
+                        "{\"repostCount\": " + repostCount + ", \"isReposted\": " + !isReposted + ", \"status\": 200}");
             } else {
-                out.write("{\"error\": \"Failed to toggle repost\", \"repostCount\": " + repostCount + ", \"status\": 400}");
+                out.write("{\"error\": \"Failed to toggle repost\", \"repostCount\": " + repostCount
+                        + ", \"status\": 400}");
             }
             out.flush();
         } catch (IOException e) {

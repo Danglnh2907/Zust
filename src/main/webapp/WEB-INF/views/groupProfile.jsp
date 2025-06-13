@@ -1,158 +1,141 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html lang="en">
+<%@ page import="dto.GroupProfileDTO" %>
+<html>
 <head>
   <title>Group Profile</title>
   <style>
+    /* Global styles */
     body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f8;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
       margin: 0;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
+      padding: 20px;
     }
-
     .container {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 30px;
-      max-width: 600px;
-      width: 100%;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      max-width: 1000px;
+      margin: 0 auto;
     }
-
-    h2 {
+    h1 {
       text-align: center;
       color: #333;
-      margin-bottom: 30px;
     }
-
-    .form-group {
-      margin-bottom: 20px;
+    .profile-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
     }
-
-    label {
+    .profile-display, .update-form {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex: 1;
+    }
+    .profile-display img {
+      border-radius: 50%;
+      margin-bottom: 10px;
       display: block;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #333;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    input[type="text"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: border-color 0.3s ease;
+    .profile-display p {
+      margin: 10px 0;
     }
-
-    input[type="text"]:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #007bff;
-      outline: none;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    input[type="file"] {
-      border: none;
-    }
-
-    img {
+    .update-form label {
       display: block;
       margin-top: 10px;
-      border-radius: 6px;
-      max-height: 120px;
+      font-weight: bold;
     }
-
-    .error {
-      background-color: #ffe6e6;
-      color: #d8000c;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-
-    .success {
-      background-color: #e6ffed;
-      color: #2e7d32;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-
-    button[type="submit"] {
+    .update-form input[type="text"],
+    .update-form textarea {
       width: 100%;
-      padding: 12px;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+      padding: 8px;
+      margin: 5px 0 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
     }
-
-    button[type="submit"]:hover {
-      background-color: #0056b3;
+    .update-form input[type="radio"] {
+      margin-right: 5px;
+    }
+    .update-form input[type="submit"] {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .update-form input[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+    .message {
+      color: green;
+      margin-bottom: 10px;
+    }
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .profile-container {
+        flex-direction: column;
+      }
+      .profile-display, .update-form {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <h2>✏️ Edit Group Profile</h2>
-  <%
-    dto.GroupProfileDTO group = (dto.GroupProfileDTO) request.getAttribute("group");
-    String error = (String) request.getAttribute("error");
-    String message = (String) request.getAttribute("message");
-  %>
-  <% if (error != null) { %>
-  <div class="error"><%= error %></div>
+  <% if (request.getAttribute("error") != null) { %>
+  <div class="error"><%= request.getAttribute("error") %></div>
   <% } %>
-  <% if (message != null) { %>
-  <div class="success"><%= message %></div>
+  <% if (request.getAttribute("message") != null) { %>
+  <div class="message"><%= request.getAttribute("message") %></div>
   <% } %>
 
-  <form action="groupProfile" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="groupId"
-           value="<%= group != null ? group.getGroupId() : (request.getParameter("groupId") != null ? request.getParameter("groupId") : "") %>">
-
-    <div class="form-group">
-      <label for="groupName">Group Name</label>
-      <input type="text" id="groupName" name="groupName" required
-             value="<%= group != null ? group.getGroupName() : "" %>">
-    </div>
-
-    <div class="form-group">
-      <label for="description">Description</label>
-      <textarea id="description" name="description"><%= group != null ? group.getDescription() : "" %></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="avatar">Avatar</label>
-      <input type="file" id="avatar" name="avatar" accept="image/*">
-      <% if (group != null && group.getAvatarPath() != null) { %>
-      <img src="<%= group.getAvatarPath() %>" alt="Current Avatar">
+  <h1>Group Profile</h1>
+  <div class="profile-container">
+    <div class="profile-display">
+      <% GroupProfileDTO group = (GroupProfileDTO) request.getAttribute("group"); %>
+      <% if (group != null) { %>
+      <% if (group.getAvatarPath() != null && !group.getAvatarPath().isEmpty()) { %>
+      <img src="<%= group.getAvatarPath() %>" alt="Group Avatar" width="100">
+      <% } %>
+      <p><strong>Name:</strong> <%= group.getGroupName() %></p>
+      <p><strong>Description:</strong> <%= group.getDescription() %></p>
+      <p><strong>Status:</strong> <%= group.getStatus() %></p>
+      <% } else { %>
+      <p>No group information available.</p>
       <% } %>
     </div>
-
-    <div class="form-group">
-      <label for="status">Status</label>
-      <select id="status" name="status">
-        <option value="public" <%= group != null && "public".equals(group.getStatus()) ? "selected" : "" %>>Public</option>
-        <option value="private" <%= group != null && "private".equals(group.getStatus()) ? "selected" : "" %>>Private</option>
-      </select>
+    <div class="update-form">
+      <h2>Update Group Profile</h2>
+      <form action="<%= request.getContextPath() %>/groupProfile" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="groupId" value="<%= group != null ? group.getGroupId() : "" %>">
+        <label for="groupName">Group Name:</label>
+        <input type="text" id="groupName" name="groupName" value="<%= group != null ? group.getGroupName() : "" %>" required>
+        <label for="description">Description:</label>
+        <textarea id="description" name="description"><%= group != null ? group.getDescription() : "" %></textarea>
+        <label>Status:</label>
+        <div>
+          <input type="radio" id="deleted" name="status" value="deleted" <% if (group != null && group.getStatus().equals("deleted")) { %>checked<% } %>>
+          <label for="deleted">Deleted</label>
+          <input type="radio" id="banned" name="status" value="banned" <% if (group != null && group.getStatus().equals("banned")) { %>checked<% } %>>
+          <label for="banned">Banned</label>
+          <input type="radio" id="active" name="status" value="active" <% if (group != null && group.getStatus().equals("active")) { %>checked<% } %>>
+          <label for="active">Active</label>
+        </div>
+        <label for="avatar">Avatar:</label>
+        <input type="file" id="avatar" name="avatar">
+        <input type="submit" value="Update">
+      </form>
     </div>
-
-    <button type="submit">Update Profile</button>
-  </form>
+  </div>
 </div>
 </body>
-</html>
+

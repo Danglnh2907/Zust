@@ -14,9 +14,27 @@ public class PostWithLikeDTO {
         this.isLiked = isLiked;
     }
 
-    public Post getPost() { return post; }
-    public void setPost(Post post) { this.post = post; }
-    public int getLikeCount() { return likeCount; }
-    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
-    public boolean isLiked() { return isLiked; }
-    public void setLiked(boolean isLiked) { this.isLiked = isLiked; }}
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public boolean isLiked() {
+        return isLiked;
+    }
+
+    public void setLiked(boolean isLiked) {
+        this.isLiked = isLiked;
+    }
+}

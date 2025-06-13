@@ -14,10 +14,27 @@ public class PostWithRepostDTO {
         this.isReposted = isReposted;
     }
 
-    public Post getPost() { return post; }
-    public void setPost(Post post) { this.post = post; }
-    public int getRepostCount() { return repostCount; }
-    public void setRepostCount(int repostCount) { this.repostCount = repostCount; }
-    public boolean isReposted() { return isReposted; }
-    public void setReposted(boolean isReposted) { this.isReposted = isReposted; }
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
+    public int getRepostCount() {
+        return repostCount;
+    }
+
+    public void setRepostCount(int repostCount) {
+        this.repostCount = repostCount;
+    }
+
+    public boolean isReposted() {
+        return isReposted;
+    }
+
+    public void setReposted(boolean isReposted) {
+        this.isReposted = isReposted;
+    }
 }

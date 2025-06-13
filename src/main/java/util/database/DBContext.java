@@ -42,7 +42,5 @@ public class DBContext {
 		return connection;
 	}
 
-	public static void main(String[] args) {
-		DBContext dbContext = new DBContext();
-	}
+
 }

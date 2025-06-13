@@ -21,12 +21,35 @@ public class JoinGroupRequestDTO {
         this.errors = new ArrayList<>();
     }
 
-    public JoinGroupRequest getRequest() { return request; }
-    public void setRequest(JoinGroupRequest request) { this.request = request; }
-    public Account getAccount() { return account; }
-    public void setAccount(Account account) { this.account = account; }
-    public Group getGroup() { return group; }
-    public void setGroup(Group group) { this.group = group; }
-    public List<String> getErrors() { return errors; }
-    public void addError(String error) { this.errors.add(error); }
+    public JoinGroupRequest getRequest() {
+        return request;
+    }
+
+    public void setRequest(JoinGroupRequest request) {
+        this.request = request;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
+    }
+
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    public void addError(String error) {
+        this.errors.add(error);
+    }
 }

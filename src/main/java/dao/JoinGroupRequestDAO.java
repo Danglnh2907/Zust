@@ -122,8 +122,10 @@ public class JoinGroupRequestDAO {
             return false;
         } finally {
             try {
-                if (stmt1 != null) stmt1.close();
-                if (stmt2 != null) stmt2.close();
+                if (stmt1 != null)
+                    stmt1.close();
+                if (stmt2 != null)
+                    stmt2.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -181,8 +183,10 @@ public class JoinGroupRequestDAO {
             return false;
         } finally {
             try {
-                if (stmt != null) stmt.close();
-                if (conn != null) conn.close();
+                if (stmt != null)
+                    stmt.close();
+                if (conn != null)
+                    conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
