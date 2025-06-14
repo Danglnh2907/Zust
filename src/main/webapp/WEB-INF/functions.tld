@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                            http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+        version="2.1">
+
+    <tlib-version>1.0</tlib-version>
+    <short-name>htmlUtils</short-name>
+    <uri>http://zust.com/functions</uri>
+
+    <function>
+        <name>stripHtml</name>
+        <function-class>util.HtmlUtils</function-class>
+        <function-signature>
+            java.lang.String stripHtmlTags(java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>getPreview</name>
+        <function-class>util.HtmlUtils</function-class>
+        <function-signature>
+            java.lang.String getPreviewText(java.lang.String, int)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>sanitizeHtml</name>
+        <function-class>util.HtmlUtils</function-class>
+        <function-signature>
+            java.lang.String sanitizeHtml(java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>isHtmlContent</name>
+        <function-class>util.HtmlUtils</function-class>
+        <function-signature>
+            boolean isHtmlContent(java.lang.String)
+        </function-signature>
+    </function>
+
+</taglib>
