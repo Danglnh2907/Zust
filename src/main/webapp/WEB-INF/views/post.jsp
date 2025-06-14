@@ -1,5 +1,6 @@
 <%@ page import="dto.RespPostDTO" %>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="model.Account" %>
 
 <%-- Created by IntelliJ IDEA. User: Asus Date: 6/7/2025 Time: 9:54 PM To change this template use File |
     Settings | File Templates. --%>
@@ -24,6 +25,17 @@
     </head>
 
     <body>
+        <%
+            //Get account information
+            Account account = (Account) request.getAttribute("account");
+            if (account == null) {
+                //Unnecessary since if account = null -> redirect to /error, but check anyway
+                out.println("<p>Error fetching account data</p>");
+                return;
+            }
+
+        %>
+
         <!-- Edit Post Modal -->
         <div class="modal fade" id="edit_post" data-bs-backdrop="static" data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="edit_post_label" aria-hidden="true">
@@ -135,8 +147,9 @@
                         <input type="search" placeholder="Search">
                     </div>
                     <a href="#" class="nav-profile">
-                        <img src="https://i.pravatar.cc/150?u=shaanalam" alt="User Profile Picture">
-                        <span>Shaan Alam</span>
+                        <img src="${pageContext.request.contextPath}/static/images/<%= account.getAvatar() %>"
+                             alt="User Profile Picture">
+                        <span><%= account.getUsername() %></span>
                     </a>
                 </header>
 

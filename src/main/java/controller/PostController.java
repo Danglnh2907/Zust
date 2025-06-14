@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
 
+import dao.AccountDAO;
 import dao.PostDAO;
 import dto.ReqPostDTO;
 import dto.RespPostDTO;
@@ -14,6 +15,7 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
+import model.Account;
 import util.service.FileService;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")
@@ -39,6 +41,7 @@ public class PostController extends HttpServlet {
         int userID;
         try {
             userID = Integer.parseInt(userIDRaw);
+
         } catch (NumberFormatException e) {
             //logger.warning("Invalid userID: " + userIDRaw);
             //Redirect to /error
@@ -46,6 +49,17 @@ public class PostController extends HttpServlet {
             //return;
             userID = 1; //Remove later when incorporate with authentication
         }
+
+        //Get account information from userID
+        AccountDAO accountDAO = new AccountDAO();
+        Account account = accountDAO.getAccountById(userID);
+        if (account == null) {
+            logger.warning("Account not found");
+            //Redirect to /error
+            request.getRequestDispatcher("/error").forward(request, response);
+            return;
+        }
+        request.setAttribute("account", account);
 
         //Get action and id in request parameter
         String action = request.getParameter("action");
@@ -80,6 +94,7 @@ public class PostController extends HttpServlet {
                     request.setAttribute("message", "No post found");
                 } else {
                     request.setAttribute("post", post);
+
                 }
             } catch (NumberFormatException e) {
                 logger.warning("Invalid postID: " + idRaw);
