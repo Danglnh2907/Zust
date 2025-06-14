@@ -1,9 +1,9 @@
 <%@ page import="dto.RespPostDTO" %>
 <%@ page import="java.util.ArrayList" %>
-
 <%-- Created by IntelliJ IDEA. User: Asus Date: 6/7/2025 Time: 9:54 PM To change this template use File |
     Settings | File Templates. --%>
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page import="model.Account" %>
 <html>
 
     <head>
@@ -134,9 +134,10 @@
                         </svg>
                         <input type="search" placeholder="Search">
                     </div>
+                <% Account account = (Account) request.getSession().getAttribute("users"); %>
                     <a href="#" class="nav-profile">
-                        <img src="https://i.pravatar.cc/150?u=shaanalam" alt="User Profile Picture">
-                        <span>Shaan Alam</span>
+                        <img src="<%=account.getAvatar()%>" alt="User Profile Picture">
+                        <span><%=account.getFullname()%></span>
                     </a>
                 </header>
 
