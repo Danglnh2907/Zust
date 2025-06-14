@@ -27,7 +27,7 @@
         <!-- Edit Post Modal -->
         <div class="modal fade" id="edit_post" data-bs-backdrop="static" data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="edit_post_label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable modal-fullscreen">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="edit_post_label">Edit Post</h5>
@@ -77,7 +77,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="#">
+                        <li><a href="${pageContext.request.contextPath}/sendCreateGroupRequest">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
