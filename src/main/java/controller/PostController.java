@@ -14,6 +14,7 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
+import model.Account;
 import util.service.FileService;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")
@@ -35,16 +36,19 @@ public class PostController extends HttpServlet {
 
         //Fetch userID in sessions
         HttpSession session = request.getSession();
-        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
-            userID = Integer.parseInt(userIDRaw);
-        } catch (NumberFormatException e) {
-            //logger.warning("Invalid userID: " + userIDRaw);
-            //Redirect to /error
-            //request.getRequestDispatcher("/error").forward(request, response);
-            //return;
-            userID = 1; //Remove later when incorporate with authentication
+            Account account = (Account) session.getAttribute("users");
+            if (account == null) {
+                // Redirect to login if user is not authenticated
+                response.sendRedirect(request.getContextPath() + "/auth");
+                return;
+            }
+            userID = account.getId();
+        } catch (Exception e) {
+            logger.warning("Error getting user from session: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
         }
 
         //Get action and id in request parameter
@@ -54,12 +58,16 @@ public class PostController extends HttpServlet {
 
         //No provided id or action -> View all posts belong to a user
         if (action == null && idRaw == null) {
-            ArrayList<RespPostDTO> posts = postDAO.getPosts(userID);
-            if (posts.isEmpty()) {
-                request.setAttribute("message", "No posts found");
-            } else {
-                //logger.info("Found " + posts.size() + " posts");
-                request.setAttribute("posts", posts);
+            try {
+                ArrayList<RespPostDTO> posts = postDAO.getPosts(userID);
+                if (posts.isEmpty()) {
+                    request.setAttribute("message", "No posts found");
+                } else {
+                    request.setAttribute("posts", posts);
+                }
+            } catch (Exception e) {
+                logger.severe("Error fetching posts for user " + userID + ": " + e.getMessage());
+                request.setAttribute("message", "Error loading posts");
             }
             request.getRequestDispatcher("/WEB-INF/views/post.jsp").forward(request, response);
             return;
@@ -83,6 +91,10 @@ public class PostController extends HttpServlet {
                 }
             } catch (NumberFormatException e) {
                 logger.warning("Invalid postID: " + idRaw);
+                request.setAttribute("message", "Invalid post ID");
+            } catch (Exception e) {
+                logger.severe("Error fetching post " + idRaw + ": " + e.getMessage());
+                request.setAttribute("message", "Error loading post");
             }
             request.getRequestDispatcher("/WEB-INF/views/post.jsp").forward(request, response);
         }
@@ -97,110 +109,120 @@ public class PostController extends HttpServlet {
          * /post?action=delete&id=post_id: Delete a post by ID (UserID fetch in session)
          */
 
+        //Set response content type for JSON responses
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         //Fetch userID in sessions
         HttpSession session = request.getSession();
-        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
-            userID = Integer.parseInt(userIDRaw);
-        } catch (NumberFormatException e) {
-            //logger.warning("Invalid userID: " + userIDRaw);
-            //Redirect to /error
-            //request.getRequestDispatcher("/error").forward(request, response);
-            //return;
-            userID = 1; //Remove later when incorporate with authentication
+            Account account = (Account) session.getAttribute("users");
+            if (account == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"User not authenticated\"}");
+                return;
+            }
+            userID = account.getId();
+        } catch (Exception e) {
+            logger.warning("Error getting user from session: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Authentication error\"}");
+            return;
         }
 
         //Get request parameter: action
         String action = request.getParameter("action");
-        action = action == null ? "" : action.toLowerCase().trim();
+        if (action == null || action.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\":\"Action parameter is required\"}");
+            return;
+        }
+
+        action = action.toLowerCase().trim();
         PostDAO postDAO = new PostDAO();
 
-        //Work base on action
-        //All action here work in a single page (use Javascript to call instead of form submit),
-        //we return a status code instead of forward to a new page
-        switch (action) {
-            case "create" -> {
-                ReqPostDTO dto = extractData(userID, request.getParts());
-                if (dto == null) {
-                    //response.sendRedirect("/error");
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                } else {
-                    boolean success = postDAO.createPost(dto);
-                    if (success) {
-                        //logger.info("Post created successfully");
-                        response.setStatus(HttpServletResponse.SC_CREATED);
+        //Work based on action
+        try {
+            switch (action) {
+                case "create" -> {
+                    ReqPostDTO dto = extractData(userID, request.getParts());
+                    if (dto == null) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Failed to process post data\"}");
                     } else {
-                        //logger.warning("Error creating post");
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        boolean success = postDAO.createPost(dto);
+                        if (success) {
+                            response.setStatus(HttpServletResponse.SC_CREATED);
+                            response.getWriter().write("{\"message\":\"Post created successfully\"}");
+                        } else {
+                            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                            response.getWriter().write("{\"error\":\"Failed to create post\"}");
+                        }
                     }
-                    //request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
                 }
-            }
-            case "edit" -> {
-                //Extract postID
-                String idRaw = request.getParameter("id");
-                if (idRaw == null || idRaw.toLowerCase().trim().isEmpty()) {
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    //logger.warning("Invalid postID: " + idRaw);
-                    //response.sendRedirect("/error");
-                    return;
-                }
-                try {
+                case "edit" -> {
+                    String idRaw = request.getParameter("id");
+                    if (idRaw == null || idRaw.trim().isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is required for edit\"}");
+                        return;
+                    }
+
                     int id = Integer.parseInt(idRaw);
                     ReqPostDTO dto = extractData(userID, request.getParts());
                     if (dto == null) {
-                        //response.sendRedirect("/error");
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Failed to process post data\"}");
                     } else {
                         boolean success = postDAO.editPost(id, dto);
                         if (success) {
-                            //logger.info("Successfully edited post");
                             response.setStatus(HttpServletResponse.SC_OK);
+                            response.getWriter().write("{\"message\":\"Post updated successfully\"}");
                         } else {
-                            //logger.info("Failed to edit post");
-                            response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
                         }
-                        //request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
                     }
-                } catch (NumberFormatException e) {
-                    //logger.warning("Invalid postID: " + idRaw);
-                    //response.sendRedirect("/error");
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 }
-            }
-            case "delete" -> {
-                //Extract postID
-                String idRaw = request.getParameter("id");
-                if (idRaw == null || idRaw.toLowerCase().trim().isEmpty()) {
-                    //response.sendRedirect("/error");
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    return;
-                }
-                try {
+                case "delete" -> {
+                    String idRaw = request.getParameter("id");
+                    if (idRaw == null || idRaw.trim().isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is required for delete\"}");
+                        return;
+                    }
+
                     int id = Integer.parseInt(idRaw);
                     boolean success = postDAO.deletePost(id, userID);
                     if (success) {
-                        //logger.info("Deleted post with ID: " + id);
                         response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write("{\"message\":\"Post deleted successfully\"}");
                     } else {
-                        //logger.warning("Failed to delete post: " + id);
-                        response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
                     }
-                    //request.getRequestDispatcher("/WEB-INF/views/post/posts.jsp").forward(request, response);
-                } catch (NumberFormatException e) {
-                    //logger.warning("Invalid postID: " + idRaw);
-                    //response.sendRedirect("/error");
+                }
+                default -> {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"error\":\"Invalid action: " + action + "\"}");
                 }
             }
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid post ID format: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\":\"Invalid post ID format\"}");
+        } catch (Exception e) {
+            logger.severe("Unexpected error in POST request: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\":\"Internal server error\"}");
         }
     }
 
     private ReqPostDTO extractData(int userID, Collection<Part> parts) {
         //Variables declaration
         String htmlContent = null;
-        String postPrivacy = null;
+        String postPrivacy = "public"; // Default privacy
         String hashtags = null;
         int groupID = -1;
         String postStatus = "public";
@@ -211,110 +233,73 @@ public class PostController extends HttpServlet {
         File uploadDir = new File(fileService.getLocationPath() + File.separator + "images");
         if (!uploadDir.exists()) {
             //Create directory and check if it success
-            if (!uploadDir.mkdir()) {
-                logger.severe("Failed to create upload directory: " + fileService.getLocationPath() + File.separator + "images\n");
+            if (!uploadDir.mkdirs()) { // Use mkdirs() to create parent directories too
+                logger.severe("Failed to create upload directory: " + uploadDir.getAbsolutePath());
                 return null;
             }
         }
 
         //Extract data
-        for (Part part : parts) {
-            String fieldName = part.getName();
+        try {
+            for (Part part : parts) {
+                String fieldName = part.getName();
+                if (fieldName == null) continue;
 
-            //Get HTML content
-            if (fieldName.equals("htmlContent")) {
-                try {
-                    htmlContent = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                            .useDelimiter("\\A").next();
-                } catch (Exception e) {
-                    logger.severe(String.format("Failed to read HTML from part\nError: %s", e.getMessage()));
-                    return null; //All post should have content, whether text or images, so we stop if failed to read content
+                //Get HTML content
+                if (fieldName.equals("htmlContent")) {
+                    htmlContent = readPartAsString(part);
+                    if (htmlContent == null) {
+                        logger.warning("Failed to read HTML content");
+                        return null;
+                    }
                 }
-            }
-            //Get list of hashtags
-            else if (fieldName.equals("hashtags")) {
-                try {
-                    hashtags = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                            .useDelimiter("\\A").next();
-                } catch (Exception e) {
-                    logger.severe(String.format("Failed to read hashtags from part\nError: %s", e.getMessage()));
+                //Get list of hashtags
+                else if (fieldName.equals("hashtags")) {
+                    hashtags = readPartAsString(part);
                 }
-            }
-            //Get post_privacy
-            else if (fieldName.equals("post_privacy")) {
-                try {
-                    postPrivacy = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                            .useDelimiter("\\A").next();
-                } catch (Exception e) {
-                    logger.severe(String.format("Failed to read post privacy from part\nError: %s", e.getMessage()));
+                //Get post_privacy
+                else if (fieldName.equals("post_privacy")) {
+                    String privacy = readPartAsString(part);
+                    if (privacy != null && !privacy.trim().isEmpty()) {
+                        postPrivacy = privacy.trim();
+                    }
                 }
-            }
-            //Handle images - both new uploads and existing ones
-            else if (fieldName.startsWith("image")) {
-                String fileName = "";
-                String contentDisposition = part.getHeader("content-disposition");
-
-                //Read images' filenames
-                if (contentDisposition != null) {
-                    for (String cd : contentDisposition.split(";")) {
-                        if (cd.trim().startsWith("filename")) {
-                            fileName = cd.substring(cd.indexOf('=') + 1)
-                                    .trim().replace("\"", "");
-                            fileName = fileName
-                                    .substring(fileName.lastIndexOf('/') + 1)
-                                    .substring(fileName.lastIndexOf('\\') + 1);
+                //Handle images - both new uploads and existing ones
+                else if (fieldName.startsWith("image")) {
+                    handleImagePart(part, imagePaths, uploadDir);
+                }
+                //Get group_id (if this post is uploaded in a group)
+                else if (fieldName.equals("group_id")) {
+                    String groupIDRaw = readPartAsString(part);
+                    if (groupIDRaw != null && !groupIDRaw.trim().isEmpty()) {
+                        try {
+                            groupID = Integer.parseInt(groupIDRaw.trim());
+                        } catch (NumberFormatException e) {
+                            logger.warning("Invalid group ID format: " + groupIDRaw);
                         }
                     }
                 }
-
-                // If no filename, check if it's an existing image reference
-                if (fileName.isEmpty()) {
-                    try {
-                        String existingImage = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                                .useDelimiter("\\A").next();
-                        if (!existingImage.isEmpty()) {
-                            imagePaths.add(existingImage); // Add existing image filename
+                //Get posts_status
+                else if (fieldName.equals("is_drafted")) {
+                    String isDraftedRaw = readPartAsString(part);
+                    if (isDraftedRaw != null) {
+                        boolean isDrafted = Boolean.parseBoolean(isDraftedRaw.trim());
+                        if (isDrafted) {
+                            postStatus = "drafted";
                         }
-                    } catch (IOException e) {
-                        logger.warning("Failed to read existing image reference: " + e.getMessage());
                     }
-                } else {
-                    // Handle new image upload
-                    String newFileName = UUID.randomUUID() + "_" + fileName;
-                    String filePath = fileService.getLocationPath() + File.separator + "images" + File.separator + newFileName;
+                }
+            }
+        } catch (Exception e) {
+            logger.severe("Error extracting data from parts: " + e.getMessage());
+            return null;
+        }
 
-                    try {
-                        part.write(filePath);
-                        imagePaths.add(newFileName);
-                    } catch (Exception e) {
-                        logger.severe("Failed to write image: " + e.getMessage());
-                    }
-                }
-            }
-            //Get group_id (if this post is uploaded in a group)
-            else if (fieldName.equals("group_id")) {
-                try {
-                    String groupIDRaw = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                            .useDelimiter("\\A").next();
-                    groupID = Integer.parseInt(groupIDRaw);
-                } catch (Exception e) {
-                    logger.severe(String.format("Failed to read group_id from part\nError: %s", e.getMessage()));
-                    //return null;
-                }
-            }
-            //Get posts_status
-            else if (fieldName.equals("is_drafted")) {
-                String isDraftedRaw;
-                try {
-                    isDraftedRaw = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)
-                            .useDelimiter("\\A").next();
-                    boolean isDrafted = Boolean.parseBoolean(isDraftedRaw);
-                    if (isDrafted) {
-                        postStatus = "drafted";
-                    }
-                } catch (Exception e) {
-                    logger.warning(e.getMessage());
-                }
+        // Validate required fields
+        if (htmlContent == null || htmlContent.trim().isEmpty()) {
+            if (imagePaths.isEmpty()) {
+                logger.warning("Post must have either content or images");
+                return null;
             }
         }
 
@@ -329,21 +314,76 @@ public class PostController extends HttpServlet {
         dto.setCreatedAt(LocalDateTime.now());
         dto.setLastModified(LocalDateTime.now());
         dto.setGroupID(groupID);
+
         //Add images path
-        for (String imagePath : imagePaths) {
-            dto.getImages().add(imagePath);
-        }
+        dto.getImages().addAll(imagePaths);
+
         //Add hashtags
-        if (hashtags != null && !hashtags.isEmpty()) {
+        if (hashtags != null && !hashtags.trim().isEmpty()) {
             //Split the format String into array (format: #123#hello#first_time -> [123, hello, first_time])
             String[] hashtagArray = hashtags.split("#");
             for (String hashtag : hashtagArray) {
-                if (!hashtag.trim().isEmpty()) {
-                    dto.getHashtags().add(hashtag);
+                String cleanHashtag = hashtag.trim();
+                if (!cleanHashtag.isEmpty()) {
+                    dto.getHashtags().add(cleanHashtag);
                 }
             }
         }
         return dto;
+    }
+
+    private String readPartAsString(Part part) {
+        try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
+            scanner.useDelimiter("\\A");
+            return scanner.hasNext() ? scanner.next() : "";
+        } catch (Exception e) {
+            logger.warning("Failed to read part as string: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void handleImagePart(Part part, ArrayList<String> imagePaths, File uploadDir) {
+        try {
+            String fileName = "";
+            String contentDisposition = part.getHeader("content-disposition");
+
+            //Read images' filenames
+            if (contentDisposition != null) {
+                for (String cd : contentDisposition.split(";")) {
+                    if (cd.trim().startsWith("filename")) {
+                        fileName = cd.substring(cd.indexOf('=') + 1)
+                                .trim().replace("\"", "");
+                        // Extract just the filename without path
+                        fileName = fileName.substring(Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\')) + 1);
+                        break;
+                    }
+                }
+            }
+
+            // If no filename, check if it's an existing image reference
+            if (fileName.isEmpty()) {
+                String existingImage = readPartAsString(part);
+                if (existingImage != null && !existingImage.trim().isEmpty()) {
+                    imagePaths.add(existingImage.trim());
+                }
+            } else if (part.getSize() > 0) {
+                // Handle new image upload - only if there's actual content
+                String fileExtension = "";
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                    fileExtension = fileName.substring(dotIndex);
+                }
+
+                String newFileName = UUID.randomUUID() + "_" + System.currentTimeMillis() + fileExtension;
+                String filePath = uploadDir.getAbsolutePath() + File.separator + newFileName;
+
+                part.write(filePath);
+                imagePaths.add(newFileName);
+                logger.info("Successfully saved image: " + newFileName);
+            }
+        } catch (Exception e) {
+            logger.severe("Failed to handle image part: " + e.getMessage());
+        }
     }
 
     private String formatContent(String htmlContent) {
