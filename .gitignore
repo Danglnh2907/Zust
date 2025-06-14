@@ -1,3 +1,5 @@
 /.idea
 /.mvn
-save.env
+src/main/resources/save.env
+*.properties
+/target

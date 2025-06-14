@@ -85,8 +85,8 @@ public class AuthServlet extends HttpServlet {
 				if (authDAO.loginByForm(username, password)) {
 					Account loggedInAccount = authDAO.getAccountByUsername(username);
 					if (loggedInAccount != null) {
-						request.getSession().setAttribute("loggedInAccount", loggedInAccount);
-						response.sendRedirect(request.getContextPath() + "/");
+						request.getSession().setAttribute("users", loggedInAccount);
+						response.sendRedirect(request.getContextPath() + "/post");
 						return;
 					} else {
 						errorMessage = "Login successful but could not retrieve account details.";
