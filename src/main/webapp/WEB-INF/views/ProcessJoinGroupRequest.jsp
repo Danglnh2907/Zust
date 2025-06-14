@@ -24,9 +24,10 @@
 <% if (requests != null && !requests.isEmpty()) { %>
 <% for (dto.JoinGroupRequestDTO requestDto : requests) { %>
 <div class="request">
-    <p>User ID: <%= requestDto.getAccount().getId() %></p>
+<%--    <p>User ID: <%= requestDto.getAccount().getId() %></p>--%>
     <p>Group ID: <%= requestDto.getGroup().getId() %></p>
-    <p>Request Date: <%= requestDto.getRequest().getJoinGroupRequestDate() %></p>
+    <p>Request Content: <%= requestDto.getRequest().getJoinGroupRequestContent() %></p>
+<%--    <p>Request Date: <%= requestDto.getRequest().getJoinGroupRequestDate() %></p>--%>
     <p>Status: <%= requestDto.getRequest().getJoinGroupRequestStatus() %></p>
     <form action="processJoinGroupRequest" method="post">
         <input type="hidden" name="requestId" value="<%= requestDto.getRequest().getId() %>">

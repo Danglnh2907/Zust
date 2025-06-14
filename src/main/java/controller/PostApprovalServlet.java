@@ -21,45 +21,55 @@ public class PostApprovalServlet extends HttpServlet {
     // Xử lý các yêu cầu GET
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Lấy thông tin accountId và role từ session
-        Integer accountId = (Integer) req.getSession().getAttribute("accountId");
-        String accountRole = (String) req.getSession().getAttribute("accountRole");
+//        // Lấy thông tin accountId và role từ session
+//     Integer ManagerId = (Integer) req.getSession().getAttribute("accountId");
+////        String accountRole = (String) req.getSession().getAttribute("accountRole");
+//
+//        if (ManagerId == null) {
+//            ManagerId = 1003; // ID của một tài khoản admin giả định (đang quản lý group nào đó)
+//            req.getSession().setAttribute("accountId", ManagerId);
+//            System.out.println("Set temporary accountId: " + ManagerId + " for testing");
+//        }
+//
+        String managerIdParam = req.getParameter("managerId");
+        System.out.println("DEBUG - managerId = " + managerIdParam);
 
-        // Nếu chưa đăng nhập hoặc không phải admin -> gán giá trị tạm để test
-        if (accountId == null || !"admin".equals(accountRole)) {
-            accountId = 1003; // Gán tạm accountId
-            req.getSession().setAttribute("accountId", accountId);
-            req.getSession().setAttribute("accountRole", "admin"); // Gán tạm vai trò admin
-            System.out.println("Set temporary accountId: " + accountId + " and role: admin for testing");
+        int managerId;
+
+        try {
+            managerId = Integer.parseInt(managerIdParam);
+        } catch (NumberFormatException | NullPointerException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid or missing managerId");
+            return;
         }
 
         // Lấy danh sách các bài post đang chờ duyệt của tài khoản
-        List<PostApprovalDTO> pendingPosts = postApprovalDAO.getPendingPosts(accountId);
-
-        // Nếu không có bài post nào chờ duyệt
+        List<PostApprovalDTO> pendingPosts = postApprovalDAO.getPendingPosts(managerId);
+        System.out.println("Pending posts size in servlet: " + pendingPosts.size());
         if (pendingPosts.isEmpty()) {
+            System.out.println("No pending posts found, setting message");
             req.setAttribute("message", "No pending posts to approve");
         } else {
-            // Truyền danh sách post vào request để hiển thị trên giao diện
+            System.out.println("Found pending posts, setting attribute 'posts'");
             req.setAttribute("posts", pendingPosts);
         }
 
         // Chuyển tiếp sang trang JSP để hiển thị dữ liệu
-        req.getRequestDispatcher("/WEB-INF/views/postApproval.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/postApprove.jsp").forward(req, resp);
     }
 
     // Xử lý các yêu cầu POST (ví dụ: khi bấm duyệt hoặc từ chối bài post)
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Lấy lại thông tin người dùng từ session
-        Integer accountId = (Integer) req.getSession().getAttribute("accountId");
-        String accountRole = (String) req.getSession().getAttribute("accountRole");
+//        Integer accountId = (Integer) req.getSession().getAttribute("accountId");
+//        String accountRole = (String) req.getSession().getAttribute("accountRole");
 
         // Nếu không phải admin hoặc chưa đăng nhập thì chuyển hướng về trang login
-        if (accountId == null || !"admin".equals(accountRole)) {
-            resp.sendRedirect("login.jsp");
-            return;
-        }
+//        if (accountId == null || !"admin".equals(accountRole)) {
+//            resp.sendRedirect("login.jsp");
+//            return;
+//        }
 
         // Lấy postId và action từ form (ví dụ: approve hoặc disapprove)
         String postIdParam = req.getParameter("postId");
@@ -79,14 +89,19 @@ public class PostApprovalServlet extends HttpServlet {
             return;
         }
 
+
         // Chỉ chấp nhận action là "approve" hoặc "disapprove"
         if (!"approve".equalsIgnoreCase(action) && !"disapprove".equalsIgnoreCase(action)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
             return;
         }
 
-        // Gọi DAO để xử lý phê duyệt hoặc từ chối bài viết
-        boolean success = postApprovalDAO.processPost(postId, action, accountId);
+// Chuyển action thành giá trị đúng với trong DB (published hoặc rejected)
+        String normalizedAction = "approve".equalsIgnoreCase(action) ? "published" : "rejected";
+
+// Gọi DAO để xử lý phê duyệt hoặc từ chối bài viết
+        boolean success = postApprovalDAO.processPost(postId, normalizedAction ); // gán tạm accountId = 1003 test
+
 
         // Nếu thành công, set thông báo thành công
         if (success) {
@@ -96,6 +111,8 @@ public class PostApprovalServlet extends HttpServlet {
         }
 
         // Chuyển hướng về lại trang approvePost để load lại danh sách
-        resp.sendRedirect(req.getContextPath() + "/approvePost");
+        resp.sendRedirect(req.getContextPath() + "/"); // tạm chuyển về home
+
     }
+
 }
