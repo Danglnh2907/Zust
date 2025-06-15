@@ -155,7 +155,6 @@
             <%
                 Account account = (Account) request.getSession().getAttribute("users");
                 String linkAvatar = account.getAvatar();
-                linkAvatar = linkAvatar.replace("\\", "/");
             %>
             <a href="#" class="nav-profile">
                 <img src="<%=linkAvatar%>" alt="User Profile Picture">

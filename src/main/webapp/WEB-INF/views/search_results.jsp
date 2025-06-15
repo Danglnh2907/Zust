@@ -7,7 +7,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Previous head content remains the same... -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Search Results - Zust</title>
@@ -24,7 +23,6 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
 
   <style>
-    /* Previous styles remain the same... */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: #f8f9fa;
@@ -150,7 +148,6 @@
       background: #166fe5;
     }
 
-    /* Rest of previous styles... */
     .search-header {
       border-bottom: 1px solid #e4e6ea;
       padding-bottom: 16px;
@@ -296,34 +293,6 @@
       margin-right: 8px;
     }
 
-    .summary-stats {
-      background: #e3f2fd;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      border-left: 4px solid #1877f2;
-    }
-
-    .summary-stats h3 {
-      color: #1565c0;
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: #1976d2;
-    }
-
     .no-results {
       text-align: center;
       padding: 40px 20px;
@@ -338,18 +307,6 @@
       font-size: 24px;
       margin-bottom: 12px;
       display: block;
-    }
-
-    .error-message {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      color: #856404;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .badge {
@@ -385,124 +342,43 @@
     </button>
   </form>
 
-  <!-- Error Message -->
   <c:if test="${not empty errorMessage}">
-    <div class="error-message">
+    <div class="alert alert-danger">
       <i class="fas fa-exclamation-triangle"></i>
         ${errorMessage}
     </div>
   </c:if>
 
-  <!-- Results -->
-  <c:if test="${not empty keyword && empty errorMessage}">
-    <!-- Summary Statistics -->
-    <div class="summary-stats">
-      <h3>Search Summary</h3>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <i class="fas fa-user"></i>
-          <span>${fn:length(searchResults.users)} Users</span>
-        </div>
-        <div class="stat-item">
-          <i class="fas fa-file-alt"></i>
-          <span>${fn:length(searchResults.posts_content)} Posts</span>
-        </div>
-        <div class="stat-item">
-          <i class="fas fa-hashtag"></i>
-          <span>${fn:length(searchResults.posts_hashtag)} Tagged Posts</span>
-        </div>
-        <div class="stat-item">
-          <i class="fas fa-users"></i>
-          <span>${fn:length(searchResults.groups)} Groups</span>
-        </div>
-      </div>
-    </div>
+  <c:choose>
+    <c:when test="${not empty keyword}">
+      <div class="search-results">
+        <c:set var="anyResultsFound" value="${false}" />
 
-    <div class="search-results">
-      <c:set var="anyResultsFound" value="${false}" />
-
-      <!-- Users Section -->
-      <div class="results-category">
-        <div class="category-header">
-          <h3 class="category-title">
-            <i class="fas fa-user"></i>People
-          </h3>
-          <div class="d-flex align-items-center gap-2">
-            <span class="category-count">${fn:length(searchResults.users)} results</span>
-            <c:if test="${fn:length(searchResults.users) > 0}">
-              <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=users" class="view-more-link">
-                View all
-              </a>
-            </c:if>
-          </div>
-        </div>
-        <c:choose>
-          <c:when test="${not empty searchResults.users}">
-            <c:set var="anyResultsFound" value="${true}" />
-            <c:forEach var="account" items="${searchResults.users}" varStatus="status" end="4">
-              <div class="result-item-large">
-                <div class="d-flex align-items-center">
-                  <div class="result-avatar me-3">
-                    <c:choose>
-                      <c:when test="${not empty account.avatar}">
-                        <img src="${account.avatar}" alt="${account.fullname}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                      </c:when>
-                      <c:otherwise>
-                        <i class="fas fa-user"></i>
-                      </c:otherwise>
-                    </c:choose>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="result-title">
-                      <a href="${pageContext.request.contextPath}/profile?userId=${account.id}" style="text-decoration: none; color: #1c1e21;">
-                        <c:out value="${account.fullname}"/>
-                      </a>
-                    </div>
-                    <div class="result-subtitle">@<c:out value="${account.username}"/> · <c:out value="${account.email}"/></div>
-                    <c:if test="${not empty account.bio}">
-                      <div class="result-content"><c:out value="${account.bio}"/></div>
-                    </c:if>
-                  </div>
-                </div>
-              </div>
-            </c:forEach>
-          </c:when>
-          <c:otherwise>
-            <div class="no-results">
-              <i class="fas fa-user-slash"></i>
-              No users found for "<c:out value="${keyword}"/>".
+        <!-- Users Section -->
+        <div class="results-category">
+          <div class="category-header">
+            <h3 class="category-title">
+              <i class="fas fa-user"></i>People
+            </h3>
+            <div class="d-flex align-items-center gap-2">
+              <span class="category-count">${fn:length(searchResults.users)} results</span>
+              <c:if test="${fn:length(searchResults.users) > 0}">
+                <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=users" class="view-more-link">
+                  View all
+                </a>
+              </c:if>
             </div>
-          </c:otherwise>
-        </c:choose>
-      </div>
-
-      <!-- Posts by Content Section -->
-      <div class="results-category">
-        <div class="category-header">
-          <h3 class="category-title">
-            <i class="fas fa-file-alt"></i>Posts
-          </h3>
-          <div class="d-flex align-items-center gap-2">
-            <span class="category-count">${fn:length(searchResults.posts_content)} results</span>
-            <c:if test="${fn:length(searchResults.posts_content) > 0}">
-              <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=posts_content" class="view-more-link">
-                View all
-              </a>
-            </c:if>
           </div>
-        </div>
-        <c:choose>
-          <c:when test="${not empty searchResults.posts_content}">
-            <c:set var="anyResultsFound" value="${true}" />
-            <c:forEach var="post" items="${searchResults.posts_content}" varStatus="status" end="4">
-              <div class="result-item-large">
-                <div class="d-flex align-items-start mb-3">
-                  <c:if test="${post.account != null}">
-                    <div class="result-avatar me-3" style="width: 36px; height: 36px; font-size: 14px;">
+          <c:choose>
+            <c:when test="${not empty searchResults.users}">
+              <c:set var="anyResultsFound" value="${true}" />
+              <c:forEach var="account" items="${searchResults.users}" varStatus="status" end="4">
+                <div class="result-item-large">
+                  <div class="d-flex align-items-center">
+                    <div class="result-avatar me-3">
                       <c:choose>
-                        <c:when test="${not empty post.account.avatar}">
-                          <img src="${post.account.avatar}" alt="${post.account.fullname}"
-                               style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        <c:when test="${not empty account.avatar}">
+                          <img src="${account.avatar}" alt="${account.fullname}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                         </c:when>
                         <c:otherwise>
                           <i class="fas fa-user"></i>
@@ -510,227 +386,282 @@
                       </c:choose>
                     </div>
                     <div class="flex-grow-1">
-                      <div class="result-title" style="font-size: 16px;">
-                        <a href="${pageContext.request.contextPath}/profile?userId=${post.account.id}" style="text-decoration: none; color: #1c1e21;">
-                          <c:out value="${post.account.fullname}"/>
+                      <div class="result-title">
+                        <a href="${pageContext.request.contextPath}/profile?userId=${account.id}" style="text-decoration: none; color: #1c1e21;">
+                          <c:out value="${account.fullname}"/>
                         </a>
                       </div>
-                      <div class="result-subtitle">@<c:out value="${post.account.username}"/></div>
+                      <div class="result-subtitle">@<c:out value="${account.username}"/> · <c:out value="${account.email}"/></div>
+                      <c:if test="${not empty account.bio}">
+                        <div class="result-content"><c:out value="${account.bio}"/></div>
+                      </c:if>
                     </div>
-                  </c:if>
+                  </div>
                 </div>
-                <div class="post-content">
-                  <a href="${pageContext.request.contextPath}/post?postId=${post.id}" style="text-decoration: none; color: #1c1e21;">
-                    <div class="result-content">
-                      <!-- Check if content has HTML using fn:contains -->
-                      <c:set var="isHtmlContent" value="${fn:contains(post.postContent, '<') && fn:contains(post.postContent, '>')}" />
-                      <c:choose>
-                        <c:when test="${isHtmlContent}">
-                                                    <span class="post-html-badge">
-                                                        <i class="fas fa-code"></i> Rich Text
-                                                    </span>
-
-                          <!-- Show plain text preview -->
-                          <div class="post-content-preview">
-                            <c:out value="${h:getPreview(post.postContent, 150)}" />
-                          </div>
-
-                          <!-- Toggle for full HTML content -->
-                          <a href="#" class="content-toggle" onclick="toggleHtmlContent(this); return false;"
-                             data-post-id="${post.id}">
-                            Show original formatting
-                          </a>
-                          <div class="html-content" id="html-content-${post.id}">
-                              ${h:sanitizeHtml(post.postContent)}
-                          </div>
-                        </c:when>
-                        <c:otherwise>
-                          <!-- Regular text content -->
-                          <c:out value="${h:getPreview(post.postContent, 200)}" />
-                        </c:otherwise>
-                      </c:choose>
-                    </div>
-                  </a>
-                  <c:if test="${post.group != null}">
-                    <small class="text-muted mt-2 d-block">
-                      <i class="fas fa-users" style="margin-right: 4px;"></i>
-                      Posted in: <c:out value="${post.group.groupName}"/>
-                    </small>
-                  </c:if>
-                </div>
+              </c:forEach>
+            </c:when>
+            <c:otherwise>
+              <div class="no-results">
+                <i class="fas fa-user-slash"></i>
+                No users found for "<c:out value="${keyword}"/>".
               </div>
-            </c:forEach>
-          </c:when>
-          <c:otherwise>
-            <div class="no-results">
-              <i class="fas fa-file-excel"></i>
-              No posts found for "<c:out value="${keyword}"/>".
-            </div>
-          </c:otherwise>
-        </c:choose>
-      </div>
-
-      <!-- Posts by Hashtag Section -->
-      <div class="results-category">
-        <div class="category-header">
-          <h3 class="category-title">
-            <i class="fas fa-hashtag"></i>Posts with hashtags
-          </h3>
-          <div class="d-flex align-items-center gap-2">
-            <span class="category-count">${fn:length(searchResults.posts_hashtag)} results</span>
-            <c:if test="${fn:length(searchResults.posts_hashtag) > 0}">
-              <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=posts_hashtag" class="view-more-link">
-                View all
-              </a>
-            </c:if>
-          </div>
+            </c:otherwise>
+          </c:choose>
         </div>
-        <c:choose>
-          <c:when test="${not empty searchResults.posts_hashtag}">
-            <c:set var="anyResultsFound" value="${true}" />
-            <c:forEach var="post" items="${searchResults.posts_hashtag}" varStatus="status" end="4">
-              <div class="result-item-large">
-                <div class="d-flex align-items-start mb-3">
-                  <c:if test="${post.account != null}">
-                    <div class="result-avatar me-3" style="width: 36px; height: 36px; font-size: 14px;">
+
+        <!-- Posts by Content Section -->
+        <div class="results-category">
+          <div class="category-header">
+            <h3 class="category-title">
+              <i class="fas fa-file-alt"></i>Posts
+            </h3>
+            <div class="d-flex align-items-center gap-2">
+              <span class="category-count">${fn:length(searchResults.posts_content)} results</span>
+              <c:if test="${fn:length(searchResults.posts_content) > 0}">
+                <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=posts_content" class="view-more-link">
+                  View all
+                </a>
+              </c:if>
+            </div>
+          </div>
+          <c:choose>
+            <c:when test="${not empty searchResults.posts_content}">
+              <c:set var="anyResultsFound" value="${true}" />
+              <c:forEach var="post" items="${searchResults.posts_content}" varStatus="status" end="4">
+                <div class="result-item-large">
+                  <div class="d-flex align-items-start mb-3">
+                    <c:if test="${post.account != null}">
+                      <div class="result-avatar me-3" style="width: 36px; height: 36px; font-size: 14px;">
+                        <c:choose>
+                          <c:when test="${not empty post.account.avatar}">
+                            <img src="${post.account.avatar}" alt="${post.account.fullname}"
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                          </c:when>
+                          <c:otherwise>
+                            <i class="fas fa-user"></i>
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="result-title" style="font-size: 16px;">
+                          <a href="${pageContext.request.contextPath}/profile?userId=${post.account.id}" style="text-decoration: none; color: #1c1e21;">
+                            <c:out value="${post.account.fullname}"/>
+                          </a>
+                        </div>
+                        <div class="result-subtitle">@<c:out value="${post.account.username}"/></div>
+                      </div>
+                    </c:if>
+                  </div>
+                  <div class="post-content">
+                    <a href="${pageContext.request.contextPath}/post?postId=${post.id}" style="text-decoration: none; color: #1c1e21;">
+                      <div class="result-content">
+                        <c:set var="isHtmlContent" value="${fn:contains(post.postContent, '<') && fn:contains(post.postContent, '>')}" />
+                        <c:choose>
+                          <c:when test="${isHtmlContent}">
+                            <span class="post-html-badge">
+                              <i class="fas fa-code"></i> Rich Text
+                            </span>
+                            <div class="post-content-preview">
+                              <c:out value="${h:getPreview(post.postContent, 150)}" />
+                            </div>
+                            <a href="#" class="content-toggle" onclick="toggleHtmlContent(this); return false;" data-post-id="${post.id}">
+                              Show original formatting
+                            </a>
+                            <div class="html-content" id="html-content-${post.id}">
+                                ${h:sanitizeHtml(post.postContent)}
+                            </div>
+                          </c:when>
+                          <c:otherwise>
+                            <c:out value="${h:getPreview(post.postContent, 200)}" />
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                    </a>
+                    <c:if test="${post.group != null}">
+                      <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-users" style="margin-right: 4px;"></i>
+                        Posted in: <c:out value="${post.group.groupName}"/>
+                      </small>
+                    </c:if>
+                  </div>
+                </div>
+              </c:forEach>
+            </c:when>
+            <c:otherwise>
+              <div class="no-results">
+                <i class="fas fa-file-excel"></i>
+                No posts found for "<c:out value="${keyword}"/>".
+              </div>
+            </c:otherwise>
+          </c:choose>
+        </div>
+
+        <!-- Posts by Hashtag Section -->
+        <div class="results-category">
+          <div class="category-header">
+            <h3 class="category-title">
+              <i class="fas fa-hashtag"></i>Posts with hashtags
+            </h3>
+            <div class="d-flex align-items-center gap-2">
+              <span class="category-count">${fn:length(searchResults.posts_hashtag)} results</span>
+              <c:if test="${fn:length(searchResults.posts_hashtag) > 0}">
+                <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=posts_hashtag" class="view-more-link">
+                  View all
+                </a>
+              </c:if>
+            </div>
+          </div>
+          <c:choose>
+            <c:when test="${not empty searchResults.posts_hashtag}">
+              <c:set var="anyResultsFound" value="${true}" />
+              <c:forEach var="post" items="${searchResults.posts_hashtag}" varStatus="status" end="4">
+                <div class="result-item-large">
+                  <div class="d-flex align-items-start mb-3">
+                    <c:if test="${post.account != null}">
+                      <div class="result-avatar me-3" style="width: 36px; height: 36px; font-size: 14px;">
+                        <c:choose>
+                          <c:when test="${not empty post.account.avatar}">
+                            <img src="${post.account.avatar}" alt="${post.account.fullname}"
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                          </c:when>
+                          <c:otherwise>
+                            <i class="fas fa-user"></i>
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div>
+                            <div class="result-title" style="font-size: 16px;">
+                              <a href="${pageContext.request.contextPath}/profile?userId=${post.account.id}" style="text-decoration: none; color: #1c1e21;">
+                                <c:out value="${post.account.fullname}"/>
+                              </a>
+                            </div>
+                            <div class="result-subtitle">@<c:out value="${post.account.username}"/></div>
+                          </div>
+                          <span class="badge bg-primary"><i class="fas fa-hashtag"></i> hashtag</span>
+                        </div>
+                      </div>
+                    </c:if>
+                  </div>
+                  <div class="post-content">
+                    <a href="${pageContext.request.contextPath}/post?postId=${post.id}" style="text-decoration: none; color: #1c1e21;">
+                      <div class="result-content">
+                        <c:set var="isHtmlContent" value="${fn:contains(post.postContent, '<') && fn:contains(post.postContent, '>')}" />
+                        <c:choose>
+                          <c:when test="${isHtmlContent}">
+                            <span class="post-html-badge">
+                              <i class="fas fa-code"></i> Rich Text
+                            </span>
+                            <div class="post-content-preview">
+                              <c:out value="${h:getPreview(post.postContent, 150)}" />
+                            </div>
+                            <a href="#" class="content-toggle" onclick="toggleHtmlContent(this); return false;" data-post-id="${post.id}">
+                              Show original formatting
+                            </a>
+                            <div class="html-content" id="html-content-${post.id}">
+                                ${h:sanitizeHtml(post.postContent)}
+                            </div>
+                          </c:when>
+                          <c:otherwise>
+                            <c:out value="${h:getPreview(post.postContent, 200)}" />
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                    </a>
+                    <c:if test="${post.group != null}">
+                      <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-users" style="margin-right: 4px;"></i>
+                        Posted in: <c:out value="${post.group.groupName}"/>
+                      </small>
+                    </c:if>
+                  </div>
+                </div>
+              </c:forEach>
+            </c:when>
+            <c:otherwise>
+              <div class="no-results">
+                <i class="fas fa-hashtag"></i>
+                No tagged posts found for "<c:out value="${keyword}"/>".
+              </div>
+            </c:otherwise>
+          </c:choose>
+        </div>
+
+        <!-- Groups Section -->
+        <div class="results-category">
+          <div class="category-header">
+            <h3 class="category-title">
+              <i class="fas fa-users"></i>Groups
+            </h3>
+            <div class="d-flex align-items-center gap-2">
+              <span class="category-count">${fn:length(searchResults.groups)} results</span>
+              <c:if test="${fn:length(searchResults.groups) > 0}">
+                <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=groups" class="view-more-link">
+                  View all
+                </a>
+              </c:if>
+            </div>
+          </div>
+          <c:choose>
+            <c:when test="${not empty searchResults.groups}">
+              <c:set var="anyResultsFound" value="${true}" />
+              <c:forEach var="group" items="${searchResults.groups}" varStatus="status" end="4">
+                <div class="result-item-large">
+                  <div class="d-flex align-items-center">
+                    <div class="result-avatar group me-3">
                       <c:choose>
-                        <c:when test="${not empty post.account.avatar}">
-                          <img src="${post.account.avatar}" alt="${post.account.fullname}"
-                               style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        <c:when test="${not empty group.groupCoverImage}">
+                          <img src="${group.groupCoverImage}" alt="${group.groupName}"
+                               style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;">
                         </c:when>
                         <c:otherwise>
-                          <i class="fas fa-user"></i>
+                          <i class="fas fa-users"></i>
                         </c:otherwise>
                       </c:choose>
                     </div>
                     <div class="flex-grow-1">
-                      <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                          <div class="result-title" style="font-size: 16px;">
-                            <a href="${pageContext.request.contextPath}/profile?userId=${post.account.id}" style="text-decoration: none; color: #1c1e21;">
-                              <c:out value="${post.account.fullname}"/>
-                            </a>
-                          </div>
-                          <div class="result-subtitle">@<c:out value="${post.account.username}"/></div>
-                        </div>
-                        <span class="badge bg-primary"><i class="fas fa-hashtag"></i> hashtag</span>
+                      <div class="result-title">
+                        <a href="${pageContext.request.contextPath}/group?groupId=${group.id}" style="text-decoration: none; color: #1c1e21;">
+                          <c:out value="${group.groupName}"/>
+                        </a>
                       </div>
+                      <c:if test="${not empty group.groupDescription}">
+                        <div class="result-content"><c:out value="${group.groupDescription}"/></div>
+                      </c:if>
                     </div>
-                  </c:if>
+                  </div>
                 </div>
-                <div class="post-content">
-                  <a href="${pageContext.request.contextPath}/post?postId=${post.id}" style="text-decoration: none; color: #1c1e21;">
-                    <div class="result-content">
-                      <c:set var="isHtmlContent" value="${fn:contains(post.postContent, '<') && fn:contains(post.postContent, '>')}" />
-                      <c:choose>
-                        <c:when test="${isHtmlContent}">
-                                                    <span class="post-html-badge">
-                                                        <i class="fas fa-code"></i> Rich Text
-                                                    </span>
-
-                          <div class="post-content-preview">
-                            <c:out value="${h:getPreview(post.postContent, 150)}" />
-                          </div>
-
-                          <a href="#" class="content-toggle" onclick="toggleHtmlContent(this); return false;"
-                             data-post-id="${post.id}">
-                            Show original formatting
-                          </a>
-                          <div class="html-content" id="html-content-${post.id}">
-                              ${h:sanitizeHtml(post.postContent)}
-                          </div>
-                        </c:when>
-                        <c:otherwise>
-                          <c:out value="${h:getPreview(post.postContent, 200)}" />
-                        </c:otherwise>
-                      </c:choose>
-                    </div>
-                  </a>
-                  <c:if test="${post.group != null}">
-                    <small class="text-muted mt-2 d-block">
-                      <i class="fas fa-users" style="margin-right: 4px;"></i>
-                      Posted in: <c:out value="${post.group.groupName}"/>
-                    </small>
-                  </c:if>
-                </div>
+              </c:forEach>
+            </c:when>
+            <c:otherwise>
+              <div class="no-results">
+                <i class="fas fa-users-slash"></i>
+                No groups found for "<c:out value="${keyword}"/>".
               </div>
-            </c:forEach>
-          </c:when>
-          <c:otherwise>
-            <div class="no-results">
-              <i class="fas fa-hashtag"></i>
-              No tagged posts found for "<c:out value="${keyword}"/>".
-            </div>
-          </c:otherwise>
-        </c:choose>
-      </div>
+            </c:otherwise>
+          </c:choose>
+        </div>
 
-      <!-- Groups Section -->
-      <div class="results-category">
-        <div class="category-header">
-          <h3 class="category-title">
-            <i class="fas fa-users"></i>Groups
-          </h3>
-          <div class="d-flex align-items-center gap-2">
-            <span class="category-count">${fn:length(searchResults.groups)} results</span>
-            <c:if test="${fn:length(searchResults.groups) > 0}">
-              <a href="${pageContext.request.contextPath}/search?action=viewMore&keyword=${keyword}&category=groups" class="view-more-link">
-                View all
-              </a>
-            </c:if>
+        <!-- Overall No Results -->
+        <c:if test="${!anyResultsFound}">
+          <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No results found</h3>
+            <p>We couldn't find anything for "<c:out value="${keyword}"/>" across all categories.</p>
+            <p>Try searching with different keywords or check your spelling.</p>
           </div>
-        </div>
-        <c:choose>
-          <c:when test="${not empty searchResults.groups}">
-            <c:set var="anyResultsFound" value="${true}" />
-            <c:forEach var="group" items="${searchResults.groups}" varStatus="status" end="4">
-              <div class="result-item-large">
-                <div class="d-flex align-items-center">
-                  <div class="result-avatar group me-3">
-                    <c:choose>
-                      <c:when test="${not empty group.groupCoverImage}">
-                        <img src="${group.groupCoverImage}" alt="${group.groupName}"
-                             style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;">
-                      </c:when>
-                      <c:otherwise>
-                        <i class="fas fa-users"></i>
-                      </c:otherwise>
-                    </c:choose>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="result-title">
-                      <a href="${pageContext.request.contextPath}/group?groupId=${group.id}" style="text-decoration: none; color: #1c1e21;">
-                        <c:out value="${group.groupName}"/>
-                      </a>
-                    </div>
-                    <c:if test="${not empty group.groupDescription}">
-                      <div class="result-content"><c:out value="${group.groupDescription}"/></div>
-                    </c:if>
-                  </div>
-                </div>
-              </div>
-            </c:forEach>
-          </c:when>
-          <c:otherwise>
-            <div class="no-results">
-              <i class="fas fa-users-slash"></i>
-              No groups found for "<c:out value="${keyword}"/>".
-            </div>
-          </c:otherwise>
-        </c:choose>
+        </c:if>
       </div>
-
-      <!-- Overall No Results -->
-      <c:if test="${!anyResultsFound}">
-        <div class="no-results">
-          <i class="fas fa-search"></i>
-          <h3>No results found</h3>
-          <p>We couldn't find anything for "<c:out value="${keyword}"/>" across all categories.</p>
-          <p>Try searching with different keywords or check your spelling.</p>
-        </div>
-      </c:if>
-    </div>
-  </c:if>
+    </c:when>
+    <c:otherwise>
+      <div class="no-results">
+        <i class="fas fa-search"></i>
+        <h3>Enter a search term</h3>
+        <p>Use the search box above to find users, posts, and groups.</p>
+      </div>
+    </c:otherwise>
+  </c:choose>
 </div>
 
 <script>
@@ -747,7 +678,6 @@
     }
   }
 
-  // Add smooth animations for better UX
   document.addEventListener('DOMContentLoaded', function() {
     const toggles = document.querySelectorAll('.content-toggle');
     toggles.forEach(toggle => {

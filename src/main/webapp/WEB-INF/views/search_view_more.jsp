@@ -11,7 +11,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Search Results - <c:out value="${category}"/> - Zust</title>
-  <!-- Font Imports -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -244,32 +243,6 @@
     }
   </style>
 </head>
-<script>
-  function toggleHtmlContent(element) {
-    const htmlContent = element.nextElementSibling;
-    const isVisible = htmlContent.classList.contains('show');
-
-    if (isVisible) {
-      htmlContent.classList.remove('show');
-      element.textContent = 'Show full content with formatting';
-    } else {
-      htmlContent.classList.add('show');
-      element.textContent = 'Hide formatting';
-    }
-  }
-
-  // Add smooth animations for better UX
-  document.addEventListener('DOMContentLoaded', function() {
-    const toggles = document.querySelectorAll('.content-toggle');
-    toggles.forEach(toggle => {
-      toggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleHtmlContent(this);
-      });
-    });
-  });
-</script>
 
 <body>
 <%-- Debug information --%>
@@ -285,10 +258,11 @@
     <p>Results Size: <strong>${fn:length(pagedResults.results)}</strong></p>
   </div>
 </c:if>
+
 <div class="search-results-page">
-  <a href="${pageContext.request.contextPath}/post" class="back-link">
+  <a href="${pageContext.request.contextPath}/search?keyword=${keyword}" class="back-link">
     <i class="fas fa-arrow-left"></i>
-    Back to Feed
+    Back to Search Results
   </a>
 
   <div class="search-header">
@@ -355,7 +329,7 @@
                 </div>
               </c:when>
 
-              <%-- Post Results Section trong search_view_more.jsp --%>
+              <%-- Post Results --%>
               <c:when test="${category == 'posts_content' or category == 'posts_hashtag'}">
                 <div>
                   <div class="d-flex align-items-start mb-3">
@@ -391,7 +365,6 @@
                   <div class="post-content">
                     <a href="${pageContext.request.contextPath}/post?postId=${item.id}" style="text-decoration: none; color: #1c1e21;">
                       <div class="result-content">
-                        <!-- Replace isHtmlContent check with: -->
                         <c:set var="isHtmlContent" value="${fn:contains(item.postContent, '<') && fn:contains(item.postContent, '>')}" />
                         <c:choose>
                           <c:when test="${isHtmlContent}">
@@ -414,7 +387,6 @@
                   </div>
                 </div>
               </c:when>
-
 
               <%-- Group Results --%>
               <c:when test="${category == 'groups'}">
@@ -477,6 +449,32 @@
     </c:choose>
   </div>
 </div>
+
+<script>
+  function toggleHtmlContent(element) {
+    const htmlContent = element.nextElementSibling;
+    const isVisible = htmlContent.classList.contains('show');
+
+    if (isVisible) {
+      htmlContent.classList.remove('show');
+      element.textContent = 'Show full content with formatting';
+    } else {
+      htmlContent.classList.add('show');
+      element.textContent = 'Hide formatting';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.content-toggle');
+    toggles.forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleHtmlContent(this);
+      });
+    });
+  });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"

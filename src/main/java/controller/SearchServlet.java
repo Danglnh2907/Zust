@@ -1,100 +1,172 @@
 package controller;
 
 import dao.SearchDAO;
-import model.Account;
-import model.Post;
-import model.Group;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
-@WebServlet("/search")
-public class SearchServlet extends HttpServlet implements Serializable {
-	@Serial
-	private static final long serialVersionUID = 1L;
+@WebServlet(name = "SearchServlet", urlPatterns = {"/search"})
+public class SearchServlet extends HttpServlet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SearchServlet.class);
-	private SearchDAO searchDAO;
 	private static final int RESULTS_PER_PAGE = 10;
-	private static final int LIVE_SEARCH_LIMIT = 5;
+
+	private SearchDAO searchDAO;
 
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		searchDAO = new SearchDAO();
-		LOGGER.info("SearchServlet initialized. Starting Lucene data indexing...");
 		try {
-			searchDAO.indexAllDataToLucene();
-			LOGGER.info("Lucene data indexing complete.");
+			this.searchDAO = new SearchDAO();
+			LOGGER.info("SearchServlet initialized successfully");
 		} catch (Exception e) {
-			LOGGER.error("Error during initialization", e);
+			LOGGER.error("Failed to initialize SearchDAO", e);
+			throw new ServletException("Failed to initialize search functionality", e);
 		}
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("users") == null) {
-			response.sendRedirect(request.getContextPath() + "/login?message=" + java.net.URLEncoder.encode("Please log in to access search.", "UTF-8"));
-			return;
+	public void destroy() {
+		if (searchDAO != null) {
+			try {
+				searchDAO.close();
+				LOGGER.info("SearchDAO closed successfully");
+			} catch (Exception e) {
+				LOGGER.error("Error closing SearchDAO", e);
+			}
 		}
+		super.destroy();
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 
 		String action = request.getParameter("action");
 
-		if ("live".equals(action)) {
-			handleLiveSearch(request, response);
-		} else if ("viewMore".equals(action)) {
-			handleViewMoreSearch(request, response);
-		} else {
-			handleFullSearch(request, response);
+		try {
+			if ("live".equals(action)) {
+				handleLiveSearch(request, response);
+			} else if ("viewMore".equals(action)) {
+				handleViewMoreSearch(request, response);
+			} else if ("forceRefresh".equals(action)) {
+				handleForceRefresh(request, response);
+			} else {
+				handleFullSearch(request, response);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error in SearchServlet", e);
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Search error occurred");
 		}
 	}
 
-	private void handleLiveSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		doGet(request, response);
+	}
+
+	/**
+	 * Handle main search functionality
+	 */
+	private void handleFullSearch(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
 		String keyword = request.getParameter("keyword");
 
-		LOGGER.info("Live search request for keyword: {}", keyword);
+		LOGGER.info("Full search request - keyword: {}", keyword);
 
-		if (keyword == null || keyword.trim().isEmpty() || keyword.trim().length() < 2) {
-			request.setAttribute("liveResults", Collections.emptyMap());
-			request.setAttribute("keyword", keyword);
-			request.getRequestDispatcher("/WEB-INF/views/live_search_results.jsp").forward(request, response);
+		if (keyword == null || keyword.trim().isEmpty()) {
+			LOGGER.warn("Full search with empty keyword, showing empty results");
+			request.setAttribute("keyword", "");
+			request.setAttribute("searchResults", Map.of(
+					"users", java.util.Collections.emptyList(),
+					"posts_content", java.util.Collections.emptyList(),
+					"posts_hashtag", java.util.Collections.emptyList(),
+					"groups", java.util.Collections.emptyList()
+			));
+			request.getRequestDispatcher("/WEB-INF/views/search_results.jsp").forward(request, response);
 			return;
 		}
 
 		try {
-			Map<String, List<?>> liveResults = searchDAO.searchAllLimited(keyword, LIVE_SEARCH_LIMIT);
+			// Perform search across all categories with limited results for overview
+			Map<String, java.util.List<?>> searchResults = searchDAO.searchAllLimited(keyword, 5);
+
+			LOGGER.info("Full search completed for keyword: {} - Users: {}, Posts: {}, Hashtag Posts: {}, Groups: {}",
+					keyword,
+					searchResults.get("users").size(),
+					searchResults.get("posts_content").size(),
+					searchResults.get("posts_hashtag").size(),
+					searchResults.get("groups").size());
+
 			request.setAttribute("keyword", keyword);
-			request.setAttribute("liveResults", liveResults);
+			request.setAttribute("searchResults", searchResults);
+			request.getRequestDispatcher("/WEB-INF/views/search_results.jsp").forward(request, response);
 
-			LOGGER.info("Live search results: users={}, posts_content={}, posts_hashtag={}, groups={}",
-					liveResults.get("users") != null ? ((List<?>)liveResults.get("users")).size() : 0,
-					liveResults.get("posts_content") != null ? ((List<?>)liveResults.get("posts_content")).size() : 0,
-					liveResults.get("posts_hashtag") != null ? ((List<?>)liveResults.get("posts_hashtag")).size() : 0,
-					liveResults.get("groups") != null ? ((List<?>)liveResults.get("groups")).size() : 0);
-
-			request.getRequestDispatcher("/WEB-INF/views/live_search_results.jsp").forward(request, response);
 		} catch (Exception e) {
-			LOGGER.error("Live search failed for keyword: {}", keyword, e);
-			request.setAttribute("liveResults", Collections.emptyMap());
+			LOGGER.error("Full search failed for keyword: {}", keyword, e);
 			request.setAttribute("keyword", keyword);
-			request.getRequestDispatcher("/WEB-INF/views/live_search_results.jsp").forward(request, response);
+			request.setAttribute("errorMessage", "Search failed. Please try again.");
+			request.getRequestDispatcher("/WEB-INF/views/search_results.jsp").forward(request, response);
 		}
 	}
 
-	private void handleViewMoreSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	/**
+	 * Handle live search - return HTML fragment instead of JSON
+	 */
+	private void handleLiveSearch(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		String keyword = request.getParameter("keyword");
+		int limit = 3; // Fewer results for live search
+
+		LOGGER.debug("Live search request - keyword: {}", keyword);
+
+		response.setContentType("text/html");
+		response.setCharacterEncoding("UTF-8");
+
+		if (keyword == null || keyword.trim().isEmpty()) {
+			response.getWriter().write("<div style='padding: 20px; text-align: center; color: #65676b;'>Enter search terms...</div>");
+			return;
+		}
+
+		try {
+			Map<String, java.util.List<?>> liveResults = searchDAO.searchAllLimited(keyword, limit);
+
+			LOGGER.debug("Live search completed for keyword: {} - Users: {}, Posts: {}, Hashtag Posts: {}, Groups: {}",
+					keyword,
+					liveResults.get("users").size(),
+					liveResults.get("posts_content").size(),
+					liveResults.get("posts_hashtag").size(),
+					liveResults.get("groups").size());
+
+			// Set attributes for JSP
+			request.setAttribute("keyword", keyword);
+			request.setAttribute("searchResults", liveResults);
+
+			// Forward to live search JSP fragment
+			request.getRequestDispatcher("/WEB-INF/views/live_search_results.jsp").forward(request, response);
+
+		} catch (Exception e) {
+			LOGGER.error("Live search failed for keyword: {}", keyword, e);
+			response.getWriter().write("<div style='padding: 20px; text-align: center; color: #d73502;'><i class='fas fa-exclamation-triangle'></i> Search failed. Please try again.</div>");
+		}
+	}
+
+
+	/**
+	 * Handle view more search for specific category with pagination
+	 */
+	private void handleViewMoreSearch(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
 		String keyword = request.getParameter("keyword");
 		String category = request.getParameter("category");
 		int page = 1;
@@ -132,7 +204,7 @@ public class SearchServlet extends HttpServlet implements Serializable {
 			LOGGER.info("Paged search results: totalCount={}, hasMore={}, resultSize={}",
 					pagedResults.get("totalCount"),
 					pagedResults.get("hasMore"),
-					pagedResults.get("results") != null ? ((List<?>)pagedResults.get("results")).size() : 0);
+					pagedResults.get("results") != null ? ((java.util.List<?>)pagedResults.get("results")).size() : 0);
 
 			request.setAttribute("keyword", keyword);
 			request.setAttribute("category", category);
@@ -147,26 +219,43 @@ public class SearchServlet extends HttpServlet implements Serializable {
 		}
 	}
 
-	private void handleFullSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String keyword = request.getParameter("keyword");
-		Map<String, List<?>> searchResults = Collections.emptyMap();
-		String errorMessage = null;
+	/**
+	 * Handle force refresh of search index (admin function)
+	 */
+	private void handleForceRefresh(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 
-		if (keyword != null && !keyword.trim().isEmpty()) {
-			try {
-				searchResults = searchDAO.searchAll(keyword);
-			} catch (Exception e) {
-				LOGGER.error("Search failed for keyword: {}", keyword, e);
-				errorMessage = "An error occurred during search: " + e.getMessage();
+		LOGGER.info("Force refresh search index requested");
+
+		try {
+			searchDAO.forceRefreshIndex();
+			LOGGER.info("Search index force refresh completed successfully");
+
+			// Redirect back to where they came from or search page
+			String referer = request.getHeader("Referer");
+			if (referer != null && !referer.isEmpty()) {
+				response.sendRedirect(referer + (referer.contains("?") ? "&" : "?") + "refreshed=true");
+			} else {
+				response.sendRedirect(request.getContextPath() + "/search?refreshed=true");
 			}
-		} else if (keyword != null && keyword.trim().isEmpty()) {
-			errorMessage = "Please enter a search keyword.";
+		} catch (Exception e) {
+			LOGGER.error("Force refresh failed", e);
+			response.sendRedirect(request.getContextPath() + "/search?error=" +
+					java.net.URLEncoder.encode("Refresh failed", "UTF-8"));
 		}
+	}
 
-		request.setAttribute("keyword", keyword);
-		request.setAttribute("searchResults", searchResults);
-		request.setAttribute("errorMessage", errorMessage);
-
-		request.getRequestDispatcher("/WEB-INF/views/search_results.jsp").forward(request, response);
+	/**
+	 * Escape JSON special characters
+	 */
+	private String escapeJson(String input) {
+		if (input == null) return "";
+		return input.replace("\\", "\\\\")
+				.replace("\"", "\\\"")
+				.replace("\b", "\\b")
+				.replace("\f", "\\f")
+				.replace("\n", "\\n")
+				.replace("\r", "\\r")
+				.replace("\t", "\\t");
 	}
 }

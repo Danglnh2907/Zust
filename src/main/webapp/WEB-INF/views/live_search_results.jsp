@@ -1,204 +1,160 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
-<%@ page import="model.Account, model.Post, model.Group" %>
-<%@ page import="java.util.List" %>
+<%@ page import="java.util.*" %>
+<%@ page import="model.*" %>
 
-<c:set var="contextPath" value="${pageContext.request.contextPath}" />
-<c:set var="keyword" value="${keyword}" />
+<%
+  Map<String, List<?>> searchResults = (Map<String, List<?>>) request.getAttribute("searchResults");
+  String keyword = (String) request.getAttribute("keyword");
 
-<c:choose>
-  <c:when test="${empty liveResults or (empty liveResults.users and empty liveResults.posts_content and empty liveResults.posts_hashtag and empty liveResults.groups)}">
-    <div class="no-results">
-      <i class="fas fa-search" style="margin-right: 8px; color: #65676b;"></i>
-      No results found for "<c:out value="${keyword}"/>"
-    </div>
-  </c:when>
-  <c:otherwise>
-    <!-- Users Section -->
-    <c:if test="${not empty liveResults.users}">
-      <div class="search-category">
-        <div class="search-category-header">
-          <span><i class="fas fa-user" style="margin-right: 6px;"></i>People</span>
-          <a href="#" class="view-all-link" data-category="users">See all</a>
-        </div>
-        <c:forEach var="user" items="${liveResults.users}" varStatus="status">
-          <div class="search-item" data-type="user" data-id="${user.id}">
-            <div class="search-item-avatar">
-              <c:choose>
-                <c:when test="${not empty user.avatar}">
-                  <img src="${user.avatar}" alt="${user.fullname}">
-                </c:when>
-                <c:otherwise>
-                  <i class="fas fa-user"></i>
-                </c:otherwise>
-              </c:choose>
-            </div>
-            <div class="search-item-content">
-              <div class="search-item-title">
-                <c:out value="${user.fullname}"/>
-              </div>
-              <div class="search-item-subtitle">
-                @<c:out value="${user.username}"/>
-                <c:if test="${not empty user.bio and fn:length(user.bio) > 0}">
-                  · <c:choose>
-                  <c:when test="${fn:length(user.bio) > 30}">
-                    <c:out value="${fn:substring(user.bio, 0, 30)}"/>...
-                  </c:when>
-                  <c:otherwise>
-                    <c:out value="${user.bio}"/>
-                  </c:otherwise>
-                </c:choose>
-                </c:if>
-              </div>
-            </div>
-            <div class="search-item-type">Person</div>
-          </div>
-        </c:forEach>
-      </div>
-    </c:if>
+  boolean hasResults = false;
 
-    <!-- Posts by Content Section -->
-    <c:if test="${not empty liveResults.posts_content}">
-      <div class="search-category">
-        <div class="search-category-header">
-          <span><i class="fas fa-file-text" style="margin-right: 6px;"></i>Posts</span>
-          <a href="#" class="view-all-link" data-category="posts_content">See all</a>
-        </div>
-        <c:forEach var="post" items="${liveResults.posts_content}" varStatus="status">
-          <div class="search-item" data-type="post" data-id="${post.id}">
-            <div class="search-item-avatar">
-              <c:choose>
-                <c:when test="${not empty post.account and not empty post.account.avatar}">
-                  <img src="${post.account.avatar}" alt="${post.account.fullname}">
-                </c:when>
-                <c:otherwise>
-                  <i class="fas fa-file-alt"></i>
-                </c:otherwise>
-              </c:choose>
-            </div>
-            <div class="search-item-content">
-              <div class="search-item-title">
-                <c:choose>
-                  <c:when test="${post.account != null}">
-                    <c:out value="${post.account.fullname}"/>
-                  </c:when>
-                  <c:otherwise>
-                    Post #${post.id}
-                  </c:otherwise>
-                </c:choose>
-              </div>
-              <div class="search-item-subtitle">
-                <c:choose>
-                  <c:when test="${not empty post.postContent and fn:length(post.postContent) > 60}">
-                    <c:out value="${fn:substring(post.postContent, 0, 60)}"/>...
-                  </c:when>
-                  <c:when test="${not empty post.postContent}">
-                    <c:out value="${post.postContent}"/>
-                  </c:when>
-                  <c:otherwise>
-                    Post content
-                  </c:otherwise>
-                </c:choose>
-              </div>
-            </div>
-            <div class="search-item-type">Post</div>
-          </div>
-        </c:forEach>
-      </div>
-    </c:if>
+  if (searchResults != null) {
+    List<?> users = searchResults.get("users");
+    List<?> postsContent = searchResults.get("posts_content");
+    List<?> postsHashtag = searchResults.get("posts_hashtag");
+    List<?> groups = searchResults.get("groups");
 
-    <!-- Posts by Hashtag Section -->
-    <c:if test="${not empty liveResults.posts_hashtag}">
-      <div class="search-category">
-        <div class="search-category-header">
-          <span><i class="fas fa-hashtag" style="margin-right: 6px;"></i>Hashtags</span>
-          <a href="#" class="view-all-link" data-category="posts_hashtag">See all</a>
-        </div>
-        <c:forEach var="post" items="${liveResults.posts_hashtag}" varStatus="status">
-          <div class="search-item" data-type="post" data-id="${post.id}">
-            <div class="search-item-avatar">
-              <c:choose>
-                <c:when test="${not empty post.account and not empty post.account.avatar}">
-                  <img src="${post.account.avatar}" alt="${post.account.fullname}">
-                </c:when>
-                <c:otherwise>
-                  <i class="fas fa-hashtag"></i>
-                </c:otherwise>
-              </c:choose>
-            </div>
-            <div class="search-item-content">
-              <div class="search-item-title">
-                <c:choose>
-                  <c:when test="${post.account != null}">
-                    <c:out value="${post.account.fullname}"/>
-                  </c:when>
-                  <c:otherwise>
-                    Tagged Post #${post.id}
-                  </c:otherwise>
-                </c:choose>
-              </div>
-              <div class="search-item-subtitle">
-                <c:choose>
-                  <c:when test="${not empty post.postContent and fn:length(post.postContent) > 60}">
-                    <c:out value="${fn:substring(post.postContent, 0, 60)}"/>...
-                  </c:when>
-                  <c:when test="${not empty post.postContent}">
-                    <c:out value="${post.postContent}"/>
-                  </c:when>
-                  <c:otherwise>
-                    Tagged post content
-                  </c:otherwise>
-                </c:choose>
-              </div>
-            </div>
-            <div class="search-item-type">#Tag</div>
-          </div>
-        </c:forEach>
-      </div>
-    </c:if>
+    hasResults = (users != null && !users.isEmpty()) ||
+            (postsContent != null && !postsContent.isEmpty()) ||
+            (postsHashtag != null && !postsHashtag.isEmpty()) ||
+            (groups != null && !groups.isEmpty());
+%>
 
-    <!-- Groups Section -->
-    <c:if test="${not empty liveResults.groups}">
-      <div class="search-category">
-        <div class="search-category-header">
-          <span><i class="fas fa-users" style="margin-right: 6px;"></i>Groups</span>
-          <a href="#" class="view-all-link" data-category="groups">See all</a>
-        </div>
-        <c:forEach var="group" items="${liveResults.groups}" varStatus="status">
-          <div class="search-item" data-type="group" data-id="${group.id}">
-            <div class="search-item-avatar" style="border-radius: 8px;">
-              <c:choose>
-                <c:when test="${not empty group.groupCoverImage}">
-                  <img src="${group.groupCoverImage}" alt="${group.groupName}" style="border-radius: 8px;">
-                </c:when>
-                <c:otherwise>
-                  <i class="fas fa-users"></i>
-                </c:otherwise>
-              </c:choose>
-            </div>
-            <div class="search-item-content">
-              <div class="search-item-title">
-                <c:out value="${group.groupName}"/>
-              </div>
-              <div class="search-item-subtitle">
-                <c:choose>
-                  <c:when test="${not empty group.groupDescription and fn:length(group.groupDescription) > 50}">
-                    <c:out value="${fn:substring(group.groupDescription, 0, 50)}"/>...
-                  </c:when>
-                  <c:when test="${not empty group.groupDescription}">
-                    <c:out value="${group.groupDescription}"/>
-                  </c:when>
-                  <c:otherwise>
-                    Group
-                  </c:otherwise>
-                </c:choose>
-              </div>
-            </div>
-            <div class="search-item-type">Group</div>
-          </div>
-        </c:forEach>
-      </div>
-    </c:if>
-  </c:otherwise>
-</c:choose>
+<% if (!hasResults) { %>
+<div style="padding: 30px 20px; text-align: center; color: #65676b;">
+  <i class="fas fa-search" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+  <div>No results found for "<%= keyword != null ? keyword.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : "" %>"</div>
+</div>
+<% } else { %>
+
+<!-- Users Section -->
+<% if (users != null && !users.isEmpty()) { %>
+<div class="search-section-header">
+  <i class="fas fa-user" style="margin-right: 8px; color: #1877f2;"></i>
+  People (<%= users.size() %>)
+</div>
+<%
+  for (int i = 0; i < Math.min(users.size(), 3); i++) {
+    Account user = (Account) users.get(i);
+    String avatar = user.getAvatar();
+    String fullname = user.getFullname() != null ? user.getFullname() : "Unknown";
+    String username = user.getUsername() != null ? user.getUsername() : "unknown";
+%>
+<div class="search-result-item" onclick="goToProfile(<%= user.getId() %>)">
+  <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
+    <% if (avatar != null && !avatar.trim().isEmpty()) { %>
+    <img src="<%= avatar %>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="<%= fullname.replaceAll("\"", "&quot;") %>">
+    <% } else { %>
+    <i class="fas fa-user"></i>
+    <% } %>
+  </div>
+  <div style="flex-grow: 1;">
+    <div style="font-weight: 600; color: #1c1e21; font-size: 14px;"><%= fullname.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+    <div style="color: #65676b; font-size: 13px;">@<%= username.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+  </div>
+</div>
+<% } %>
+<% } %>
+
+<!-- Posts Content Section -->
+<% if (postsContent != null && !postsContent.isEmpty()) { %>
+<div class="search-section-header">
+  <i class="fas fa-file-alt" style="margin-right: 8px; color: #1877f2;"></i>
+  Posts (<%= postsContent.size() %>)
+</div>
+<%
+  for (int i = 0; i < Math.min(postsContent.size(), 2); i++) {
+    Post post = (Post) postsContent.get(i);
+    String content = post.getPostContent() != null ? post.getPostContent() : "[No content available]";
+    // Strip HTML tags
+    content = content.replaceAll("<[^>]*>", "").trim();
+    if (content.length() > 100) {
+      content = content.substring(0, 100) + "...";
+    }
+    String authorName = post.getAccount() != null ? post.getAccount().getFullname() : "Unknown Author";
+%>
+<div class="search-result-item" onclick="goToPost(<%= post.getId() %>)">
+  <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
+    <i class="fas fa-file-alt"></i>
+  </div>
+  <div style="flex-grow: 1;">
+    <div style="color: #65676b; font-size: 13px;">by <%= authorName.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+    <div style="color: #1c1e21; font-size: 13px; line-height: 1.3;"><%= content.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+  </div>
+</div>
+<% } %>
+<% } %>
+
+<!-- Posts Hashtag Section -->
+<% if (postsHashtag != null && !postsHashtag.isEmpty()) { %>
+<div class="search-section-header">
+  <i class="fas fa-hashtag" style="margin-right: 8px; color: #1877f2;"></i>
+  Tagged Posts (<%= postsHashtag.size() %>)
+</div>
+<%
+  for (int i = 0; i < Math.min(postsHashtag.size(), 2); i++) {
+    Post post = (Post) postsHashtag.get(i);
+    String content = post.getPostContent() != null ? post.getPostContent() : "[No content available]";
+    content = content.replaceAll("<[^>]*>", "").trim();
+    if (content.length() > 100) {
+      content = content.substring(0, 100) + "...";
+    }
+    String authorName = post.getAccount() != null ? post.getAccount().getFullname() : "Unknown Author";
+%>
+<div class="search-result-item" onclick="goToPost(<%= post.getId() %>)">
+  <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
+    <i class="fas fa-hashtag"></i>
+  </div>
+  <div style="flex-grow: 1;">
+    <div style="color: #65676b; font-size: 13px;">by <%= authorName.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+    <div style="color: #1c1e21; font-size: 13px; line-height: 1.3;"><%= content.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+  </div>
+  <span style="background: #1877f2; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: auto;">
+                    <i class="fas fa-hashtag"></i>
+                </span>
+</div>
+<% } %>
+<% } %>
+
+<!-- Groups Section -->
+<% if (groups != null && !groups.isEmpty()) { %>
+<div class="search-section-header">
+  <i class="fas fa-users" style="margin-right: 8px; color: #1877f2;"></i>
+  Groups (<%= groups.size() %>)
+</div>
+<%
+  for (int i = 0; i < Math.min(groups.size(), 2); i++) {
+    Group group = (Group) groups.get(i);
+    String groupName = group.getGroupName() != null ? group.getGroupName() : "Unknown Group";
+    String description = group.getGroupDescription();
+    if (description != null && description.length() > 60) {
+      description = description.substring(0, 60) + "...";
+    }
+%>
+<div class="search-result-item" onclick="goToGroup(<%= group.getId() %>)">
+  <div style="width: 40px; height: 40px; border-radius: 8px; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
+    <i class="fas fa-users"></i>
+  </div>
+  <div style="flex-grow: 1;">
+    <div style="font-weight: 600; color: #1c1e21; font-size: 14px;"><%= groupName.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+    <% if (description != null && !description.trim().isEmpty()) { %>
+    <div style="color: #65676b; font-size: 13px;"><%= description.replaceAll("<", "&lt;").replaceAll(">", "&gt;") %></div>
+    <% } %>
+  </div>
+</div>
+<% } %>
+<% } %>
+
+<!-- View All Footer -->
+<div style="padding: 12px 16px; text-align: center; border-top: 1px solid #e4e6ea; background: #f8f9fa;">
+  <a href="${pageContext.request.contextPath}/search?keyword=<%= java.net.URLEncoder.encode(keyword != null ? keyword : "", "UTF-8") %>"
+     style="color: #1877f2; text-decoration: none; font-weight: 500; font-size: 14px;">
+    View all results for "<%= keyword != null ? keyword.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : "" %>"
+  </a>
+</div>
+
+<% } %>
+
+<%
+  }
+%>

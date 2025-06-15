@@ -1,21 +1,16 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-
-/* Search Container */
+/* Enhanced Search Container Styles */
 .search-container {
     position: relative;
     flex-grow: 1;
-    max-width: 400px;
+    max-width: 500px;
     margin: 0 20px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .search-bar {
     position: relative;
     display: flex;
     align-items: center;
-    background: #f1f3f4;
+    background: #f0f2f5;
     border-radius: 20px;
     padding: 8px 16px;
     transition: all 0.3s ease;
@@ -23,41 +18,44 @@
 
 .search-bar:focus-within {
     background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #1877f2;
 }
 
 .search-icon {
-    color: #65676b;
-    margin-right: 8px;
-    stroke: currentColor;
-    width: 16px;
-    height: 16px;
+    stroke: #65676b;
+    margin-right: 10px;
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
-#liveSearchInput {
+.search-bar input {
     border: none;
     background: transparent;
     outline: none;
-    font-size: 15px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     flex-grow: 1;
+    font-size: 15px;
     color: #1c1e21;
-    font-weight: 400;
+    font-family: 'Inter', sans-serif;
 }
 
-#liveSearchInput::placeholder {
+.search-bar input::placeholder {
     color: #65676b;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .search-loading {
     margin-left: 8px;
+    display: none;
+}
+
+.search-loading.show {
+    display: block;
 }
 
 .spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid #e4e6ea;
+    border: 2px solid #f3f3f3;
     border-top: 2px solid #1877f2;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -76,218 +74,266 @@
     right: 0;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    max-height: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 450px;
     overflow-y: auto;
+    z-index: 1000;
+    margin-top: 8px;
+    border: 1px solid #e4e6ea;
     display: none;
-    margin-top: 4px;
-    border: 1px solid #dadde1;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .live-search-dropdown.show {
     display: block;
+    animation: slideDown 0.2s ease-out;
 }
 
-.search-results-container {
-    padding: 8px 0;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.search-category {
-    margin-bottom: 12px;
-}
-
-.search-category:last-child {
-    margin-bottom: 0;
-}
-
-.search-category-header {
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #65676b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: #f7f8fa;
+/* Search Sections */
+.search-section {
     border-bottom: 1px solid #e4e6ea;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
-.search-item {
-    padding: 8px 16px;
+.search-section:last-child {
+    border-bottom: none;
+}
+
+.search-section-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e4e6ea;
+    font-weight: 600;
+    color: #1c1e21;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+}
+
+.search-section-header i {
+    margin-right: 8px;
+    color: #1877f2;
+    width: 16px;
+}
+
+/* Search Result Items */
+.search-result-item {
+    padding: 12px 16px;
     cursor: pointer;
     border-bottom: 1px solid #f0f2f5;
     transition: background-color 0.2s ease;
     display: flex;
     align-items: center;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.search-item:hover {
-    background: #f2f3f5;
+.search-result-item:hover {
+    background-color: #f0f2f5;
 }
 
-.search-item:last-child {
+.search-result-item:last-child {
     border-bottom: none;
 }
 
-.search-item-avatar {
-    width: 36px;
-    height: 36px;
+.search-result-avatar {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     margin-right: 12px;
+    object-fit: cover;
     background: #e4e6ea;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
     color: #65676b;
-    overflow: hidden;
     flex-shrink: 0;
 }
 
-.search-item-avatar i {
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
+.search-result-avatar.group {
+    border-radius: 8px;
 }
 
-.search-item-avatar img {
+.search-result-avatar img {
     width: 100%;
     height: 100%;
+    border-radius: inherit;
     object-fit: cover;
 }
 
-.search-item-content {
+.search-result-info {
     flex-grow: 1;
     min-width: 0;
 }
 
-.search-item-title {
-    font-size: 15px;
-    font-weight: 500;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.search-result-title {
+    font-weight: 600;
     color: #1c1e21;
+    font-size: 14px;
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: 'Inter', sans-serif;
 }
 
-.search-item-subtitle {
-    font-size: 13px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.search-result-subtitle {
     color: #65676b;
+    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: 'Inter', sans-serif;
 }
 
-.search-item-type {
-    font-size: 12px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #1877f2;
-    font-weight: 500;
-    margin-left: 8px;
+.search-result-content {
+    color: #1c1e21;
+    font-size: 13px;
+    line-height: 1.3;
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+}
+
+.search-badge {
+    background: #1877f2;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    margin-left: auto;
     flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
 }
 
-.view-all-link {
+/* Search States */
+.search-no-results {
+    text-align: center;
+    padding: 30px 20px;
+    color: #65676b;
+    font-family: 'Inter', sans-serif;
+}
+
+.search-no-results i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+    opacity: 0.5;
+}
+
+.search-loading-state {
+    text-align: center;
+    padding: 20px;
+    color: #65676b;
+    font-family: 'Inter', sans-serif;
+}
+
+.search-error-state {
+    text-align: center;
+    padding: 20px;
+    color: #d73502;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Search Footer */
+.search-footer {
+    padding: 12px 16px;
+    text-align: center;
+    border-top: 1px solid #e4e6ea;
+    background: #f8f9fa;
+}
+
+.search-view-all {
     color: #1877f2;
     text-decoration: none;
-    font-size: 12px;
     font-weight: 500;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.view-all-link:hover {
-    text-decoration: underline;
-}
-
-.no-results {
-    padding: 20px 16px;
-    text-align: center;
-    color: #65676b;
     font-size: 14px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
-/* Search highlight */
-.search-highlight {
-    background: #fff3cd;
-    font-weight: 600;
-    padding: 1px 2px;
-    border-radius: 2px;
+.search-view-all:hover {
+    text-decoration: underline;
+    color: #166fe5;
 }
 
-/* Custom scrollbar for dropdown */
-.live-search-dropdown::-webkit-scrollbar {
-    width: 6px;
+/* Feed Enhancement */
+.feed {
+    margin-top: 20px;
 }
 
-.live-search-dropdown::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 6px;
+.no-posts-message {
+    text-align: center;
+    padding: 40px 20px;
 }
 
-.live-search-dropdown::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 6px;
-}
-
-.live-search-dropdown::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
     .search-container {
         margin: 0 10px;
-        max-width: 300px;
+        max-width: none;
     }
 
-    .live-search-dropdown {
-        left: -20px;
-        right: -20px;
+    .search-bar {
+        padding: 6px 12px;
+        border-radius: 16px;
     }
 
-    .search-item-title,
-    .search-item-subtitle {
+    .search-bar input {
         font-size: 14px;
     }
 
-    .search-item-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+    .search-result-item {
+        padding: 10px 12px;
+    }
+
+    .search-result-avatar {
+        width: 36px;
+        height: 36px;
+        margin-right: 10px;
+    }
+
+    .search-section-header {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .search-result-title {
+        font-size: 13px;
+    }
+
+    .search-result-subtitle,
+    .search-result-content {
+        font-size: 12px;
     }
 }
 
 @media (max-width: 480px) {
     .search-container {
-        margin: 0 8px;
-        max-width: 250px;
+        margin: 0 5px;
     }
 
     .search-bar {
-        padding: 6px 12px;
+        padding: 5px 10px;
     }
 
-    #liveSearchInput {
-        font-size: 14px;
+    .live-search-dropdown {
+        margin-top: 5px;
     }
 
-    .search-item {
-        padding: 6px 12px;
-    }
-
-    .search-item-avatar {
-        width: 28px;
-        height: 28px;
+    .search-result-avatar {
+        width: 32px;
+        height: 32px;
         margin-right: 8px;
-        font-size: 12px;
     }
 }
