@@ -121,7 +121,7 @@ public class FileService {
 		String subDir = determineSubDirectory(fileName);
 		Path filePath = prepareAndSaveFile(fileName, fileContent, subDir);
 		LOGGER.info("File saved successfully: {}", filePath);
-		return normalizePath(filePath.toString());
+		return fileName;
 	}
 
 	public String saveTemplate(String templateName, String htmlContent) throws IOException {
