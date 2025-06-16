@@ -963,9 +963,4 @@ public class SearchDAO implements AutoCloseable {
 			LOGGER.error("Error closing SearchDAO resources", e);
 		}
 	}
-
-	public static void main(String[] args) {
-		SearchDAO dao = new SearchDAO();
-		dao.searchAll("hi");
-	}
 }
