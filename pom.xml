@@ -136,7 +136,6 @@
             <version>9.11.1</version>
         </dependency>
 
-        <!-- Lucene Analyzers (Đồng bộ phiên bản) -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analysis-common</artifactId>
@@ -148,7 +147,6 @@
             <artifactId>lucene-backward-codecs</artifactId>
             <version>9.11.1</version>
         </dependency>
-
     </dependencies>
 
     <build>

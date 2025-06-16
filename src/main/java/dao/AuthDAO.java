@@ -156,7 +156,7 @@ public class AuthDAO {
 		Map<String, Object> variables = new HashMap<>();
 		variables.put("fullName", account.getFullname() != null ? account.getFullname() : account.getUsername());
 		variables.put("username", account.getUsername());
-		variables.put("verificationLink", baseUrl + "zust/verify?token=" + tokenContent);
+		variables.put("verificationLink", baseUrl + "/zust/verify?token=" + tokenContent);
 		variables.put("supportEmail", dotenv.get("SUPPORT_EMAIL", "zust.developer@gmail.com"));
 		variables.put("companyName", "Zust Social Media");
 		variables.put("currentYear", String.valueOf(java.time.Year.now().getValue()));
