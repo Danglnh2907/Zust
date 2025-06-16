@@ -146,10 +146,10 @@ public class AuthDAO {
 		}
 
 		// Get base URL from environment
-		String baseUrl = dotenv.get("APP_BASE_URL", "http://localhost:8080");
+		String baseUrl = dotenv.get("APP_BASE_URL", "http://localhost:8080/zust");
 		if (baseUrl.isBlank()) {
-			LOGGER.warn("APP_BASE_URL is not configured, using default: http://localhost:8080");
-			baseUrl = "http://localhost:8080";
+			LOGGER.warn("APP_BASE_URL is not configured, using default: http://localhost:8080/zust");
+			baseUrl = "http://localhost:8080/zust";
 		}
 
 		// Prepare template variables
