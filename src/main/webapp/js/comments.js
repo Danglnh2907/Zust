@@ -1,51 +1,219 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded, setting up event listeners");
-    // Options Menu Logic
-    const optionsBtns = document.querySelectorAll('.comment-menu-button');
-    const optionsMenus = document.querySelectorAll('.comment-menu');
 
-    optionsBtns.forEach((btn, index) => {
-        btn.addEventListener('click', (e) => {
+    // Initialize variables
+    const commentsList = document.querySelector('.comments-list');
+    const commentForm = document.getElementById('comment-create-form');
+    const commentInput = document.querySelector('.comment-input');
+    const commentImageInput = document.getElementById('comment-image-input');
+    const submitButton = commentForm.querySelector('button[type="submit"]');
+    let previewImage = null;
+
+    // Verify commentsList exists
+    if (!commentsList) {
+        console.error("commentsList not found. Using document delegation.");
+    }
+
+    // Single event delegation for all comment interactions
+    document.addEventListener('click', (e) => {
+        console.log("Click event captured, target:", e.target, "currentTarget:", e.currentTarget);
+
+        // Menu button click
+        const menuButton = e.target.closest('.comment-menu-button');
+        if (menuButton) {
+            e.preventDefault();
             e.stopPropagation();
-            const commentId = btn.getAttribute('data-comment-id');
-            console.log("Menu button clicked for commentId:", commentId);
+            const commentId = menuButton.getAttribute('data-comment-id');
+            console.log("Menu button clicked for commentId:", commentId, "Button:", menuButton);
             const menu = document.getElementById('comment-menu-' + commentId);
-            optionsMenus.forEach(m => m.classList.remove('show'));
-            menu.classList.toggle('show');
-        });
+            if (menu) {
+                console.log("Menu found:", menu);
+                setTimeout(() => {
+                    const allMenus = document.querySelectorAll('.comment-menu');
+                    allMenus.forEach(m => m.classList.remove('show'));
+                    menu.classList.toggle('show');
+                    console.log("Menu toggle state:", menu.classList.contains('show'));
+                }, 0);
+            } else {
+                console.error("Menu not found for commentId:", commentId);
+            }
+            return;
+        }
+
+        // Edit button click
+        const editBtn = e.target.closest('.comment-menu .edit');
+        if (editBtn) {
+            e.preventDefault();
+            const commentId = editBtn.getAttribute('data-comment-id');
+            const postId = editBtn.getAttribute('data-post-id');
+            console.log("Edit clicked for commentId:", commentId, "postId:", postId, "Edit Button:", editBtn);
+            showEditForm(commentId, postId);
+            return;
+        }
+
+        // Delete button click
+        const deleteBtn = e.target.closest('.comment-menu .delete');
+        if (deleteBtn) {
+            e.preventDefault();
+            const commentId = deleteBtn.getAttribute('data-comment-id');
+            console.log("Delete clicked for commentId:", commentId, "Delete Button:", deleteBtn);
+            deleteComment(commentId);
+            return;
+        }
     });
 
     // Close menu if clicked outside
-    window.addEventListener('click', () => {
-        optionsMenus.forEach(menu => {
-            if (menu.classList.contains('show')) {
-                console.log("Closing menu");
+    window.addEventListener('click', (e) => {
+        const allMenus = document.querySelectorAll('.comment-menu');
+        allMenus.forEach(menu => {
+            if (menu.classList.contains('show') && !e.target.closest('.comment-menu') && !e.target.closest('.comment-menu-button')) {
+                console.log("Closing menu for commentId:", menu.id.replace('comment-menu-', ''));
                 menu.classList.remove('show');
             }
         });
     });
 
-    // Edit Link Logic
-    document.querySelectorAll('.comment-menu .edit').forEach(editBtn => {
-        editBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const commentId = editBtn.getAttribute('data-comment-id');
-            const postId = editBtn.getAttribute('data-post-id');
-            console.log("Edit clicked for commentId:", commentId, "postId:", postId);
-            showEditForm(commentId, postId);
-        });
+    // Validate form before submission
+    function validateForm() {
+        const hasText = commentInput.value.trim().length > 0;
+        const hasImage = commentImageInput.files.length > 0;
+        submitButton.disabled = !hasText && !hasImage;
+    }
+
+    commentInput.addEventListener('input', validateForm);
+    commentImageInput.addEventListener('change', validateForm);
+
+    commentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(commentForm);
+        formData.append('action', 'create');
+
+        // Debug FormData
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        fetch(window.contextPath + '/comment', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const comment = data.comment;
+                    const commentsList = document.querySelector('.comments-list');
+                    if (commentsList) {
+                        const newComment = createCommentElement(comment);
+                        commentsList.insertBefore(newComment, commentsList.firstChild);
+                        console.log("New comment inserted with commentId:", comment.commentId);
+                    } else {
+                        console.error("commentsList not found during insertion.");
+                    }
+                    commentForm.reset();
+                    document.getElementById('replyCommentId').value = '';
+                    document.querySelector('.comment-input').placeholder = 'Write comment...';
+                    validateForm(); // Re-enable button after reset
+                } else {
+                    alert('Failed to create comment: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create comment. Please try again.');
+            });
     });
 
-    // Delete Link Logic
-    document.querySelectorAll('.comment-menu .delete').forEach(deleteBtn => {
-        deleteBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const commentId = deleteBtn.getAttribute('data-comment-id');
-            console.log("Delete clicked for commentId:", commentId);
-            deleteComment(commentId);
-        });
+    // Preview images in comment
+    const commentInputArea = document.querySelector('.comment-input-area');
+
+    commentImageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            if (previewImage) previewImage.remove();
+            reader.onload = (event) => {
+                previewImage = document.createElement('img');
+                previewImage.className = 'comment-preview-image';
+                previewImage.src = event.target.result;
+                previewImage.style.maxWidth = '100px';
+                previewImage.style.maxHeight = '100px';
+                previewImage.style.borderRadius = '8px';
+                previewImage.style.marginTop = '0.5rem';
+                previewImage.style.marginLeft = '0.75rem';
+                commentInputArea.appendChild(previewImage);
+            };
+            reader.readAsDataURL(file);
+        } else if (previewImage) {
+            previewImage.remove();
+            previewImage = null;
+        }
     });
+
+    // Clear preview when form is reset or submitted
+    commentForm.addEventListener('reset', () => {
+        if (previewImage) {
+            previewImage.remove();
+            previewImage = null;
+        }
+    });
+    commentForm.addEventListener('submit', () => {
+        if (previewImage) {
+            previewImage.remove();
+            previewImage = null;
+        }
+    });
+
+    // Initial validation
+    validateForm();
 });
+
+// Helper function to create a comment element
+function createCommentElement(comment) {
+    const div = document.createElement('div');
+    div.className = 'comment-item' + (comment.replyCommentId ? ' is-reply' : '');
+    div.innerHTML = `
+        <img class="comment-avatar" src="https://i.pravatar.cc/150?u=shaanalam" alt="${comment.username}'s Avatar" onerror="this.src='/images/avatars/default.png'">
+        <div class="comment-content">
+            <div class="comment-bubble" id="comment-bubble-${comment.commentId}">
+                <div>
+                    <div class="comment-author">${comment.username}</div>
+                    <p class="comment-text" id="comment-text-${comment.commentId}">${comment.commentContent}</p>
+                    ${comment.commentImage ? `<img class="comment-image" id="comment-image-${comment.commentId}" src="${window.contextPath}/comment-image/images/${comment.commentImage}" alt="${comment.username}'s Comment Image">` : ''}
+                </div>
+                <button class="comment-menu-button" aria-label="Comment options" data-comment-id="${comment.commentId}">
+                    <span>•••</span>
+                </button>
+                <div class="comment-menu" id="comment-menu-${comment.commentId}">
+                    <a href="#" class="edit" data-comment-id="${comment.commentId}" data-post-id="${comment.postId}">Edit</a>
+                    <a href="#" class="delete" data-comment-id="${comment.commentId}">Delete</a>
+                </div>
+            </div>
+            <div class="edit-form" id="edit-form-${comment.commentId}">
+                <form id="edit-comment-form-${comment.commentId}" enctype="multipart/form-data">
+                    <input type="hidden" name="postId" value="${comment.postId}">
+                    <input type="hidden" name="replyCommentId" value="${comment.replyCommentId}">
+                    <textarea class="comment-input" name="commentContent" required>${comment.commentContent}</textarea>
+                    <input type="file" id="edit-comment-image-${comment.commentId}" name="commentImage" accept="image/*" style="display: none;">
+                    <div class="form-actions">
+                        <button type="button" onclick="submitEditForm(${comment.commentId})">Save</button>
+                        <button type="button" class="cancel" onclick="hideEditForm(${comment.commentId})">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div class="comment-actions">
+                <span>${comment.likeCount} Likes</span>
+                <a href="#" onclick="likeComment(${comment.commentId})">Like</a>
+                <a href="#" onclick="showReplyForm(${comment.commentId}, ${comment.postId})">Reply</a>
+            </div>
+        </div>
+    `;
+    return div;
+}
 
 function showEditForm(commentId, postId) {
     console.log("Showing edit form for commentId:", commentId, "postId:", postId);

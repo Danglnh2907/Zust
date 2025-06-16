@@ -184,18 +184,18 @@ public class CommentDAO extends DBContext {
             }
 
             String permissionSql = """
-                SELECT p.post_privacy, p.post_status
-                FROM post p
-                WHERE p.post_id = ? AND p.post_status = 'published'
-                AND (
-                    p.post_privacy = 'public'
-                    OR (p.post_privacy = 'friend' AND EXISTS (
-                        SELECT 1 FROM interact i
-                        WHERE i.actor_account_id = ? AND i.target_account_id = p.account_id
-                        AND i.interact_status = 'friend'
-                    ))
-                    OR (p.post_privacy = 'private' AND p.account_id = ?)
-                )""";
+            SELECT p.post_privacy, p.post_status
+            FROM post p
+            WHERE p.post_id = ? AND p.post_status = 'published'
+            AND (
+                p.post_privacy = 'public'
+                OR (p.post_privacy = 'friend' AND EXISTS (
+                    SELECT 1 FROM interact i
+                    WHERE i.actor_account_id = ? AND i.target_account_id = p.account_id
+                    AND i.interact_status = 'friend'
+                ))
+                OR (p.post_privacy = 'private' AND p.account_id = ?)
+            )""";
             try (PreparedStatement permStmt = conn.prepareStatement(permissionSql)) {
                 permStmt.setInt(1, postId);
                 permStmt.setInt(2, viewerAccountId);
@@ -208,13 +208,14 @@ public class CommentDAO extends DBContext {
             }
 
             String commentSql = """
-                SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
-                       c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
-                       (SELECT COUNT(*) FROM like_comment lc WHERE lc.comment_id = c.comment_id) AS like_count
-                FROM comment c
-                JOIN account a ON c.account_id = a.account_id
-                WHERE c.post_id = ? AND c.comment_status = 0
-                ORDER BY c.comment_create_date DESC""";
+            SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
+                   c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
+                   (SELECT COUNT(*) FROM like_comment lc WHERE lc.comment_id = c.comment_id) AS like_count,
+                   c.post_id
+            FROM comment c
+            JOIN account a ON c.account_id = a.account_id
+            WHERE c.post_id = ? AND c.comment_status = 0
+            ORDER BY c.comment_create_date DESC""";
             try (PreparedStatement commentStmt = conn.prepareStatement(commentSql)) {
                 commentStmt.setInt(1, postId);
                 ResultSet rs = commentStmt.executeQuery();
@@ -232,6 +233,7 @@ public class CommentDAO extends DBContext {
                             ? rs.getInt("reply_comment_id") : null);
                     comment.setLikeCount(rs.getInt("like_count"));
                     comment.setAccountId(rs.getInt("account_id"));
+                    comment.setPostId(rs.getInt("post_id")); // Set postId
                     comments.add(comment);
                 }
             }
@@ -296,5 +298,76 @@ public class CommentDAO extends DBContext {
             }
             return false;
         }
+    }
+
+    public RespCommentDTO getCommentById(int commentId) {
+        Connection conn = null;
+        RespCommentDTO comment = null;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                logger.warning("Failed to get database connection");
+                return null;
+            }
+
+            String sql = """
+            SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
+                   c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
+                   (SELECT COUNT(*) FROM like_comment lc WHERE lc.comment_id = c.comment_id) AS like_count,
+                   c.post_id
+            FROM comment c
+            JOIN account a ON c.account_id = a.account_id
+            WHERE c.comment_id = ? AND c.comment_status = 0""";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, commentId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    comment = new RespCommentDTO();
+                    comment.setCommentId(rs.getInt("comment_id"));
+                    comment.setCommentContent(rs.getString("comment_content"));
+                    comment.setCommentImage(rs.getString("comment_image"));
+                    comment.setUsername(rs.getString("username"));
+                    comment.setCreatedAt(rs.getTimestamp("comment_create_date") != null
+                            ? rs.getTimestamp("comment_create_date").toLocalDateTime() : null);
+                    comment.setLastModified(rs.getTimestamp("comment_last_update") != null
+                            ? rs.getTimestamp("comment_last_update").toLocalDateTime() : null);
+                    comment.setReplyCommentId(rs.getInt("reply_comment_id") != 0
+                            ? rs.getInt("reply_comment_id") : null);
+                    comment.setLikeCount(rs.getInt("like_count"));
+                    comment.setAccountId(rs.getInt("account_id"));
+                    comment.setPostId(rs.getInt("post_id")); // Set postId
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("Error fetching comment by ID: " + e.getMessage());
+        }
+        return comment;
+    }
+
+    public int getLatestCommentId(int accountId) {
+        Connection conn = null;
+        int latestCommentId = -1;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                logger.warning("Failed to get database connection");
+                return -1;
+            }
+
+            String sql = """
+            SELECT MAX(comment_id) AS latest_comment_id
+            FROM comment
+            WHERE account_id = ? AND comment_status = 0""";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, accountId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    latestCommentId = rs.getInt("latest_comment_id");
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("Error fetching latest comment ID: " + e.getMessage());
+        }
+        return latestCommentId;
     }
 }

@@ -12,6 +12,7 @@ public class RespCommentDTO {
     private Integer replyCommentId;
     private int likeCount;
     private int accountId;
+    private int postId; // Added postId field
 
     public RespCommentDTO() {
         this.commentId = 0;
@@ -23,11 +24,12 @@ public class RespCommentDTO {
         this.replyCommentId = null;
         this.likeCount = 0;
         this.accountId = 0;
+        this.postId = 0; // Initialize postId
     }
 
     public RespCommentDTO(int commentId, String commentContent, String commentImage, String username,
                           LocalDateTime createdAt, LocalDateTime lastModified, Integer replyCommentId,
-                          int likeCount, int accountId) {
+                          int likeCount, int accountId, int postId) {
         this.commentId = commentId;
         this.commentContent = commentContent;
         this.commentImage = commentImage;
@@ -37,7 +39,10 @@ public class RespCommentDTO {
         this.replyCommentId = replyCommentId;
         this.likeCount = likeCount;
         this.accountId = accountId;
+        this.postId = postId; // Set postId
     }
+
+    // Existing getters and setters...
 
     public int getCommentId() {
         return commentId;
@@ -109,5 +114,13 @@ public class RespCommentDTO {
 
     public void setAccountId(int accountId) {
         this.accountId = accountId;
+    }
+
+    public int getPostId() {
+        return postId;
+    }
+
+    public void setPostId(int postId) {
+        this.postId = postId;
     }
 }

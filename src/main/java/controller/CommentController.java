@@ -82,15 +82,26 @@ public class CommentController extends HttpServlet {
         switch (action) {
             case "create":
                 ReqCommentDTO createDTO = extractData(userID, request.getParts());
-                if (createDTO == null) {
+//                if (createDTO == null) {
+//                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//                    out.write("{\"success\": false, \"message\": \"Invalid input\"}");
+//                    return;
+//                }
+                // Allow image-only comments by checking if either content or image is present
+                if (createDTO.getCommentContent() == null && createDTO.getCommentImage() == null) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    out.write("{\"success\": false, \"message\": \"Invalid input\"}");
+                    out.write("{\"success\": false, \"message\": \"Comment must contain text or an image\"}");
                     return;
                 }
                 boolean createSuccess = commentDAO.createComment(createDTO);
-                response.setStatus(createSuccess ? HttpServletResponse.SC_CREATED : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.write("{\"success\": " + createSuccess + "}");
-                response.sendRedirect(request.getContextPath() + request.getServletPath());
+                if (createSuccess) {
+                    RespCommentDTO createdComment = commentDAO.getCommentById(commentDAO.getLatestCommentId(userID)); // Assuming this method exists
+                    response.setStatus(HttpServletResponse.SC_CREATED);
+                    out.write("{\"success\": true, \"comment\": " + toJson(createdComment) + "}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.write("{\"success\": false, \"message\": \"Failed to create comment\"}");
+                }
                 break;
 
             case "edit":
@@ -180,17 +191,19 @@ public class CommentController extends HttpServlet {
                                 fileName = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
                                 fileName = fileName.substring(fileName.lastIndexOf('/') + 1)
                                         .substring(fileName.lastIndexOf('\\') + 1);
+                                // Sanitize filename to remove invalid characters
+                                fileName = fileName.replaceAll("[\\p{Cntrl}\\\\/:*?\"<>]", "_");
                             }
                         }
                     }
                     if (!fileName.isEmpty()) {
                         String newFileName = UUID.randomUUID() + "_" + fileName;
-                        String filePath = fileService.getLocationPath() + File.separator + "images" + File.separator + newFileName;
                         try {
-                            part.write(filePath);
+                            String fullPath = fileService.saveFile(newFileName, part.getInputStream());
+                            logger.info("Image saved at: " + fullPath);
                             commentImage = newFileName;
                         } catch (IOException e) {
-                            logger.severe("Failed to write comment image: " + e.getMessage());
+                            logger.severe("Failed to save comment image: " + e.getMessage());
                         }
                     }
                 } else if (fieldName.equals("replyCommentId")) {
@@ -223,7 +236,7 @@ public class CommentController extends HttpServlet {
             }
         }
 
-        if (commentContent == null || commentContent.trim().isEmpty()) {
+        if ((commentContent == null || commentContent.trim().isEmpty()) && commentImage == null) {
             logger.severe("Comment content is required");
             return null;
         }
@@ -233,5 +246,19 @@ public class CommentController extends HttpServlet {
         }
 
         return new ReqCommentDTO(userID, postId, commentContent, commentImage, replyCommentId, now, now);
+    }
+
+    private String toJson(RespCommentDTO comment) {
+        if (comment == null) return "{}";
+        logger.info("Serializing commentImage: " + comment.getCommentImage());
+        return "{"
+                + "\"commentId\":" + comment.getCommentId() + ","
+                + "\"username\":\"" + comment.getUsername() + "\","
+                + "\"commentContent\":\"" + comment.getCommentContent().replace("\"", "\\\"") + "\","
+                + "\"commentImage\":\"" + (comment.getCommentImage() != null ? comment.getCommentImage() : "") + "\","
+                + "\"likeCount\":" + comment.getLikeCount() + ","
+                + "\"postId\":" + comment.getPostId() + ","
+                + "\"replyCommentId\":" + (comment.getReplyCommentId() != null ? comment.getReplyCommentId() : "null")
+                + "}";
     }
 }

@@ -13,12 +13,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Comments Section</title>
+    <title>Comments Section</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comments.css">
     <script>
         window.contextPath = '${pageContext.request.contextPath}';
     </script>
-    <script src="${pageContext.request.contextPath}/js/comments.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -45,7 +44,7 @@
                                     <p class="comment-text" id="comment-text-${comment.commentId}">${comment.commentContent}</p>
                                     <c:if test="${not empty comment.commentImage}">
                                         <img class="comment-image" id="comment-image-${comment.commentId}"
-                                             src="https://i.pravatar.cc/150?u=shaanalam" alt="Comment Image">
+                                             src="${pageContext.request.contextPath}/comment-image/images/${comment.commentImage}" alt="${comment.username}'s Comment Image">
                                     </c:if>
                                 </div>
                                 <button class="comment-menu-button" aria-label="Comment options"
@@ -87,21 +86,20 @@
     <div class="comment-composer-container">
         <div class="comment-composer">
             <img class="comment-avatar" src="https://i.pravatar.cc/150?u=shaanalam"
-                 alt="Current User Avatar"
-                 onerror="this.src='/images/avatars/default.png'">
+                 alt="Current User Avatar" onerror="this.src='/images/avatars/default.png'">
             <form action="${pageContext.request.contextPath}/comment?action=create" method="post"
-                  enctype="multipart/form-data" class="comment-input-area">
+                  enctype="multipart/form-data" class="comment-input-area" id="comment-create-form">
                 <input type="hidden" name="postId" value="${postId}">
                 <input type="hidden" name="replyCommentId" id="replyCommentId" value="">
                 <textarea class="comment-input" name="commentContent"
-                          placeholder="Write comment..." required></textarea>
+                          placeholder="Write comment..."></textarea> <!-- Removed 'required' -->
                 <div class="comment-input-icons">
-                    <label for="commentImage">
+                    <label for="comment-image-input">
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAANCAYAAACdKY9CAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADXSURBVHgBlZFPCwFRFMXHn81QiIXNrBRZUfIB2CoL+Yo+g52UjWRHWZgFC5ZEFmpYOIczeb1Gk1e/13v33nP/vOc4f66EcXZBISb+mjYuPXCIEVRMwR34oAum4BwhKCUtQxNsQM2wNUAxvISC0MDMrLrQndWyoO98Znw7PVA2MmZAB2zln4M1GLLNFLaWnJ7Yq3+2NVGSABzBgBly4KReR873pewXY8ySgqcM7Lstfq0gocFcZdyBW0Qgq694MH+a/VdBHjw0ly8fP3VsC+xFcV0xFzCj8QXLwybH+TNMlwAAAABJRU5ErkJggg=="
                              alt="Attachment icon">
-                        <input type="file" id="commentImage" name="commentImage" accept="image/*" style="display: none;">
                     </label>
-                    <button type="submit">
+                    <input type="file" id="comment-image-input" name="commentImage" accept="image/*" style="display: none;">
+                    <button type="submit" class="post-button">
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAANCAYAAACdKY9CAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB5SURBVHgBnY6xCYBADEVPsHIFG7F0BCsbC53iNrN2A7nm3EQ3cIQzSiIfPCHnhwf54X8SY36qNok6CEe02sJEBMZrih2UBMf7qAp+K3wUn4sZlK5lCd4SI/iFGHJY9EQFvoF5J2bwdzD2zsaXXrLaoMhrg6JVG0zWCZtAJOrIQN5tAAAAAElFTkSuQmCC"
                              alt="Send icon">
                     </button>
@@ -110,5 +108,6 @@
         </div>
     </div>
 </div>
+<script src="${pageContext.request.contextPath}/js/comments.js"></script>
 </body>
 </html>

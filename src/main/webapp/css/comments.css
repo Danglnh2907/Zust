@@ -167,11 +167,11 @@ body {
 }
 
 .comment-menu.show {
-    display: block;
+    display: block !important;
 }
 
 .comment-menu a {
-    display: block;
+    display: block !important;
     padding: 12px 16px;
     text-decoration: none;
     color: #14171a;
@@ -244,6 +244,7 @@ body {
     border-radius: 10.79px;
     padding: 0.75rem;
     min-height: 56px;
+    position: relative;
 }
 
 .comment-input {
@@ -271,6 +272,18 @@ body {
 .comment-input-icons img {
     opacity: 0.6;
     cursor: pointer;
+}
+
+.comment-input-icons .post-button {
+    color: var(--white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    justify-content: flex-end;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
 }
 
 @media (max-width: 600px) {
