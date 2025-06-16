@@ -1,7 +1,13 @@
+/*
+ * Handle all comment-related client-side interactions:
+ * - Initialize event listeners for comment creation, editing, deletion, and replies
+ * - Manage form validation and image previews
+ * - Dynamically create and update comment elements
+ */
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded, setting up event listeners");
 
-    // Initialize variables
+    // Initialize DOM element references
     const commentsList = document.querySelector('.comments-list');
     const commentForm = document.getElementById('comment-create-form');
     const commentInput = document.querySelector('.comment-input');
@@ -9,16 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = commentForm.querySelector('button[type="submit"]');
     let previewImage = null;
 
-    // Verify commentsList exists
+    // Check if commentsList exists, log error if not
     if (!commentsList) {
         console.error("commentsList not found. Using document delegation.");
     }
 
-    // Single event delegation for all comment interactions
+    // Set up single event delegation for all comment interactions
     document.addEventListener('click', (e) => {
         console.log("Click event captured, target:", e.target, "currentTarget:", e.currentTarget);
 
-        // Menu button click
+        // Handle menu button click to toggle comment options menu
         const menuButton = e.target.closest('.comment-menu-button');
         if (menuButton) {
             e.preventDefault();
@@ -40,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Edit button click
+        // Handle edit button click to show edit form
         const editBtn = e.target.closest('.comment-menu .edit');
         if (editBtn) {
             e.preventDefault();
@@ -51,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Delete button click
+        // Handle delete button click to remove a comment
         const deleteBtn = e.target.closest('.comment-menu .delete');
         if (deleteBtn) {
             e.preventDefault();
@@ -62,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Close menu if clicked outside
+    // Close all comment menus when clicking outside
     window.addEventListener('click', (e) => {
         const allMenus = document.querySelectorAll('.comment-menu');
         allMenus.forEach(menu => {
@@ -73,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Validate form before submission
+    // Validate comment form to enable/disable submit button
     function validateForm() {
         const hasText = commentInput.value.trim().length > 0;
         const hasImage = commentImageInput.files.length > 0;
@@ -83,12 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
     commentInput.addEventListener('input', validateForm);
     commentImageInput.addEventListener('change', validateForm);
 
+    // Handle comment form submission
     commentForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(commentForm);
         formData.append('action', 'create');
 
-        // Debug FormData
+        // Log FormData for debugging
         for (let [key, value] of formData.entries()) {
             console.log(key, value);
         }
@@ -128,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    // Preview images in comment
+    // Handle image preview for comment input
     const commentInputArea = document.querySelector('.comment-input-area');
 
     commentImageInput.addEventListener('change', (e) => {
@@ -154,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Clear preview when form is reset or submitted
+    // Clear image preview when form is reset or submitted
     commentForm.addEventListener('reset', () => {
         if (previewImage) {
             previewImage.remove();
@@ -168,11 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initial validation
+    // Perform initial form validation
     validateForm();
 });
 
-// Helper function to create a comment element
+/*
+ * Create a DOM element for a new comment
+ * @param {Object} comment - Comment data including id, content, image, etc.
+ * @returns {HTMLElement} - The constructed comment element
+ */
 function createCommentElement(comment) {
     const div = document.createElement('div');
     div.className = 'comment-item' + (comment.replyCommentId ? ' is-reply' : '');
@@ -215,6 +226,11 @@ function createCommentElement(comment) {
     return div;
 }
 
+/*
+ * Show the edit form for a specific comment
+ * @param {number} commentId - The ID of the comment to edit
+ * @param {number} postId - The ID of the post the comment belongs to
+ */
 function showEditForm(commentId, postId) {
     console.log("Showing edit form for commentId:", commentId, "postId:", postId);
     const bubble = document.getElementById('comment-bubble-' + commentId);
@@ -227,6 +243,10 @@ function showEditForm(commentId, postId) {
     }
 }
 
+/*
+ * Hide the edit form and show the comment content
+ * @param {number} commentId - The ID of the comment being edited
+ */
 function hideEditForm(commentId) {
     console.log("Hiding edit form for commentId:", commentId);
     const bubble = document.getElementById('comment-bubble-' + commentId);
@@ -239,11 +259,17 @@ function hideEditForm(commentId) {
     }
 }
 
+/*
+ * Submit the edit form for a comment
+ * @param {number} commentId - The ID of the comment being edited
+ */
 function submitEditForm(commentId) {
     console.log("Submitting edit form for commentId:", commentId);
     const form = document.getElementById('edit-comment-form-' + commentId);
     if (form) {
-        const formData = new FormData(form);
+        const
+
+            formData = new FormData(form);
         formData.append('action', 'edit');
         formData.append('id', commentId);
 
@@ -283,6 +309,10 @@ function submitEditForm(commentId) {
     }
 }
 
+/*
+ * Delete a comment after user confirmation
+ * @param {number} commentId - The ID of the comment to delete
+ */
 function deleteComment(commentId) {
     if (!confirm('Are you sure you want to delete this comment?')) {
         return;
@@ -315,10 +345,19 @@ function deleteComment(commentId) {
         });
 }
 
+/*
+ * Handle liking a comment
+ * @param {number} commentId - The ID of the comment to like
+ */
 function likeComment(commentId) {
     console.log("Liking comment " + commentId);
 }
 
+/*
+ * Show the reply form for a specific comment
+ * @param {number} commentId - The ID of the comment to reply to
+ * @param {number} postId - The ID of the post the comment belongs to
+ */
 function showReplyForm(commentId, postId) {
     document.getElementById('replyCommentId').value = commentId;
     document.querySelector('.comment-input').focus();

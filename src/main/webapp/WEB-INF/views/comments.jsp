@@ -92,7 +92,7 @@
                 <input type="hidden" name="postId" value="${postId}">
                 <input type="hidden" name="replyCommentId" id="replyCommentId" value="">
                 <textarea class="comment-input" name="commentContent"
-                          placeholder="Write comment..."></textarea> <!-- Removed 'required' -->
+                          placeholder="Write comment..."></textarea>
                 <div class="comment-input-icons">
                     <label for="comment-image-input">
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAANCAYAAACdKY9CAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADXSURBVHgBlZFPCwFRFMXHn81QiIXNrBRZUfIB2CoL+Yo+g52UjWRHWZgFC5ZEFmpYOIczeb1Gk1e/13v33nP/vOc4f66EcXZBISb+mjYuPXCIEVRMwR34oAum4BwhKCUtQxNsQM2wNUAxvISC0MDMrLrQndWyoO98Znw7PVA2MmZAB2zln4M1GLLNFLaWnJ7Yq3+2NVGSABzBgBly4KReR873pewXY8ySgqcM7Lstfq0gocFcZdyBW0Qgq694MH+a/VdBHjw0ly8fP3VsC+xFcV0xFzCj8QXLwybH+TNMlwAAAABJRU5ErkJggg=="

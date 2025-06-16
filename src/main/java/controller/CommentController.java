@@ -20,14 +20,24 @@ import java.util.Scanner;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+/*
+ * Handle all comment-related HTTP requests:
+ * - GET /comment: Retrieve all comments for a specific post
+ * - POST /comment?action=create: Create a new comment
+ * - POST /comment?action=edit&id=comment_id: Edit an existing comment
+ * - POST /comment?action=delete&id=comment_id: Delete a comment
+ */
 @WebServlet(name = "CommentControllerServlet", value = "/comment")
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024) // 5MB
 public class CommentController extends HttpServlet {
+    // Logger for debugging
     private final Logger logger = Logger.getLogger(this.getClass().getName());
+    // FileService for handling file uploads
     private final FileService fileService = new FileService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        // Fetch userID from session
         HttpSession session = request.getSession();
         String userIDRaw = (String) session.getAttribute("userID");
         int userID;
@@ -37,8 +47,9 @@ public class CommentController extends HttpServlet {
             userID = 1; // Temporary, remove after authentication
         }
 
+        // Get postId from request parameter
         String postIdRaw = request.getParameter("post_id");
-        postIdRaw = postIdRaw == null ? "1" : postIdRaw.trim();
+        postIdRaw = postIdRaw == null ? "1" : postIdRaw.trim(); // Temporary, remove after authentication
 //        if (postIdRaw == null || postIdRaw.trim().isEmpty()) {
 //            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 //            return;
@@ -63,6 +74,7 @@ public class CommentController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        // Fetch userID from session
         HttpSession session = request.getSession();
         String userIDRaw = (String) session.getAttribute("userID");
         int userID;
@@ -72,9 +84,11 @@ public class CommentController extends HttpServlet {
             userID = 1; // Temporary, remove after authentication
         }
 
+        // Set response content type to JSON
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
+        // Get action parameter
         String action = request.getParameter("action");
         action = action == null ? "" : action.toLowerCase().trim();
         CommentDAO commentDAO = new CommentDAO();
@@ -87,7 +101,7 @@ public class CommentController extends HttpServlet {
 //                    out.write("{\"success\": false, \"message\": \"Invalid input\"}");
 //                    return;
 //                }
-                // Allow image-only comments by checking if either content or image is present
+                // Checking if either content or image is present
                 if (createDTO.getCommentContent() == null && createDTO.getCommentImage() == null) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     out.write("{\"success\": false, \"message\": \"Comment must contain text or an image\"}");
@@ -105,6 +119,7 @@ public class CommentController extends HttpServlet {
                 break;
 
             case "edit":
+                // Get commentId
                 String commentIdRaw = request.getParameter("id");
                 if (commentIdRaw == null || commentIdRaw.trim().isEmpty()) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -130,6 +145,7 @@ public class CommentController extends HttpServlet {
                 break;
 
             case "delete":
+                // Get commentId
                 commentIdRaw = request.getParameter("id");
                 if (commentIdRaw == null || commentIdRaw.trim().isEmpty()) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -155,6 +171,12 @@ public class CommentController extends HttpServlet {
         }
     }
 
+    /*
+     * Extract comment data from multipart form parts
+     * @param userID - The ID of the user creating or editing the comment
+     * @param parts - Collection of multipart form parts
+     * @return ReqCommentDTO - Data transfer object containing comment details
+     */
     private ReqCommentDTO extractData(int userID, Collection<Part> parts) {
         String commentContent = null;
         String commentImage = null;
@@ -162,6 +184,7 @@ public class CommentController extends HttpServlet {
         int postId = -1;
         LocalDateTime now = LocalDateTime.now();
 
+        // Create storage directory if not exists
         File uploadDir = new File(fileService.getLocationPath() + File.separator + "images");
         if (!uploadDir.exists()) {
             if (!uploadDir.mkdir()) {
@@ -191,7 +214,6 @@ public class CommentController extends HttpServlet {
                                 fileName = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
                                 fileName = fileName.substring(fileName.lastIndexOf('/') + 1)
                                         .substring(fileName.lastIndexOf('\\') + 1);
-                                // Sanitize filename to remove invalid characters
                                 fileName = fileName.replaceAll("[\\p{Cntrl}\\\\/:*?\"<>]", "_");
                             }
                         }
@@ -236,6 +258,7 @@ public class CommentController extends HttpServlet {
             }
         }
 
+        // Validate required fields
         if ((commentContent == null || commentContent.trim().isEmpty()) && commentImage == null) {
             logger.severe("Comment content is required");
             return null;
@@ -248,6 +271,11 @@ public class CommentController extends HttpServlet {
         return new ReqCommentDTO(userID, postId, commentContent, commentImage, replyCommentId, now, now);
     }
 
+    /*
+     * Convert a comment DTO to JSON string
+     * @param comment - The comment data transfer object
+     * @return String - JSON representation of the comment
+     */
     private String toJson(RespCommentDTO comment) {
         if (comment == null) return "{}";
         logger.info("Serializing commentImage: " + comment.getCommentImage());

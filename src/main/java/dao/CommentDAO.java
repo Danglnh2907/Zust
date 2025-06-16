@@ -13,9 +13,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+/*
+ * Data Access Object for comment-related database operations:
+ * - Create, edit, delete, and retrieve comments
+ * - Validate permissions and status before operations
+ */
 public class CommentDAO extends DBContext {
+    // Logger for debugging
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
+    /*
+     * Create a new comment in the database
+     * @param dto - Data transfer object containing comment details
+     * @return boolean - True if creation is successful, false otherwise
+     */
     public boolean createComment(ReqCommentDTO dto) {
         Connection conn = null;
         try {
@@ -25,6 +36,7 @@ public class CommentDAO extends DBContext {
             }
             conn.setAutoCommit(false);
 
+            // Check post permissions
             String permissionSql = """
                 SELECT p.post_privacy, p.post_status
                 FROM post p
@@ -50,6 +62,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Validate reply comment if present
             if (dto.getReplyCommentId() != null) {
                 String replySql = "SELECT comment_status FROM comment WHERE comment_id = ? AND comment_status = 0";
                 try (PreparedStatement replyStmt = conn.prepareStatement(replySql)) {
@@ -63,6 +76,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Insert new comment
             String commentSql = """
                 INSERT INTO comment (comment_content, comment_image, comment_status, comment_create_date, account_id, post_id, reply_comment_id)
                 VALUES (?, ?, 0, ?, ?, ?, ?)""";
@@ -99,6 +113,12 @@ public class CommentDAO extends DBContext {
         }
     }
 
+    /*
+     * Edit an existing comment
+     * @param commentId - The ID of the comment to edit
+     * @param dto - Data transfer object containing updated comment details
+     * @return boolean - True if edit is successful, false otherwise
+     */
     public boolean editComment(int commentId, ReqCommentDTO dto) {
         Connection conn = null;
         try {
@@ -108,6 +128,7 @@ public class CommentDAO extends DBContext {
             }
             conn.setAutoCommit(false);
 
+            // Check comment and post status
             String checkSql = """
                 SELECT c.comment_status, p.post_status
                 FROM comment c
@@ -124,6 +145,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Validate reply comment if present
             if (dto.getReplyCommentId() != null) {
                 String replySql = "SELECT comment_status FROM comment WHERE comment_id = ? AND comment_status = 0";
                 try (PreparedStatement replyStmt = conn.prepareStatement(replySql)) {
@@ -137,6 +159,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Update comment
             String commentSql = """
                 UPDATE comment
                 SET comment_content = ?, comment_image = ?, comment_last_update = ?, reply_comment_id = ?
@@ -174,6 +197,12 @@ public class CommentDAO extends DBContext {
         }
     }
 
+    /*
+     * Retrieve all comments for a specific post
+     * @param postId - The ID of the post
+     * @param viewerAccountId - The ID of the user viewing the comments
+     * @return ArrayList<RespCommentDTO> - List of comment data transfer objects
+     */
     public ArrayList<RespCommentDTO> viewAllComments(int postId, int viewerAccountId) {
         ArrayList<RespCommentDTO> comments = new ArrayList<>();
         Connection conn = null;
@@ -183,6 +212,7 @@ public class CommentDAO extends DBContext {
                 return comments;
             }
 
+            // Check post permissions
             String permissionSql = """
             SELECT p.post_privacy, p.post_status
             FROM post p
@@ -207,6 +237,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Fetch comments
             String commentSql = """
             SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
                    c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
@@ -245,6 +276,12 @@ public class CommentDAO extends DBContext {
         }
     }
 
+    /*
+     * Delete a comment by marking it as deleted
+     * @param commentId - The ID of the comment to delete
+     * @param accountId - The ID of the user requesting deletion
+     * @return boolean - True if deletion is successful, false otherwise
+     */
     public boolean deleteComment(int commentId, int accountId) {
         Connection conn = null;
         try {
@@ -254,6 +291,7 @@ public class CommentDAO extends DBContext {
             }
             conn.setAutoCommit(false);
 
+            // Check comment and post status
             String checkSql = """
                 SELECT c.comment_status, p.post_status
                 FROM comment c
@@ -270,6 +308,7 @@ public class CommentDAO extends DBContext {
                 }
             }
 
+            // Set comment as deleted
             String deleteSql = """
                 UPDATE comment
                 SET comment_status = 1, comment_last_update = ?
@@ -300,6 +339,11 @@ public class CommentDAO extends DBContext {
         }
     }
 
+    /*
+     * Retrieve a comment by its ID
+     * @param commentId - The ID of the comment
+     * @return RespCommentDTO - Data transfer object for the comment, or null if not found
+     */
     public RespCommentDTO getCommentById(int commentId) {
         Connection conn = null;
         RespCommentDTO comment = null;
@@ -310,6 +354,7 @@ public class CommentDAO extends DBContext {
                 return null;
             }
 
+            // Fetch comment details
             String sql = """
             SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
                    c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
@@ -344,6 +389,11 @@ public class CommentDAO extends DBContext {
         return comment;
     }
 
+    /*
+     * Get the ID of the latest comment created by a user
+     * @param accountId - The ID of the user
+     * @return int - The latest comment ID, or -1 if none found
+     */
     public int getLatestCommentId(int accountId) {
         Connection conn = null;
         int latestCommentId = -1;
@@ -354,6 +404,7 @@ public class CommentDAO extends DBContext {
                 return -1;
             }
 
+            // Fetch latest comment ID
             String sql = """
             SELECT MAX(comment_id) AS latest_comment_id
             FROM comment
