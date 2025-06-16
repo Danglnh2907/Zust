@@ -119,10 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const postElement = e.target.closest('.post');
             postId = postElement.dataset.postId;
-            
             // Get content with images
             let content = postElement.querySelector('.post-content').innerHTML;
-            
             // Get existing images and add them to content
             const images = postElement.querySelectorAll('.carousel-track img');
             images.forEach(img => {
@@ -189,17 +187,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    throw new Error('Failed to edit post');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to edit post. Please try again.');
-            });
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        throw new Error('Failed to edit post');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to edit post. Please try again.');
+                });
         });
     });
 
@@ -209,23 +207,23 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const postElement = e.target.closest('.post');
             const postId = postElement.dataset.postId;
-            
+
             // Show confirmation dialog
             if (confirm('Are you sure you want to delete this post?')) {
                 fetch(`/zust/post?action=delete&id=${postId}`, {
                     method: 'POST'
                 })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        throw new Error('Failed to delete post');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to delete post. Please try again.');
-                });
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            throw new Error('Failed to delete post');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to delete post. Please try again.');
+                    });
             }
         });
     });
@@ -269,4 +267,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
