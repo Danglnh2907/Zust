@@ -25,7 +25,7 @@ public class ManageServlet extends HttpServlet {
         try {
             int groupId = Integer.parseInt(request.getParameter("id"));
             List<Account> members = groupDAO.getGroupMembers(groupId);
-            ResGroupDTO group = groupDAO.getActiveGroup(groupId);
+            ResGroupDTO group = groupDAO.getGroup(groupId);
             request.setAttribute("group", group);
             request.setAttribute("members", members);
             request.getRequestDispatcher("WEB-INF/views/viewGroupManagers.jsp").forward(request, response);
