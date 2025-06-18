@@ -1,11 +1,26 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%--
-  Created by IntelliJ IDEA.
-  User: hoqua
-  Date: 6/18/2025
-  Time: 8:55 PM
-  To change this template use File | Settings | File Templates.
+  This block simulates fetching data from a backend (like a servlet or database).
+  We use the Integer wrapper class instead of the primitive 'int' so that the
+  variables can be 'null', allowing us to demonstrate the null-checking requirement.
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // --- 1. SIMULATE DATA RETRIEVAL ---
+    String adminName = "Admin"; // This could come from session: (String) session.getAttribute("userName");
+
+    Integer totalUsers = 12458;
+    Integer activeGroups = 672;
+    Integer pendingReports = null; // Set to null to demonstrate the null check works
+    Integer posts24h = 2189;
+
+    // --- 2. HANDLE PAGE NAVIGATION ---
+    // Get the current page from the URL parameter to set the active link in the sidebar
+    String currentPage = request.getParameter("page");
+    if (currentPage == null || currentPage.isEmpty()) {
+        currentPage = "statistic"; // Default to 'statistic' if no page is specified
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +34,7 @@
         /* --- Global Styles & Variables --- */
         :root {
             --orange: #FF852F;
-            --black: #1a1a1a; /* Using a slightly softer black */
+            --black: #1a1a1a;
             --white: #FFFFFF;
             --light-gray: #f0f2f5;
             --text-color: #333;
@@ -79,7 +94,7 @@
         .sidebar .nav-menu li a .icon {
             margin-right: 15px;
             font-size: 1.2rem;
-            width: 20px; /* Aligns text even if icons have different widths */
+            width: 20px;
             text-align: center;
         }
 
@@ -95,7 +110,7 @@
 
         /* --- Main Content Styles --- */
         .main-content {
-            margin-left: 260px; /* Same as sidebar width */
+            margin-left: 260px;
             padding: 40px;
             width: calc(100% - 260px);
             background-color: var(--white);
@@ -154,39 +169,39 @@
     <div class="logo">Zust</div>
 
     <ul class="nav-menu">
-        <li class="active">
-            <a href="#">
+        <%-- Use a JSP expression with a ternary operator to conditionally add the 'active' class --%>
+        <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
+            <a href="dashboard.jsp?page=statistic">
                 <span class="icon"><i class="fas fa-chart-pie"></i></span>
                 <span>Statistic</span>
             </a>
         </li>
-        <li>
-            <a href="#">
+        <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
+            <a href="dashboard.jsp?page=user">
                 <span class="icon"><i class="fas fa-users"></i></span>
                 <span>User</span>
             </a>
         </li>
-        <!-- Added Notification Item -->
-        <li>
-            <a href="#">
+        <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
+            <a href="dashboard.jsp?page=notification">
                 <span class="icon"><i class="fas fa-bell"></i></span>
                 <span>Notification</span>
             </a>
         </li>
-        <li>
-            <a href="#">
+        <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
+            <a href="groupRequest">
                 <span class="icon"><i class="fas fa-plus-square"></i></span>
                 <span>Create Group Request</span>
             </a>
         </li>
-        <li>
-            <a href="#">
+        <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
+            <a href="dashboard.jsp?page=group">
                 <span class="icon"><i class="fas fa-user-friends"></i></span>
                 <span>Group</span>
             </a>
         </li>
-        <li>
-            <a href="#">
+        <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
+            <a href="dashboard.jsp?page=report">
                 <span class="icon"><i class="fas fa-flag"></i></span>
                 <span>Report</span>
             </a>
@@ -198,41 +213,66 @@
 <main class="main-content">
     <header>
         <h1>Dashboard Overview</h1>
-        <p>Welcome back, Admin! Here's a summary of your social media activity.</p>
+        <p>Welcome back,
+            <%-- Check for null adminName and provide a default if it is --%>
+            <% if (adminName != null) { %>
+            <%= adminName %>
+            <% } else { %>
+            User
+            <% } %>! Here's a summary of your social media activity.</p>
     </header>
 
     <div class="dashboard-cards">
         <div class="card">
-            <div class="card-icon">
-                <i class="fas fa-users"></i>
-            </div>
+            <div class="card-icon"><i class="fas fa-users"></i></div>
             <h3>Total Users</h3>
-            <div class="card-value">12,458</div>
+            <div class="card-value">
+                <%-- Check if totalUsers is null before displaying --%>
+                <% if (totalUsers != null) { %>
+                <%= totalUsers %>
+                <% } else { %>
+                N/A
+                <% } %>
+            </div>
         </div>
 
         <div class="card">
-            <div class="card-icon">
-                <i class="fas fa-user-friends"></i>
-            </div>
+            <div class="card-icon"><i class="fas fa-user-friends"></i></div>
             <h3>Active Groups</h3>
-            <div class="card-value">672</div>
+            <div class="card-value">
+                <%-- Check if activeGroups is null before displaying --%>
+                <% if (activeGroups != null) { %>
+                <%= activeGroups %>
+                <% } else { %>
+                N/A
+                <% } %>
+            </div>
         </div>
 
         <div class="card">
-            <div class="card-icon">
-                <i class="fas fa-flag"></i>
-            </div>
+            <div class="card-icon"><i class="fas fa-flag"></i></div>
             <h3>Pending Reports</h3>
-            <div class="card-value">34</div>
+            <div class="card-value">
+                <%-- Check if pendingReports is null before displaying --%>
+                <% if (pendingReports != null) { %>
+                <%= pendingReports %>
+                <% } else { %>
+                N/A
+                <% } %>
+            </div>
         </div>
 
-        <!-- Updated Fourth Card -->
         <div class="card">
-            <div class="card-icon">
-                <i class="fas fa-pen-to-square"></i>
-            </div>
+            <div class="card-icon"><i class="fas fa-pen-to-square"></i></div>
             <h3>Number of posts (24h)</h3>
-            <div class="card-value">2,189</div>
+            <div class="card-value">
+                <%-- Check if posts24h is null before displaying --%>
+                <% if (posts24h != null) { %>
+                <%= posts24h %>
+                <% } else { %>
+                N/A
+                <% } %>
+            </div>
         </div>
     </div>
 </main>

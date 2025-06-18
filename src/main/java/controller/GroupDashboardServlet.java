@@ -1,6 +1,5 @@
 package controller;
 
-import dao.AccountDAO;
 import dto.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,20 +11,17 @@ import jakarta.servlet.annotation.MultipartConfig;
 import java.util.List;
 import java.util.logging.Logger;
 import java.io.IOException;
-import jakarta.servlet.http.Part;
+
 import dao.GroupDAO;
-import dto.ReqGroupDTO;
-import java.io.InputStream;
 
 import model.Account;
-import util.service.FileService;
 
 @WebServlet(
-        name = "GroupServlet",
-        value = "/group"
+        name = "GroupDashboardServlet",
+        value = "/groupDashboard"
 )
 @MultipartConfig(maxFileSize = 1024 * 1024 * 5)
-public class GroupServlet extends HttpServlet {
+public class GroupDashboardServlet extends HttpServlet {
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -38,7 +34,7 @@ public class GroupServlet extends HttpServlet {
             case "view":
                 try{
                     int id = Integer.parseInt(request.getParameter("id"));
-                    ResGroupDTO group = dao.getActiveGroup(id);
+                    ResGroupDTO group = dao.getGroup(id);
                     request.setAttribute("group", group);
                     List<Account> groupMember = dao.getGroupMembers(id);
                     request.setAttribute("groupMember", groupMember);
