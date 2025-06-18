@@ -203,9 +203,9 @@
                 <%-- Actions Cell --%>
                 <td class="actions">
                     <a href="#" class="btn btn-assign"><i class="fas fa-user-plus"></i>Assign</a>
-                    <form action="groupDashboard" method="post">
+                    <form action="groupDashboard" method="post" onsubmit="return confirm('Are you sure you want to disband this group? This action cannot be undone.');">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
-                        <input type="submit" name="action" value="Disband" class="btn btn-disband" onsubmit="return confirm('Are you sure you want to disband this group? This action cannot be undone.');">
+                        <input type="submit" name="action" value="Disband" class="btn btn-disband" >
                     </form>
                 </td>
             </tr>
