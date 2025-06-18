@@ -81,12 +81,18 @@
         /* Group Info Cell */
         .group-info { display: flex; align-items: flex-start; }
         .group-info .cover-image { width: 120px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background-color: #eee; }
+        .group-info .cover-image:hover {
+            transform: scale(1.1);
+        }
         .group-info .text-details .group-name { font-weight: bold; color: var(--black); margin-bottom: 5px; }
         .group-info .text-details .group-desc { font-size: 0.9em; color: #666; max-width: 300px; }
 
         /* Creator Info Cell */
         .creator-info { display: flex; align-items: center; }
         .creator-info .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
+        .creator-info .avatar:hover {
+            transform: scale(1.1);
+        }
         .creator-info .creator-name { font-weight: 500; color: var(--black); }
         .creator-info .creator-username { font-size: 0.85em; color: #777; }
 
@@ -110,6 +116,55 @@
 
         .description-full { display: none; }
         .read-more { color: var(--primary-color); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+        .image-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none; /* Re-set to be sure */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 5px;
+            animation: zoomIn 0.3s ease;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px; right: 40px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #bbb; }
+
+        #modal-caption {
+            text-align: center;
+            color: #ccc;
+            padding: 15px 0;
+            font-size: 1.2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes zoomIn {
+            from {transform: scale(0.5);}
+            to {transform: scale(1);}
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
     </style>
 </head>
 <body>
@@ -174,9 +229,9 @@
                     <div class="group-info">
                         <%-- Null check for cover image --%>
                         <% if (group.getImage() != null) { %>
-                        <img src="${pageContext.request.contextPath}/static/images/<%= group.getImage() %>" alt="Group Cover" class="cover-image">
+                        <img src="${pageContext.request.contextPath}/static/images/<%= group.getImage() %>" alt="Group Cover" class="cover-image clickable-image">
                         <% } else { %>
-                        <img src="https://via.placeholder.com/120x70/EEEEEE/AAAAAA?text=No+Image" alt="Placeholder" class="cover-image">
+                        <img src="https://via.placeholder.com/120x70/EEEEEE/AAAAAA?text=No+Image" alt="Placeholder" class="cover-image clickable-image">
                         <% } %>
                         <div class="text-details">
                             <%-- Null check for group name --%>
@@ -259,6 +314,10 @@
         </table>
     </div>
 </main>
+<div id="imageModal" class="image-modal">
+    <span class="modal-close">×</span>
+    <img class="modal-content" id="modalImage">
+</div>
 <!-- ======================= JAVASCRIPT ENHANCEMENTS ======================= -->
 <script>
 
@@ -277,6 +336,35 @@
             full.style.display = 'inline';
         }
     }
+
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("modalImage");
+    const closeBtn = document.querySelector(".modal-close");
+    // Get all clickable avatars
+    const avatars = document.querySelectorAll(".clickable-image");
+
+    // Loop through all avatars and add a click event
+    avatars.forEach(avatar => {
+        avatar.addEventListener('click', function() {
+            modal.style.display = "flex"; // Use flex for centering
+            modalImg.src = this.src;
+        });
+    });
+
+    // Function to close the modal
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    // Add click events to close the modal
+    closeBtn.addEventListener('click', closeModal);
+
+    // Also close modal when clicking on the background
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
 </script>
 </body>
 </html>
