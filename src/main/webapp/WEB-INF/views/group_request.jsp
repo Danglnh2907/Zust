@@ -2,8 +2,10 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dto.ResGroupDTO" %>
 <%@ page import="model.Account" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 
 <%
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
     List<ResGroupDTO> groups = (List<ResGroupDTO>) request.getAttribute("groups");
     String currentPage = "creategroup";
 %>
@@ -171,22 +173,22 @@
     <div class="logo">Zust</div>
     <ul class="nav-menu">
         <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=statistic"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a>
+            <a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a>
         </li>
         <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=user"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a>
+            <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a>
         </li>
         <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=notification"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a>
+            <a href="#"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a>
         </li>
         <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
-            <a href="group_requests.jsp"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Create Group Request</span></a>
+            <a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a>
         </li>
         <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=group"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a>
+            <a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a>
         </li>
         <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=report"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a>
+            <a href="#"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a>
         </li>
     </ul>
 </aside>
@@ -273,7 +275,7 @@
                             if (creator != null) { %>
                         <%-- Null check for avatar --%>
                         <% if (creator.getAvatar() != null) { %>
-                        <img src="<%= creator.getAvatar() %>" alt="Creator Avatar" class="avatar">
+                        <img src="${pageContext.request.contextPath}/static/images/<%= creator.getAvatar() %>" alt="Creator Avatar" class="avatar clickable-image">
                         <% } else { %>
                         <img src="https://via.placeholder.com/40/EEEEEE/AAAAAA?text=?" alt="Placeholder Avatar" class="avatar">
                         <% } %>
@@ -301,7 +303,7 @@
                 <%-- Date Cell --%>
                 <td>
                     <%-- Null check for create date --%>
-                    <%= (group.getCreateDate() != null) ? group.getCreateDate() : "N/A" %>
+                    <%= (group.getCreateDate() != null) ? group.getCreateDate().format(formatter) : "N/A" %>
                 </td>
 
                 <%-- Actions Cell --%>

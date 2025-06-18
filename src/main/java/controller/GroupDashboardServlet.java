@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.annotation.MultipartConfig;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.IOException;
 
@@ -23,56 +24,35 @@ import model.Account;
 @MultipartConfig(maxFileSize = 1024 * 1024 * 5)
 public class GroupDashboardServlet extends HttpServlet {
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         GroupDAO dao = new GroupDAO();
-        String action = request.getParameter("action");
-        action = action == null ? "" : action.toLowerCase().trim();
-        switch (action) {
-            case "view":
-                try{
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    ResGroupDTO group = dao.getGroup(id);
-                    request.setAttribute("group", group);
-                    List<Account> groupMember = dao.getGroupMembers(id);
-                    request.setAttribute("groupMember", groupMember);
-                    request.getRequestDispatcher("/WEB-INF/views/viewGroup.jsp").forward(request, response);
-                } catch (Exception e) {
-                    response.sendRedirect("/error");
-                }
-                break;
-            default:
-                List<ResGroupDTO> groups = dao.getActiveGroups();
-                request.setAttribute("groupList", groups);
-                request.getRequestDispatcher("/WEB-INF/views/viewGroups.jsp").forward(request, response);
-                break;
-        }
+        List<ResGroupDTO> groups = dao.getActiveGroups();
+        request.setAttribute("groupList", groups);
+        request.getRequestDispatcher("/WEB-INF/views/group_dashboard.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         GroupDAO dao = new GroupDAO();
         String action = request.getParameter("action");
-        action = action == null ? "" : action.toLowerCase().trim();
-        switch (action) {
-            case "disband":
-                try {
-                    int id = Integer.parseInt(request.getParameter("groupId"));
-                    if (dao.disbandGroup(id)) {
-                        request.setAttribute("msg", "Disbanded group successfully.");
-                    } else {
-                        request.setAttribute("msg", "Failed to remove group.");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    response.sendRedirect("/error");
-                    return;
+        if(action.equalsIgnoreCase("Disband")) {
+            try {
+                int id = Integer.parseInt(request.getParameter("groupId"));
+                if (dao.disbandGroup(id)) {
+                    request.setAttribute("msg", "Disbanded group successfully.");
+                    LOGGER.log(Level.INFO, "Disbanded group successfully.");
+                } else {
+                    request.setAttribute("msg", "Failed to disband group.");
+                    LOGGER.log(Level.INFO, "Failed to disband group.");
                 }
-                break;
-            default:
-                break;
+            } catch (Exception e) {
+                LOGGER.warning("Failed to disband group: " + e.getMessage());
+                response.sendRedirect("/error");
+                return;
+            }
         }
         doGet(request, response);
     }

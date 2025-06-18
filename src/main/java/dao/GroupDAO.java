@@ -130,7 +130,7 @@ public class GroupDAO extends DBContext {
     }
 
     public List<ResGroupDTO> getActiveGroups() {
-        String sql = "SELECT [group].*, number_of_participant, number_of_post, account.* FROM [group]\n" +
+        String sql = "SELECT [group].*, number_of_participant, number_of_post, active_account.* FROM [group]\n" +
                 "LEFT JOIN \n" +
                 "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +
                 "JOIN account ON account.account_id = participate.account_id\n" +
@@ -143,7 +143,7 @@ public class GroupDAO extends DBContext {
                 "GROUP BY post.group_id) AS post\n" +
                 "ON post.group_id = [group].group_id\n" +
                 "LEFT JOIN manage ON [group].group_id = manage.group_id\n" +
-                "LEFT JOIN account ON manage.account_id = account.account_id\n" +
+                "LEFT JOIN [active_account] ON manage.account_id = [active_account].account_id\n" +
                 "WHERE group_status = 'active'";
         Map<Integer, ResGroupDTO> mapGroups = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -165,7 +165,7 @@ public class GroupDAO extends DBContext {
                     group.setNumberPosts(rs.getInt("number_of_post"));
                     mapGroups.put(groupId, group);
                 }
-                if (rs.getInt("account_id") != 0 && rs.getString("account_status").equals("active")) {
+                if (rs.getInt("account_id") != 0) {
                     Account account = new Account();
                     account.setId(rs.getInt("account_id"));
                     account.setUsername(rs.getString("username"));
@@ -375,8 +375,8 @@ public class GroupDAO extends DBContext {
 //        System.out.println(dao.createGroup(dto));
 //        System.out.println(dao.getGroupMembers(35));
 //        System.out.println(dao.getActiveGroup(35));
-//        List<ResGroupDTO> groups = dao.getActiveGroups();
-//        System.out.println(groups);
+        List<ResGroupDTO> groups = dao.getActiveGroups();
+        System.out.println(groups);
 //        System.out.println(dao.assignManager(31, new int[] {1}));
 //        System.out.println(dao.deleteManager(31, 3));
 //        System.out.println(dao.getInactiveGroups());

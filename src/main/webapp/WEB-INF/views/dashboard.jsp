@@ -171,19 +171,19 @@
     <ul class="nav-menu">
         <%-- Use a JSP expression with a ternary operator to conditionally add the 'active' class --%>
         <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=statistic">
+            <a href="#">
                 <span class="icon"><i class="fas fa-chart-pie"></i></span>
                 <span>Statistic</span>
             </a>
         </li>
         <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=user">
+            <a href="#">
                 <span class="icon"><i class="fas fa-users"></i></span>
                 <span>User</span>
             </a>
         </li>
         <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=notification">
+            <a href="#">
                 <span class="icon"><i class="fas fa-bell"></i></span>
                 <span>Notification</span>
             </a>
@@ -191,17 +191,17 @@
         <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
             <a href="groupRequest">
                 <span class="icon"><i class="fas fa-plus-square"></i></span>
-                <span>Create Group Request</span>
+                <span>Group Request</span>
             </a>
         </li>
         <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=group">
+            <a href="groupDashboard">
                 <span class="icon"><i class="fas fa-user-friends"></i></span>
                 <span>Group</span>
             </a>
         </li>
         <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard.jsp?page=report">
+            <a href="#">
                 <span class="icon"><i class="fas fa-flag"></i></span>
                 <span>Report</span>
             </a>
