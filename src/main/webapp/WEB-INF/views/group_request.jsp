@@ -96,10 +96,7 @@
         .creator-info .creator-name { font-weight: 500; color: var(--black); }
         .creator-info .creator-username { font-size: 0.85em; color: #777; }
 
-        /* Status & Action Styles */
-        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold; text-transform: capitalize; }
-        .status-inactive { background-color: #fff0e6; color: var(--orange); }
-        .actions a {
+        .action-btn {
             text-decoration: none;
             color: white;
             padding: 8px 15px;
@@ -109,7 +106,7 @@
             transition: opacity 0.2s;
             margin-right: 8px;
         }
-        .actions a:hover { opacity: 0.8; }
+        .action-btn:hover { opacity: 0.8; }
         .btn-accept { background-color: var(--green); }
         .btn-reject { background-color: var(--red); }
         .no-data-message { text-align: center; padding: 40px; color: var(--text-color-light); }
@@ -199,6 +196,13 @@
     <header class="page-header">
         <h1>Group Creation Requests</h1>
         <p>Review and approve or reject new group submissions.</p>
+        <%
+            if(request.getAttribute("msg") != null){
+        %>
+        <p>Message: <%= request.getAttribute("msg")%></p>
+        <%
+            }
+        %>
     </header>
     <div class="requests-table-container">
         <table class="table-requests">
@@ -302,8 +306,11 @@
 
                 <%-- Actions Cell --%>
                 <td class="actions">
-                    <a href="process_request.jsp?action=accept&id=<%= group.getId() %>" class="btn-accept">Accept</a>
-                    <a href="process_request.jsp?action=reject&id=<%= group.getId() %>" class="btn-reject">Reject</a>
+                    <form action="groupRequest" method="post">
+                        <input type="hidden" name="groupId" value="<%= group.getId()%>">
+                        <input type="submit" name="action" value="Accept" class="action-btn btn-accept">
+                        <input type="submit" name="action" value="Reject" class="action-btn btn-reject">
+                    </form>
                 </td>
             </tr>
             <%

@@ -17,7 +17,7 @@ import java.util.logging.Logger;
         value = "/groupRequest"
 )
 public class GroupRequestServlet extends HttpServlet {
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         GroupDAO dao = new GroupDAO();
@@ -28,6 +28,31 @@ public class GroupRequestServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        GroupDAO dao = new GroupDAO();
+        try{
+            int groupId = Integer.parseInt(request.getParameter("groupId"));
+            String action = request.getParameter("action");
+            if (action.equals("Accept")) {
+                if (dao.acceptGroup(groupId)) {
+                    LOGGER.info("Accepted group sucessfully");
+                    request.setAttribute("msg", "Accepted group sucessfully");
+                } else {
+                    LOGGER.info("Accepted group fail");
+                    request.setAttribute("msg", "Accepted group fail");
+                }
+            } else if (action.equals("Reject")) {
+                if (dao.rejectGroup(groupId)) {
+                    LOGGER.info("Rejected group sucessfully");
+                    request.setAttribute("msg", "Rejected group sucessfully");
+                }else {
+                    LOGGER.info("Rejected group fail");
+                    request.setAttribute("msg", "Rejected group fail");
+                }
+            }
+            doGet(request, response);
+        }catch (Exception e){
+            LOGGER.warning("Failed to get request parameters: " + e.getMessage());
+            response.sendRedirect("error.jsp");
+        }
     }
 }

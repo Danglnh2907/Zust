@@ -53,15 +53,15 @@ public class CreateGroupServlet extends HttpServlet {
         GroupDAO groupDAO = new GroupDAO();
         ReqGroupDTO groupDTO = extractData(request.getParts());
         if(groupDTO == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            LOGGER.error("Create group: Error in parsing data");
             response.sendRedirect("error.jsp");
         } else {
             boolean success = groupDAO.createGroup(groupDTO);
             if (success) {
-                response.setStatus(HttpServletResponse.SC_CREATED);
+                LOGGER.info("Create group: Success");
                 request.setAttribute("msg", "Created group successfully.");
             } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                LOGGER.error("Create group: Error");
                 request.setAttribute("msg", "Failed to create group.");
             }
         }
@@ -175,11 +175,11 @@ public class CreateGroupServlet extends HttpServlet {
         return imagePath;
     }
 
-    private boolean isImageFile(String fileName) {
-        String lowerCaseFileName = fileName.toLowerCase();
-        return lowerCaseFileName.endsWith(".jpg") ||
-                lowerCaseFileName.endsWith(".jpeg") ||
-                lowerCaseFileName.endsWith(".png") ||
-                lowerCaseFileName.endsWith(".gif");
-    }
+//    private boolean isImageFile(String fileName) {
+//        String lowerCaseFileName = fileName.toLowerCase();
+//        return lowerCaseFileName.endsWith(".jpg") ||
+//                lowerCaseFileName.endsWith(".jpeg") ||
+//                lowerCaseFileName.endsWith(".png") ||
+//                lowerCaseFileName.endsWith(".gif");
+//    }
 }

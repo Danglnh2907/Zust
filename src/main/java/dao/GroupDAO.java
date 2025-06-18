@@ -236,6 +236,40 @@ public class GroupDAO extends DBContext {
         return false;
     }
 
+    public boolean acceptGroup(int groupId) {
+        try {
+            String sql = "UPDATE [group]\n" +
+                    "SET group_status = 'active'\n" +
+                    "WHERE group_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            stmt.setInt(1, groupId);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows != 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean rejectGroup(int groupId) {
+        try {
+            String sql = "UPDATE [group]\n" +
+                    "SET group_status = 'rejected'\n" +
+                    "WHERE group_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            stmt.setInt(1, groupId);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows != 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return false;
+    }
+
     public List<Account> getGroupMembers(int groupId) {
         String sql = "SELECT * FROM participate\n" +
                 "JOIN account ON participate.account_id = account.account_id\n" +
@@ -345,7 +379,9 @@ public class GroupDAO extends DBContext {
 //        System.out.println(groups);
 //        System.out.println(dao.assignManager(31, new int[] {1}));
 //        System.out.println(dao.deleteManager(31, 3));
-        System.out.println(dao.getInactiveGroups());
+//        System.out.println(dao.getInactiveGroups());
+//        System.out.println(dao.rejectGroup(1));
+//        System.out.println(dao.acceptGroup(1));
     }
 
 
