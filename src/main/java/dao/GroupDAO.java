@@ -25,14 +25,15 @@ public class GroupDAO extends DBContext {
                 return false;
             }
             conn.setAutoCommit(false);
-            String groupSql = "INSERT INTO [group](group_name, group_description, group_cover_image) VALUES\n" +
-                             "(?, ?, ?)";
+            String groupSql = "INSERT INTO [group](group_name, group_description, group_cover_image, account_id) VALUES\n" +
+                             "(?, ?, ?, ?)";
             PreparedStatement groupSt = conn.prepareStatement(groupSql, PreparedStatement.RETURN_GENERATED_KEYS);
             groupSt.setString(1, group.getGroupName());
             groupSt.setString(2, group.getGroupDescription());
             groupSt.setString(3, group.getCoverImage());
-            int affectedRows = groupSt.executeUpdate();
-            if (affectedRows == 0) {
+            groupSt.setInt(4, group.getManagerId());
+            int affectedRow = groupSt.executeUpdate();
+            if (affectedRow == 0) {
                 conn.rollback();
                 return false;
             }
@@ -46,39 +47,28 @@ public class GroupDAO extends DBContext {
                 return false;
             }
 
-            List<Integer> managers = group.getManagers();
+            int manager = group.getManagerId();
 
             String participateSql = "INSERT INTO participate(group_id, account_id) VALUES(?, ?)";
             PreparedStatement participateSt = conn.prepareStatement(participateSql);
-            for (Integer manager : managers) {
-                participateSt.setInt(1, groupId);
-                participateSt.setInt(2, manager);
-                participateSt.addBatch();
-            }
-
-            int[] listAffectedRows = participateSt.executeBatch();
-            for (int affectedRow : listAffectedRows) {
-                if (affectedRow == 0) {
-                    conn.rollback();
-                    return false;
-                }
+            participateSt.setInt(1, groupId);
+            participateSt.setInt(2, manager);
+            affectedRow = participateSt.executeUpdate();
+            if (affectedRow == 0) {
+                conn.rollback();
+                return false;
             }
 
             String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
             PreparedStatement manageSt = conn.prepareStatement(manageSql);
-            for (Integer manager : managers) {
-                manageSt.setInt(1, groupId);
-                manageSt.setInt(2, manager);
-                manageSt.addBatch();
-            }
-            listAffectedRows = manageSt.executeBatch();
-            for (int listAffectedRow : listAffectedRows) {
-                if (listAffectedRow == 0) {
-                    conn.rollback();
-                    return false;
-                }
-            }
+            manageSt.setInt(1, groupId);
+            manageSt.setInt(2, manager);
 
+            affectedRow = manageSt.executeUpdate();
+            if (affectedRow == 0) {
+                conn.rollback();
+                return false;
+            }
             conn.commit();
             return true;
         } catch (SQLException e) {

@@ -21,11 +21,11 @@ import model.Account;
 import util.service.FileService;
 
 @WebServlet(
-        name = "GroupControllerServlet",
+        name = "GroupServlet",
         value = "/group"
 )
 @MultipartConfig(maxFileSize = 1024 * 1024 * 5)
-public class GroupControllerServlet extends HttpServlet {
+public class GroupServlet extends HttpServlet {
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -47,17 +47,6 @@ public class GroupControllerServlet extends HttpServlet {
                     response.sendRedirect("/error");
                 }
                 break;
-            case "create":
-                try {
-                    AccountDAO accountDAO = new AccountDAO();
-                    request.setAttribute("listAccount", accountDAO.getActiveAccounts());
-                    request.getRequestDispatcher("/WEB-INF/views/createGroup.jsp").forward(request, response);
-                } catch (Exception e){
-                    e.printStackTrace();
-                    response.sendRedirect("/error");
-                }
-
-                break;
             default:
                 List<ResGroupDTO> groups = dao.getActiveGroups();
                 request.setAttribute("groupList", groups);
@@ -72,41 +61,10 @@ public class GroupControllerServlet extends HttpServlet {
         String action = request.getParameter("action");
         action = action == null ? "" : action.toLowerCase().trim();
         switch (action) {
-            case "create":
-                try {
-                    FileService fileService = new FileService(getServletContext());
-                    Part filePart = request.getPart("coverImage");
-                    String fileName = filePart.getSubmittedFileName();
-                    if (!isImageFile(fileName)) {
-                        request.setAttribute("msg", "Only image files are allowed.");
-                        doGet(request, response);
-                        return;
-                    }
-                    try (InputStream fileContent = filePart.getInputStream()) {
-                        String savedPath = fileService.saveFile(fileName, fileContent);
-                        String groupName = request.getParameter("groupName");
-                        String groupDescription = request.getParameter("groupDescription");
-                        ReqGroupDTO group = new ReqGroupDTO(groupName, groupDescription, savedPath);
-                        String[] managerIds = request.getParameterValues("managerIds") == null ? new String[0] : request.getParameterValues("managerIds");
-                        for(String managerId : managerIds) {
-                            group.addManager(Integer.parseInt(managerId));
-                        }
-                        if(dao.createGroup(group)){
-                            request.setAttribute("msg", "Created group successfully.");
-                        } else {
-                            request.setAttribute("msg", "Failed to create group.");
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    response.sendRedirect("/error");
-                    return;
-                }
-                break;
             case "disband":
                 try {
                     int id = Integer.parseInt(request.getParameter("groupId"));
-                    if(dao.disbandGroup(id)){
+                    if (dao.disbandGroup(id)) {
                         request.setAttribute("msg", "Disbanded group successfully.");
                     } else {
                         request.setAttribute("msg", "Failed to remove group.");
@@ -121,13 +79,5 @@ public class GroupControllerServlet extends HttpServlet {
                 break;
         }
         doGet(request, response);
-    }
-
-    private boolean isImageFile(String fileName) {
-        String lowerCaseFileName = fileName.toLowerCase();
-        return lowerCaseFileName.endsWith(".jpg") ||
-                lowerCaseFileName.endsWith(".jpeg") ||
-                lowerCaseFileName.endsWith(".png") ||
-                lowerCaseFileName.endsWith(".gif");
     }
 }
