@@ -86,6 +86,11 @@ public class AuthServlet extends HttpServlet {
 					Account loggedInAccount = authDAO.getAccountByUsername(username);
 					if (loggedInAccount != null) {
 						request.getSession().setAttribute("users", loggedInAccount);
+						if (loggedInAccount.getAccountRole().equals("admin"))
+						{
+							request.getSession().setAttribute("isAdmin", true);
+							response.sendRedirect(request.getContextPath() + "/admin");
+						}
 						response.sendRedirect(request.getContextPath() + "/post");
 						return;
 					} else {
