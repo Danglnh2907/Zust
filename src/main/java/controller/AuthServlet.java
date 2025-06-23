@@ -1,16 +1,13 @@
 package controller;
 
 import dao.AuthDAO;
+import jakarta.servlet.http.*;
 import model.Account;
 import util.service.FileService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +92,9 @@ public class AuthServlet extends HttpServlet {
 						{
 							request.getSession().setAttribute("isAdmin", true);
 							response.sendRedirect(request.getContextPath() + "/admin");
+							Cookie cookie = new Cookie("users", "true");
+							cookie.setMaxAge(60 * 60 * 24 * 3);
+							cookie.setAttribute("users_account", loggedInAccount.toString());
 						}
 						response.sendRedirect(request.getContextPath() + "/post");
 						return;

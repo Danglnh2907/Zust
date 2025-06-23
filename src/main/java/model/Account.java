@@ -145,4 +145,11 @@ public class Account {
 		this.accountRole = accountRole;
 	}
 
+	@Override
+	public String toString() {
+		return "Account [id=" + id + ", username=" + username + ", password=" + password + ", fullname=" + fullname
+				+ ", email=" + email + ", phone=" + phone + ", gender=" + gender + ", dob=" + dob + ", avatar=" + avatar
+				+ ", bio=" + bio + ", credit=" + credit + ", accountStatus=" + accountStatus + ", accountRole="
+				+ accountRole + "]";
+	}
 }
