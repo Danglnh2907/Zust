@@ -27,16 +27,6 @@ public class ReqPostDTO {
         this.groupID = -1;
     }
 
-    public ReqPostDTO(int accountID, LocalDateTime createdAt, int groupID, LocalDateTime lastModified, String postContent, String privacy, String status) {
-        this.accountID = accountID;
-        this.createdAt = createdAt;
-        this.groupID = groupID;
-        this.lastModified = lastModified;
-        this.postContent = postContent;
-        this.privacy = privacy;
-        this.status = status;
-    }
-
     public int getAccountID() {
         return accountID;
     }

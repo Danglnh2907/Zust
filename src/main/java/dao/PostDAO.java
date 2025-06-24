@@ -38,9 +38,9 @@ public class PostDAO extends DBContext {
 
             //Insert into post table
             String postSql = """
-                INSERT INTO post\
-                 (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id)\
-                 VALUES (?, ?, ?, ?, ?, ?, ?)""";
+                    INSERT INTO post\
+                     (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id)\
+                     VALUES (?, ?, ?, ?, ?, ?, ?)""";
             PreparedStatement postStmt = conn.prepareStatement(postSql, PreparedStatement.RETURN_GENERATED_KEYS);
             postStmt.setString(1, dto.getPostContent());
             postStmt.setInt(2, dto.getAccountID());
@@ -119,17 +119,34 @@ public class PostDAO extends DBContext {
         }
     }
 
-    public ArrayList<RespPostDTO> getPosts(int userID) {
-        String sql = """
-                SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
-                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
-                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
-                (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
-                FROM post p JOIN account a ON p.account_id = a.account_id \
-                WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
-        ArrayList<RespPostDTO> posts = new ArrayList<>();
-        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userID);
+    /**
+     * Method to get a list of posts based on conditions
+     *
+     * @param userID    - ID of the user who request this. This is used to track if the current requester has
+     *                  the right to view those post (authorization), check for like status,...
+     * @param accountID - ID of the account those posts belong to (get all posts a user has posted), or ID of a
+     *                  friend of user (view all posts in friend profile or newsfeed)
+     * @return - ArrayList of RespPostDTO
+     */
+    public ArrayList<RespPostDTO> getPosts(int userID, int accountID) {
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return null;
+            }
+
+            //Get list of posts
+            String sql = """
+                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                    (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                    (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                    (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                    FROM post p JOIN account a ON p.account_id = a.account_id \
+                    WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
+            ArrayList<RespPostDTO> posts = new ArrayList<>();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, accountID);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -143,6 +160,14 @@ public class PostDAO extends DBContext {
                 post.setLikeCount(rs.getInt("like_count"));
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
+
+                //Check if the current user request this post has liked this post or not
+                String likeSql = "SELECT * FROM like_post WHERE post_id = ? AND account_id = ?";
+                PreparedStatement likeStmt = conn.prepareStatement(likeSql);
+                likeStmt.setInt(1, post.getPostId());
+                likeStmt.setInt(2, userID);
+                rs = likeStmt.executeQuery();
+                post.setLiked(rs.next());
 
                 //Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -173,19 +198,36 @@ public class PostDAO extends DBContext {
             return posts;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
-            return posts;
         }
+
+        return null;
     }
 
-    public RespPostDTO getPost(int postId) {
-        String sql = """
-                SELECT p.post_id, p.post_content, a.username, p.post_last_update, \
-                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
-                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
-                (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
-                FROM post p JOIN account a ON p.account_id = a.account_id \
-                WHERE p.post_status = 'published' AND p.post_id = ? ORDER BY p.post_create_date DESC""";
-        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Get a post based on postID
+     *
+     * @param postId - The ID of the post
+     * @param userID - ID of the user who request this. This is used to track if the current requester has
+     *               the right to view those post (authorization), check for like status,...
+     * @return RespPostDTO object corresponding to the post
+     */
+    public RespPostDTO getPost(int postId, int userID) {
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return null;
+            }
+
+            //Get post
+            String sql = """
+                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                    (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                    (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                    (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                    FROM post p JOIN account a ON p.account_id = a.account_id \
+                    WHERE p.post_status = 'published' AND p.post_id = ? ORDER BY p.post_create_date DESC""";
+            PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, postId);
             ResultSet rs = stmt.executeQuery();
 
@@ -194,11 +236,20 @@ public class PostDAO extends DBContext {
                 post.setPostId(rs.getInt("post_id"));
                 post.setPostContent(rs.getString("post_content"));
                 post.setUsername(rs.getString("username"));
+                post.setAvatar(rs.getString("avatar"));
                 post.setLastModified(rs.getTimestamp("post_last_update") != null
                         ? rs.getTimestamp("post_last_update").toLocalDateTime() : null);
                 post.setLikeCount(rs.getInt("like_count"));
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
+
+                //Check if the current user request this post has liked this post or not
+                String likeSql = "SELECT * FROM like_post WHERE post_id = ? AND account_id = ?";
+                PreparedStatement likeStmt = conn.prepareStatement(likeSql);
+                likeStmt.setInt(1, postId);
+                likeStmt.setInt(2, userID);
+                rs = likeStmt.executeQuery();
+                post.setLiked(rs.next());
 
                 // Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -287,7 +338,7 @@ public class PostDAO extends DBContext {
                 deleteTagStmt.executeUpdate();
             }
 
-            // Insert new hashtags
+            //Insert new hashtags
             String hashtagSql = """
                     MERGE hashtag AS target \
                     USING (VALUES (?)) AS source (hashtag_name) \
@@ -517,7 +568,7 @@ public class PostDAO extends DBContext {
                     break;
                 }
                 case "gets": {
-                    ArrayList<RespPostDTO> posts = dao.getPosts(1);
+                    ArrayList<RespPostDTO> posts = dao.getPosts(1, 1);
                     for (RespPostDTO post : posts) {
                         System.out.printf("Post content: %s\n", post.getPostContent()); //You can choose to print more
                     }
@@ -527,7 +578,7 @@ public class PostDAO extends DBContext {
                     //Get post ID
                     System.out.print("Enter post ID: ");
                     int postId = sc.nextInt();
-                    RespPostDTO post = dao.getPost(postId);
+                    RespPostDTO post = dao.getPost(postId, 1);
                     if (post != null) {
                         System.out.printf("Post content: %s\n", post.getPostContent());
                     } else {

@@ -35,7 +35,6 @@ public class RespCommentDTO {
         try {
             template = new String(this.getClass().getClassLoader()
                     .getResourceAsStream("templates/comment_item.html").readAllBytes());
-            //logger.info(template);
         } catch (Exception e) {
             logger.severe("Failed to load template\nError: " + e.getMessage());
         }
@@ -131,6 +130,8 @@ public class RespCommentDTO {
 
     @Override
     public String toString() {
+        String imageURL = String.format("<img src=\"/zust/static/images/%s\" alt=\"Comment image\">", image);
+
         //The template UI have no display for last_update yet
         return String.format(template,
                 replyID == -1 ? "" : "is-reply",
@@ -139,7 +140,7 @@ public class RespCommentDTO {
                 username,
                 username.toLowerCase().replaceAll(" ", ""),
                 content,
-                image == null || image.isEmpty() ? "" : String.format("<img src=\"/zust/static/images/%s\" alt=\"Comment image\">", image),
+                image == null || image.isEmpty() ? "" : imageURL,
                 totalLikes);
     }
 }

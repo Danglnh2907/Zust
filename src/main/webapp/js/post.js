@@ -128,12 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
     likeBtns.forEach((btn, index) => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            const isLiked = btn.classList.toggle('liked');
+            const isLiked = btn.classList.contains('liked');
             let likeCount = parseInt(likeCounts[index].textContent);
 
             postId = e.target.closest(".post").dataset.postId;
 
-            if (isLiked) {
+            if (!isLiked) { //If not liked before, send like request
                 //Called to server
                 fetch(`/zust/post?action=like&id=${postId}`, {
                     method: "POST"
@@ -142,10 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (resp.status === 200) {
                             likeCount++;
                             likeCounts[index].textContent = String(likeCount);
+                            btn.classList.add("liked");
                         }
                     })
                     .catch(error => console.log(error))
-            } else {
+            } else { //If already like, send unlike request
                 //Called to server
                 fetch(`/zust/post?action=unlike&id=${postId}`, {
                     method: "POST"
@@ -154,6 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (resp.status === 200) {
                             likeCount--;
                             likeCounts[index].textContent = String(likeCount);
+                            //Remove the liked class
+                            btn.classList.remove("liked");
                         }
                     })
                     .catch(error => console.log(error))

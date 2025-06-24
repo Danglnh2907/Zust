@@ -32,11 +32,20 @@ public class CommentController extends HttpServlet {
 
         out = response.getWriter();
 
-        //Get session
+        //Fetch userID in sessions
         HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("users");
-        if (account == null) {
-            response.sendRedirect("/auth");
+        Account account;
+        try {
+            account = (Account) session.getAttribute("users");
+            if (account == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"User not authenticated\"}");
+                return;
+            }
+        } catch (Exception e) {
+            logger.warning("Error getting user from session: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Authentication error\"}");
             return;
         }
 
@@ -73,7 +82,7 @@ public class CommentController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setContentType("text/html");
             response.setCharacterEncoding("UTF-8");
-            out.println(String.format(template, comments.size(),  String.format(form, ""), ""));
+            out.println(String.format(template, comments.size(),  String.format(form, account.getAvatar()), ""));
         } else {
             //We return the HTML directly
             response.setStatus(HttpServletResponse.SC_FOUND);
@@ -93,7 +102,7 @@ public class CommentController extends HttpServlet {
             //Print the HTML to the output stream
             String output = String.format(template,
                     comments.size(), //Get the total comment
-                    String.format(form, comments.getFirst().getAvatar()), //Get the comment-posting form (with custom user avatar)
+                    String.format(form, account.getAvatar()), //Get the comment-posting form (with custom user avatar)
                     commentItems);
             //logger.info(output); 
 

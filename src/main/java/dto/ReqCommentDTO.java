@@ -21,16 +21,6 @@ public class ReqCommentDTO {
         this.replyID = -1;
     }
 
-    public ReqCommentDTO(int accountID, String content, LocalDateTime createdAt, String image, int postID, int replyID, LocalDateTime updatedAt) {
-        this.accountID = accountID;
-        this.content = content;
-        this.createdAt = createdAt;
-        this.image = image;
-        this.postID = postID;
-        this.replyID = replyID;
-        this.updatedAt = updatedAt;
-    }
-
     public int getAccountID() {
         return accountID;
     }
@@ -86,6 +76,4 @@ public class ReqCommentDTO {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
-
 }

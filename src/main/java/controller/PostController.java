@@ -73,7 +73,7 @@ public class PostController extends HttpServlet {
         //No provided id or action -> View all posts belong to a user
         if (action == null && idRaw == null) {
             try {
-                ArrayList<RespPostDTO> posts = postDAO.getPosts(userID);
+                ArrayList<RespPostDTO> posts = postDAO.getPosts(userID, userID);
                 if (posts.isEmpty()) {
                     request.setAttribute("message", "No posts found");
                 } else {
@@ -97,7 +97,7 @@ public class PostController extends HttpServlet {
         if (idRaw != null) {
             try {
                 int id = Integer.parseInt(idRaw);
-                RespPostDTO post = postDAO.getPost(id);
+                RespPostDTO post = postDAO.getPost(id, userID);
                 CommentDAO commentDAO = new CommentDAO();
                 ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(id);
                 if (post == null) {
@@ -377,7 +377,7 @@ public class PostController extends HttpServlet {
         dto.setPrivacy(postPrivacy);
         //When create post, status can only be published (personal) or sent (group)
         //Edit can not change this status (status = deleted -> delete operation, not related to ReqPostDTO)
-        dto.setStatus(groupID != -1 ? "sended" : postStatus);
+        dto.setStatus(groupID != -1 ? "sent" : postStatus);
         dto.setCreatedAt(LocalDateTime.now());
         dto.setLastModified(LocalDateTime.now());
         dto.setGroupID(groupID);
