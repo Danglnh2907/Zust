@@ -126,17 +126,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const likeBtns = document.querySelectorAll('.like-btn');
     const likeCounts = document.querySelectorAll('.like-count');
     likeBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
             const isLiked = btn.classList.toggle('liked');
             let likeCount = parseInt(likeCounts[index].textContent);
 
-            if (isLiked) {
-                likeCount++;
-            } else {
-                likeCount--;
-            }
+            postId = e.target.closest(".post").dataset.postId;
 
-            likeCounts[index].textContent = String(likeCount);
+            if (isLiked) {
+                //Called to server
+                fetch(`/zust/post?action=like&id=${postId}`, {
+                    method: "POST"
+                })
+                    .then(resp => {
+                        if (resp.status === 200) {
+                            likeCount++;
+                            likeCounts[index].textContent = String(likeCount);
+                        }
+                    })
+                    .catch(error => console.log(error))
+            } else {
+                //Called to server
+                fetch(`/zust/post?action=unlike&id=${postId}`, {
+                    method: "POST"
+                })
+                    .then(resp => {
+                        if (resp.status === 200) {
+                            likeCount--;
+                            likeCounts[index].textContent = String(likeCount);
+                        }
+                    })
+                    .catch(error => console.log(error))
+            }
         });
     });
 

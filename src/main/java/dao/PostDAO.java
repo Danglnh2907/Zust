@@ -534,6 +534,16 @@ public class PostDAO extends DBContext {
                         System.out.println("Post not found");
                     }
                 }
+                case "like": {
+                    System.out.print("Enter post ID: ");
+                    int postId = sc.nextInt();
+                    boolean success = dao.likePost(postId, 1);
+                    if (success) {
+                        System.out.println("Like post successful");
+                    } else {
+                        System.out.println("Like post failed");
+                    }
+                }
             }
         }
 
