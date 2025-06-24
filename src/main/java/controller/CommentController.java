@@ -77,7 +77,7 @@ public class CommentController extends HttpServlet {
 
         //Fetch comments from database
         CommentDAO commentDAO = new CommentDAO();
-        ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(postID);
+        ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(postID, account.getId());
         if (comments.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setContentType("text/html");
@@ -146,7 +146,6 @@ public class CommentController extends HttpServlet {
                 try {
                     //Extract data
                     ReqCommentDTO commentDTO = extractData(account.getId(), request.getParts());
-                    logger.info("Creating new comment " + commentDTO);
                     boolean success = commentDAO.createComment(commentDTO);
                     if (success) {
                         response.setStatus(HttpServletResponse.SC_CREATED);
@@ -155,9 +154,39 @@ public class CommentController extends HttpServlet {
                     }
                 } catch (NumberFormatException e) {
                     logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 }
             }
-            case "edit", "delete", "like", "report" -> {
+            case "edit", "delete" -> {
+            }
+            case "like" -> {
+                try {
+                    //Extract commentID
+                    int commentID = Integer.parseInt(request.getParameter("commentID"));
+                    boolean success = commentDAO.likeComment(account.getId(), commentID);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_CREATED);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            }
+            case "unlike" -> {
+                try {
+                    int commentID = Integer.parseInt(request.getParameter("commentID"));
+                    boolean success = commentDAO.unlikeComment(account.getId(), commentID);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_CREATED);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
             }
         }
     }

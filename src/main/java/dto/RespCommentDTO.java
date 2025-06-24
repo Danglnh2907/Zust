@@ -15,6 +15,7 @@ public class RespCommentDTO {
     private String avatar;
     private int postID;
     private int replyID;
+    private boolean liked;
 
     private String template;
     private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -31,6 +32,7 @@ public class RespCommentDTO {
         this.avatar = "";
         this.postID = -1;
         this.replyID = -1;
+        this.liked = false;
 
         try {
             template = new String(this.getClass().getClassLoader()
@@ -128,6 +130,14 @@ public class RespCommentDTO {
         this.updatedAt = updatedAt;
     }
 
+    public boolean isLiked() {
+        return liked;
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
+    }
+
     @Override
     public String toString() {
         String imageURL = String.format("<img src=\"/zust/static/images/%s\" alt=\"Comment image\">", image);
@@ -141,6 +151,7 @@ public class RespCommentDTO {
                 username.toLowerCase().replaceAll(" ", ""),
                 content,
                 image == null || image.isEmpty() ? "" : imageURL,
+                liked ? "liked" : "",
                 totalLikes);
     }
 }

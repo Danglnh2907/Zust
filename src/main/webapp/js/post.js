@@ -346,32 +346,54 @@ function attachListener(postId) {
     //Comment section action (like, reply, report)
     const replyToHandle = document.getElementById('reply-to-handle');
     document.getElementById('comment-section').addEventListener('click', (e) => {
+        //Get commentID
+        const commentID = e.target.closest(".comment-item").dataset.commentId;
+
         const likeBtn = e.target.closest('.like-btn');
         if (likeBtn) {
-            //Send request to comment?action=like
-            fetch(`/zust/comment?action=like&postID=${postId}`)
-                .then(response => {
-                    if (response.status === 200) {
-                        //Change style
-                        likeBtn.classList.toggle('liked');
-                        const countSpan = likeBtn.querySelector('span');
-                        let count = parseInt(countSpan.textContent);
-                        count = likeBtn.classList.contains('liked') ? count + 1 : count - 1;
-                        countSpan.textContent = count;
-                    }
+            //Check if it has 'liked' class
+            const isCmtLiked = likeBtn.classList.contains("liked");
+            if (isCmtLiked) { //If this comment has been liked by current user, unlike
+                //Send request to comment?action=like
+                fetch(`/zust/comment?action=unlike&commentID=${commentID}`, {
+                    method: "POST"
                 })
-                .catch(error => {
-                    console.log(error);
+                    .then(response => {
+                        if (response.status === 201) {
+                            //Change style
+                            likeBtn.classList.remove('liked');
+                            const countSpan = likeBtn.querySelector('span');
+                            countSpan.textContent = parseInt(countSpan.textContent) - 1;
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            } else {
+                //Send request to comment?action=like
+                fetch(`/zust/comment?action=like&commentID=${commentID}`, {
+                    method: "POST"
                 })
+                    .then(response => {
+                        if (response.status === 201) {
+                            //Change style
+                            likeBtn.classList.add('liked');
+                            const countSpan = likeBtn.querySelector('span');
+                            countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            }
         }
 
         const replyBtn = e.target.closest('.reply-btn');
         if (replyBtn) {
             const commentItem = replyBtn.closest('.comment-item');
-            const commentId = commentItem.dataset.commentId;
             const userHandle = commentItem.querySelector('.comment-user-handle').textContent;
 
-            currentReplyTarget = commentId;
+            currentReplyTarget = commentID;
             replyToHandle.textContent = userHandle;
             replyIndicator.style.display = 'flex';
             commentTextarea.placeholder = `Replying to ${userHandle}...`;

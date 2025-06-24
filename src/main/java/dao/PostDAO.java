@@ -141,7 +141,7 @@ public class PostDAO extends DBContext {
                     SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
                     (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                     (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
-                    (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                    (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count \
                     FROM post p JOIN account a ON p.account_id = a.account_id \
                     WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
             ArrayList<RespPostDTO> posts = new ArrayList<>();
@@ -224,9 +224,9 @@ public class PostDAO extends DBContext {
                     SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
                     (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                     (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
-                    (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
+                    (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count \
                     FROM post p JOIN account a ON p.account_id = a.account_id \
-                    WHERE p.post_status = 'published' AND p.post_id = ? ORDER BY p.post_create_date DESC""";
+                    WHERE p.post_status = 'published' AND p.post_id = ?""";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, postId);
             ResultSet rs = stmt.executeQuery();

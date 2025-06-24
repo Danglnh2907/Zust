@@ -99,7 +99,7 @@ public class PostController extends HttpServlet {
                 int id = Integer.parseInt(idRaw);
                 RespPostDTO post = postDAO.getPost(id, userID);
                 CommentDAO commentDAO = new CommentDAO();
-                ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(id);
+                ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(id, account.getId());
                 if (post == null) {
                     request.setAttribute("message", "No post/comments found");
                 } else {

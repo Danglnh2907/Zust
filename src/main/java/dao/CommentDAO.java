@@ -60,7 +60,7 @@ public class CommentDAO extends DBContext {
         return true;
     }
 
-    public ArrayList<RespCommentDTO> getAllComments(int postID) {
+    public ArrayList<RespCommentDTO> getAllComments(int postID, int userID) {
         Connection conn;
         ArrayList<RespCommentDTO> comments = new ArrayList<>();
         try {
@@ -95,6 +95,14 @@ public class CommentDAO extends DBContext {
                 dto.setPostID(rs.getInt("post_id"));
                 //SQL Server treat NULL value as 0
                 dto.setReplyID(rs.getInt("reply_comment_id") == 0 ? -1 : rs.getInt("reply_comment_id"));
+
+                //Check if current requester has liked this comment
+                String likeSQL = "SELECT * FROM like_comment WHERE comment_id = ? AND account_id = ?";
+                PreparedStatement likeStmt = conn.prepareStatement(likeSQL);
+                likeStmt.setInt(1, dto.getId());
+                likeStmt.setInt(2, userID);
+                dto.setLiked(likeStmt.executeQuery().next());
+
                 comments.add(dto);
             }
         } catch (SQLException e) {
@@ -353,7 +361,7 @@ public class CommentDAO extends DBContext {
                     break;
                 }
                 case "gets": {
-                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1);
+                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1, 1);
                     for (RespCommentDTO comment : comments) {
                         System.out.println("Comment ID: " + comment.getId());
                         System.out.println("Comment image: " + (comment.getImage() == null ? "This is null value not string" : comment.getImage()));
@@ -361,7 +369,7 @@ public class CommentDAO extends DBContext {
                     break;
                 }
                 case "filter": {
-                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1);
+                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1, 1);
                     LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> commentMap = dao.filterComment(comments);
                     System.out.println(commentMap.size());
                     commentMap.forEach((key, value) -> {
