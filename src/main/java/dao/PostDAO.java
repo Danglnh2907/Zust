@@ -366,6 +366,82 @@ public class PostDAO extends DBContext {
         return false;
     }
 
+    public boolean likePost(int postId, int accountId) {
+        Connection conn;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String sql = "INSERT INTO like_post (post_id, account_id) VALUES (?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, postId);
+            stmt.setInt(2, accountId);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                logger.warning("Failed to like post");
+                conn.rollback();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return true;
+    }
+
+    public boolean unlikePost(int postId, int accountId) {
+        Connection conn;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String sql = "DELETE FROM like_post WHERE post_id = ? AND account_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, postId);
+            stmt.setInt(2, accountId);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                logger.warning("Failed to unlike post");
+                conn.rollback();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return true;
+    }
+
+    public boolean repost(int postId, int accountId) {
+        Connection conn;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String sql = "INSERT INTO repost (account_id, post_id, repost_create_date) VALUES (?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, accountId);
+            stmt.setInt(2, postId);
+            stmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                logger.warning("Failed to repost");
+                conn.rollback();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+        return true;
+    }
+
     public static void main(String[] args) {
         PostDAO dao = new PostDAO();
         Scanner sc = new Scanner(System.in);

@@ -1,0 +1,304 @@
+/* Scoped container for the edit modal composer */
+.composer-container {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e1e8ed;
+}
+
+/* Style the Quill editor within the edit modal */
+.composer-container .ql-editor {
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px 0;
+    background-color: #fff;
+    border: none;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Ensure images within the editor display correctly */
+.composer-container .ql-editor img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+}
+
+/* Styles for custom DeletableImage blots */
+.composer-container .image-blot-container {
+    position: relative;
+    display: block;
+    max-width: 100%;
+    margin: 0;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.composer-container .image-blot-container img {
+    max-width: 100%;
+    width: 100%;
+    display: block;
+}
+
+.composer-container .image-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    line-height: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.composer-container .image-delete-btn:hover {
+    background-color: rgba(224, 36, 94, 0.8);
+}
+
+/* Styles for image grid grouping */
+.composer-container .image-grid-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin: 8px 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.composer-container .image-grid-wrapper .image-blot-container {
+    margin: 0;
+    height: 150px;
+    border: none;
+}
+
+.composer-container .image-grid-wrapper .image-blot-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Ensure toolbar and other Quill elements are styled appropriately */
+.composer-container .ql-toolbar {
+    border: none;
+    padding: 0;
+    background-color: transparent;
+}
+
+.composer-container .ql-container {
+    border: none;
+}
+
+/* Composer body and avatar */
+.composer-container .composer-body {
+    display: flex;
+    gap: 16px;
+}
+
+.composer-container .composer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-top: 4px;
+}
+
+.composer-container .editor-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.composer-container .composer-privacy {
+    margin-bottom: 16px;
+}
+
+.composer-container .privacy-selector-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    position: relative;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+    min-width: 140px;
+}
+
+.composer-container .privacy-selector-wrapper:hover {
+    border-color: #f56a00;
+    box-shadow: 0 2px 8px rgba(245, 106, 0, 0.1);
+}
+
+.composer-container .privacy-selector-wrapper.open {
+    border-color: #f56a00;
+    box-shadow: 0 2px 8px rgba(245, 106, 0, 0.1);
+}
+
+.composer-container #edit-privacy-icon-display,
+.composer-container #privacy-icon-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.composer-container #edit-privacy-icon-display .icon,
+.composer-container #privacy-icon-display .icon {
+    width: 18px;
+    height: 18px;
+    stroke: #657786;
+    fill: none;
+    transition: stroke 0.2s ease;
+}
+
+.composer-container .privacy-selector-wrapper:hover #edit-privacy-icon-display .icon,
+.composer-container .privacy-selector-wrapper.open #edit-privacy-icon-display .icon,
+.composer-container .privacy-selector-wrapper:hover #privacy-icon-display .icon,
+.composer-container .privacy-selector-wrapper.open #privacy-icon-display .icon {
+    stroke: #f56a00;
+}
+
+.composer-container .privacy-display-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    color: #657786;
+    font-size: 0.95rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.composer-container .privacy-selector-wrapper:hover .privacy-display-text,
+.composer-container .privacy-selector-wrapper.open .privacy-display-text {
+    color: #f56a00;
+}
+
+.composer-container .privacy-selector-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23657786' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.composer-container .privacy-selector-wrapper:hover::after,
+.composer-container .privacy-selector-wrapper.open::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f56a00' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+.composer-container .privacy-selector-wrapper.open::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.composer-container .privacy-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    margin-top: 4px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.composer-container .privacy-dropdown-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.composer-container .privacy-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #657786;
+}
+
+.composer-container .privacy-dropdown-option:hover {
+    background-color: #f0f2f5;
+}
+
+.composer-container .privacy-dropdown-option.selected {
+    background-color: rgba(245, 106, 0, 0.1);
+    color: #f56a00;
+}
+
+.composer-container .privacy-dropdown-option .icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    flex-shrink: 0;
+}
+
+.composer-container .composer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+    padding-top: 16px;
+    border-top: 1px solid #f0f2f5;
+    flex-shrink: 0;
+}
+
+.composer-container .post-button {
+    background-color: #f56a00;
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.composer-container .post-button:disabled {
+    background-color: #fca76a;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
