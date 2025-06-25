@@ -399,13 +399,6 @@ function attachListener(postId) {
             commentTextarea.placeholder = `Replying to ${userHandle}...`;
             commentTextarea.focus();
         }
-
-        const reportBtn = e.target.closest('.report-btn');
-        if (reportBtn) {
-            const userHandle = reportBtn.closest('.comment-item').querySelector('.comment-user-handle').textContent;
-            const confirmReport = confirm(`Are you sure you want to report this comment by ${userHandle}?`);
-            if (confirmReport) alert('Thank you for your report. A moderator will review this comment.');
-        }
     });
 
     //Image previewer for comment form

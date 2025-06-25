@@ -152,6 +152,7 @@ public class RespCommentDTO {
                 content,
                 image == null || image.isEmpty() ? "" : imageURL,
                 liked ? "liked" : "",
-                totalLikes);
+                totalLikes,
+                id);
     }
 }
