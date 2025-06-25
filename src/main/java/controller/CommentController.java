@@ -1,6 +1,7 @@
 package controller;
 
 import dao.CommentDAO;
+import dto.ReportCommentDTO;
 import dto.ReqCommentDTO;
 import dto.RespCommentDTO;
 import jakarta.servlet.ServletException;
@@ -27,7 +28,8 @@ public class CommentController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         /*
-         * /comments?postID=post_id: Get all comments by postID
+         * /comment?postID=post_id: Get all comments by postID
+         * /comment?action=report: show report comment form
          */
 
         out = response.getWriter();
@@ -49,6 +51,7 @@ public class CommentController extends HttpServlet {
             return;
         }
 
+        //If no action is found, assume this as view comments
         //Get request parameter
         String postIDRaw = request.getParameter("postID");
         int postID;
@@ -154,7 +157,7 @@ public class CommentController extends HttpServlet {
                     }
                 } catch (NumberFormatException e) {
                     logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 }
             }
             case "edit", "delete" -> {
@@ -171,7 +174,7 @@ public class CommentController extends HttpServlet {
                     }
                 } catch (NumberFormatException e) {
                     logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 }
             }
             case "unlike" -> {
@@ -185,7 +188,29 @@ public class CommentController extends HttpServlet {
                     }
                 } catch (NumberFormatException e) {
                     logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                }
+            }
+            case "report" -> {
+                try {
+                    int commentID = Integer.parseInt(request.getParameter("commentID"));
+                    String content = request.getParameter("content");
+
+                    ReportCommentDTO dto = new ReportCommentDTO();
+                    dto.setCommentID(commentID);
+                    dto.setContent(content);
+                    dto.setCreatedAt(LocalDateTime.now());
+                    dto.setStatus("sent");
+                    dto.setAccountID(account.getId());
+                    boolean success = commentDAO.report(dto);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_CREATED);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 }
             }
         }

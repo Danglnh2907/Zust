@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!isLiked) { //If not liked before, send like request
                 //Called to server
-                fetch(`/zust/post?action=like&id=${postId}`, {
+                fetch(`/zust/post?action=like&postID=${postId}`, {
                     method: "POST"
                 })
                     .then(resp => {
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .catch(error => console.log(error))
             } else { //If already like, send unlike request
                 //Called to server
-                fetch(`/zust/post?action=unlike&id=${postId}`, {
+                fetch(`/zust/post?action=unlike&postID=${postId}`, {
                     method: "POST"
                 })
                     .then(resp => {
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Show confirmation dialog
             if (confirm('Are you sure you want to delete this post?')) {
-                fetch(`/zust/post?action=delete&id=${postId}`, {
+                fetch(`/zust/post?action=delete&postID=${postId}`, {
                     method: 'POST'
                 })
                     .then(response => {

@@ -320,7 +320,7 @@ function submitPost(quill, getPrivacy, action, postId = null) {
 
     let url = '/zust/post?action=' + action;
     if (action === 'edit' && postId) {
-        url += '&id=' + postId;
+        url += '&postID=' + postId;
     }
 
     Promise.all(imagePromises).then(() => {

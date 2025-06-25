@@ -1,5 +1,6 @@
 package dao;
 
+import dto.ReportPostDTO;
 import dto.ReqPostDTO;
 import dto.RespPostDTO;
 import util.database.DBContext;
@@ -166,8 +167,7 @@ public class PostDAO extends DBContext {
                 PreparedStatement likeStmt = conn.prepareStatement(likeSql);
                 likeStmt.setInt(1, post.getPostId());
                 likeStmt.setInt(2, userID);
-                rs = likeStmt.executeQuery();
-                post.setLiked(rs.next());
+                post.setLiked(likeStmt.executeQuery().next());
 
                 //Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -198,9 +198,8 @@ public class PostDAO extends DBContext {
             return posts;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return null;
         }
-
-        return null;
     }
 
     /**
@@ -248,8 +247,7 @@ public class PostDAO extends DBContext {
                 PreparedStatement likeStmt = conn.prepareStatement(likeSql);
                 likeStmt.setInt(1, postId);
                 likeStmt.setInt(2, userID);
-                rs = likeStmt.executeQuery();
-                post.setLiked(rs.next());
+                post.setLiked(likeStmt.executeQuery().next());
 
                 // Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -340,7 +338,7 @@ public class PostDAO extends DBContext {
 
             //Insert new hashtags
             String hashtagSql = """
-                    MERGE hashtag AS target \
+                    MERGE INTO hashtag AS target \
                     USING (VALUES (?)) AS source (hashtag_name) \
                     ON target.hashtag_name = source.hashtag_name \
                     WHEN NOT MATCHED THEN \
@@ -387,6 +385,10 @@ public class PostDAO extends DBContext {
         Connection conn = null;
         try {
             conn = getConnection();
+            if (conn == null) {
+                logger.warning("Failed to get connection");
+                return false;
+            }
             conn.setAutoCommit(false); // Start transaction
 
             // Soft delete post
@@ -407,14 +409,9 @@ public class PostDAO extends DBContext {
             conn.commit();
             return true;
         } catch (SQLException e) {
-            try {
-                conn.rollback();
-            } catch (SQLException ex) {
-                logger.warning(ex.getMessage());
-            }
+            logger.warning(e.getMessage());
+            return false;
         }
-
-        return false;
     }
 
     public boolean likePost(int postId, int accountId) {
@@ -436,10 +433,11 @@ public class PostDAO extends DBContext {
                 conn.rollback();
             }
             conn.commit();
+            return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return false;
         }
-        return true;
     }
 
     public boolean unlikePost(int postId, int accountId) {
@@ -461,10 +459,11 @@ public class PostDAO extends DBContext {
                 conn.rollback();
             }
             conn.commit();
+            return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return false;
         }
-        return true;
     }
 
     public boolean repost(int postId, int accountId) {
@@ -487,10 +486,43 @@ public class PostDAO extends DBContext {
                 conn.rollback();
             }
             conn.commit();
+            return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return false;
         }
-        return true;
+    }
+
+    public boolean report(ReportPostDTO report) {
+        Connection conn;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String sql = """
+                    INSERT INTO report_post (report_content, account_id, post_id, report_create_date, report_status) \
+                    VALUES (?, ?, ?, ?, ?)""";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, report.getContent());
+            stmt.setInt(2, report.getAccountID());
+            stmt.setInt(3, report.getPostID());
+            stmt.setTimestamp(4, Timestamp.valueOf(report.getCreatedAt()));
+            stmt.setString(5, report.getStatus());
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                logger.warning("Failed to report post");
+                conn.rollback();
+            }
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
     }
 
     public static void main(String[] args) {
@@ -593,6 +625,27 @@ public class PostDAO extends DBContext {
                         System.out.println("Like post successful");
                     } else {
                         System.out.println("Like post failed");
+                    }
+                }
+                case "report": {
+                    System.out.print("Enter post ID: ");
+                    int postId = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Enter report content: ");
+                    String content = sc.nextLine();
+
+                    ReportPostDTO dto = new ReportPostDTO();
+                    dto.setAccountID(1);
+                    dto.setPostID(postId);
+                    dto.setContent(content);
+                    dto.setCreatedAt(LocalDateTime.now());
+                    dto.setStatus("sent");
+                    boolean success = dao.report(dto);
+                    if (success) {
+                        System.out.println("Report successful");
+                    } else {
+                        System.out.println("Report failed");
                     }
                 }
             }

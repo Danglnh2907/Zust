@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import dao.AccountDAO;
 import dao.CommentDAO;
 import dao.PostDAO;
+import dto.ReportPostDTO;
 import dto.ReqPostDTO;
 import dto.RespCommentDTO;
 import dto.RespPostDTO;
@@ -33,8 +34,9 @@ public class PostController extends HttpServlet {
         /*
          * Handle all post related GET action:
          * /post: Get all post created by a users (UserID fetch in sessions)
-         * /post?id=post_id: Get view a certain post by ID (include comments)
+         * /post?postID=post_id: Get view a certain post by ID (include comments)
          * /post?action=create: create post form
+         * /post?action=report&postID=post_id: show report form
          */
 
         //Fetch userID in sessions
@@ -67,7 +69,7 @@ public class PostController extends HttpServlet {
 
         //Get action and id in request parameter
         String action = request.getParameter("action");
-        String idRaw = request.getParameter("id");
+        String idRaw = request.getParameter("postID");
         PostDAO postDAO = new PostDAO();
 
         //No provided id or action -> View all posts belong to a user
@@ -123,11 +125,12 @@ public class PostController extends HttpServlet {
         /*
          * Handle all post related POST action:
          * /post?action=create: Create new post (UserID fetch in sessions)
-         * /post?action=edit&id=post_id: Edit a post by ID (UserID fetch in sessions)
-         * /post?action=delete&id=post_id: Delete a post by ID (UserID fetch in session)
-         * /post?action=like&id=post_id: like post
-         * /post?action=unlike&id=post_id: unlike a post
-         * /post?action=repost&id=post_id: repost a post
+         * /post?action=edit&postID=post_id: Edit a post by ID (UserID fetch in sessions)
+         * /post?action=delete&postID=post_id: Delete a post by ID (UserID fetch in session)
+         * /post?action=like&postID=post_id: like post
+         * /post?action=unlike&postID=post_id: unlike a post
+         * /post?action=repost&postID=post_id: repost a post
+         * /post?action=report&postID=post_id: report a post
          */
 
         //Set response content type for JSON responses
@@ -183,7 +186,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "edit" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for edit\"}");
@@ -208,7 +211,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "delete" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for delete\"}");
@@ -226,7 +229,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "like" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for like\"}");
@@ -244,7 +247,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "unlike" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for unlike\"}");
@@ -261,7 +264,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "repost" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for repost\"}");
@@ -276,6 +279,28 @@ public class PostController extends HttpServlet {
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
+                    }
+                }
+                case "report" -> {
+                    try {
+                        int postID = Integer.parseInt(request.getParameter("postID"));
+                        String content = request.getParameter("content");
+
+                        ReportPostDTO dto = new ReportPostDTO();
+                        dto.setContent(content);
+                        dto.setAccountID(userID);
+                        dto.setPostID(postID);
+                        dto.setCreatedAt(LocalDateTime.now());
+                        dto.setStatus("sent");
+                        boolean success = postDAO.report(dto);
+                        if (success) {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        } else {
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        }
+                    } catch (NumberFormatException e) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is improper for report\"}");
                     }
                 }
                 default -> {

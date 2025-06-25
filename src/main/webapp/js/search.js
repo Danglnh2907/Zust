@@ -266,7 +266,7 @@ class LiveSearch {
                 redirectUrl = `${this.contextPath}/profile?userId=${itemId}`;
                 break;
             case 'post':
-                redirectUrl = `${this.contextPath}/post?postId=${itemId}`;
+                redirectUrl = `${this.contextPath}/post?postID=${itemId}`;
                 break;
             case 'group':
                 redirectUrl = `${this.contextPath}/group?groupId=${itemId}`;

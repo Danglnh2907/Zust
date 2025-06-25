@@ -1,5 +1,7 @@
 package dao;
 
+import dto.ReportCommentDTO;
+import dto.ReportPostDTO;
 import dto.ReqCommentDTO;
 import dto.RespCommentDTO;
 import util.database.DBContext;
@@ -264,10 +266,11 @@ public class CommentDAO extends DBContext {
                 conn.rollback();
             }
             conn.commit();
+            return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return false;
         }
-        return true;
     }
 
     public boolean unlikeComment(int accountID, int commentID) {
@@ -289,10 +292,43 @@ public class CommentDAO extends DBContext {
                 conn.rollback();
             }
             conn.commit();
+            return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
+            return false;
         }
-        return true;
+    }
+
+    public boolean report(ReportCommentDTO report) {
+        Connection conn;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String sql = """
+                    INSERT INTO report_comment (report_content, account_id, comment_id, report_create_date, report_status) \
+                    VALUES (?, ?, ?, ?, ?)""";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, report.getContent());
+            stmt.setInt(2, report.getAccountID());
+            stmt.setInt(3, report.getCommentID());
+            stmt.setTimestamp(4, Timestamp.valueOf(report.getCreatedAt()));
+            stmt.setString(5, report.getStatus());
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                logger.warning("Failed to report comment.");
+                conn.rollback();
+            }
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
     }
 
     public static void main(String[] args) {
@@ -377,6 +413,27 @@ public class CommentDAO extends DBContext {
                         value.forEach(System.out::println);
                     });
                     break;
+                }
+                case "report": {
+                    System.out.print("Enter comment ID: ");
+                    int commentId = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Enter report content: ");
+                    String content = sc.nextLine();
+
+                    ReportCommentDTO dto = new ReportCommentDTO();
+                    dto.setAccountID(1);
+                    dto.setCommentID(commentId);
+                    dto.setContent(content);
+                    dto.setCreatedAt(LocalDateTime.now());
+                    dto.setStatus("sent");
+                    boolean success = dao.report(dto);
+                    if (success) {
+                        System.out.println("Report successful");
+                    } else {
+                        System.out.println("Report failed");
+                    }
                 }
             }
         }
