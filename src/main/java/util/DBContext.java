@@ -1,4 +1,4 @@
-package util.database;
+package util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -41,4 +41,6 @@ public class DBContext {
 	public Connection getConnection() {
 		return connection;
 	}
+
+
 }

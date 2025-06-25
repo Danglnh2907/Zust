@@ -1,327 +1,115 @@
+// Khai báo package
 package dao;
 
-import model.Account;
-import util.database.DBContext;
+// Import các lớp cần thiết
+import dto.GroupProfileDTO;
+import util.DBContext;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-import dto.ReqGroupDTO;
-import dto.ResGroupDTO;
+// Lớp DAO dùng để thao tác với bảng "group" trong database
+public class GroupDAO {
+    private final Connection connection;
 
+    // Constructor: tạo kết nối đến database khi khởi tạo GroupDAO
+    public GroupDAO() {
+        this.connection = new DBContext().getConnection(); // Lấy connection từ DBContext (class tự định nghĩa để quản lý kết nối)
 
-public class GroupDAO extends DBContext {
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+        if (connection == null) {
+            throw new IllegalStateException("Database connection is null");
+        }
 
-    public boolean createGroup(ReqGroupDTO group) {
-        Connection conn;
+        // Kiểm tra kết nối có hợp lệ không (dùng để debug)
         try {
-            conn = getConnection();
-            if (conn == null) {
-                return false;
-            }
-            conn.setAutoCommit(false);
-            String groupSql = "INSERT INTO [group](group_name, group_description, group_cover_image) VALUES\n" +
-                             "(?, ?, ?)";
-            PreparedStatement groupSt = conn.prepareStatement(groupSql, PreparedStatement.RETURN_GENERATED_KEYS);
-            groupSt.setString(1, group.getGroupName());
-            groupSt.setString(2, group.getGroupDescription());
-            groupSt.setString(3, group.getCoverImage());
-            int affectedRows = groupSt.executeUpdate();
-            if (affectedRows == 0) {
-                conn.rollback();
-                return false;
-            }
-
-            ResultSet rs = groupSt.getGeneratedKeys();
-            int groupId;
-            if (rs.next()) {
-                groupId = rs.getInt(1);
+            if (!connection.isValid(1)) {
+                System.out.println("Debug: Database connection is not valid");
             } else {
-                conn.rollback();
-                return false;
+                System.out.println("Debug: Database connection is valid");
             }
-
-            List<Integer> managers = group.getManagers();
-
-            String participateSql = "INSERT INTO participate(group_id, account_id) VALUES(?, ?)";
-            PreparedStatement participateSt = conn.prepareStatement(participateSql);
-            for (Integer manager : managers) {
-                participateSt.setInt(1, groupId);
-                participateSt.setInt(2, manager);
-                participateSt.addBatch();
-            }
-
-            int[] listAffectedRows = participateSt.executeBatch();
-            for (int affectedRow : listAffectedRows) {
-                if (affectedRow == 0) {
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
-            PreparedStatement manageSt = conn.prepareStatement(manageSql);
-            for (Integer manager : managers) {
-                manageSt.setInt(1, groupId);
-                manageSt.setInt(2, manager);
-                manageSt.addBatch();
-            }
-            listAffectedRows = manageSt.executeBatch();
-            for (int listAffectedRow : listAffectedRows) {
-                if (listAffectedRow == 0) {
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            conn.commit();
-            return true;
         } catch (SQLException e) {
-            logger.warning(e.getMessage());
+            System.out.println("Debug: Failed to validate connection: " + e.getMessage());
+        }
+    }
+
+    // Hàm lấy thông tin group profile dựa theo groupId và accountId = Group manager hoặc admin
+    public GroupProfileDTO getGroupProfile(int groupId) {
+        String sql = "SELECT group_id, group_name, group_description, group_cover_image, group_create_date, group_status " +
+                "FROM [group] " +
+                "WHERE group_id = ? ";
+//        AND (created_by = ? OR ? IN (SELECT account_id FROM group_member WHERE group_id = ? AND is_admin = 1))";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            // Gán giá trị vào các dấu ?
+            stmt.setInt(1, groupId);
+//            stmt.setInt(2, accountId);
+//            stmt.setInt(3, accountId);
+//            stmt.setInt(4, groupId);
+
+            // Thực thi câu lệnh và xử lý kết quả
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu có dữ liệu, tạo DTO và gán giá trị
+                    GroupProfileDTO dto = new GroupProfileDTO();
+                    dto.setGroupId(rs.getInt("group_id"));
+                    dto.setGroupName(rs.getString("group_name"));
+                    dto.setDescription(rs.getString("group_description"));
+                    dto.setAvatarPath(rs.getString("group_cover_image"));
+                    dto.setStatus(rs.getString("group_status"));
+//                    dto.setCreatedBy(rs.getInt("created_by"));
+                    dto.setGroupCreateDate(rs.getTimestamp("group_create_date").toLocalDateTime());
+
+                    // last_updated có thể null
+//                    dto.setLastUpdated(rs.getTimestamp("last_updated") != null
+//                            ? rs.getTimestamp("last_updated").toLocalDateTime()
+//                            : null);
+
+                    return dto;
+                }
+            }
+        } catch (SQLException e) {
+            // Nếu có lỗi, in ra lỗi để debug
+            System.err.println("SQL error in getGroupProfile: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Nếu không có kết quả, trả về null
+        return null;
+    }
+
+    // Hàm cập nhật thông tin profile của group (chỉ cho người tạo group)
+    public boolean updateGroupProfile(GroupProfileDTO dto) {
+        String sql = "UPDATE [group] SET group_name = ?, group_description = ?, group_cover_image = ?, group_status = ? " +//group_create_date = ?, last_updated = CURRENT_TIMESTAMP " +
+                "WHERE group_id = ? ";
+
+
+        try (
+                // Sử dụng connection hiện tại và chuẩn bị statement
+                Connection conn = connection;
+                PreparedStatement stmt = conn.prepareStatement(sql)
+        ) {
+            // Gán giá trị vào các tham số ?
+            stmt.setString(1, dto.getGroupName());
+            stmt.setString(2, dto.getDescription());
+            stmt.setString(3, dto.getAvatarPath());
+            stmt.setString(4, dto.getStatus());
+//            stmt.setTimestamp(5, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setInt(5, dto.getGroupId());
+//            stmt.setInt(7, accountId);
+
+            // Thực thi update
+            int rowsAffected = stmt.executeUpdate();
+
+            // Trả về true nếu có ít nhất 1 dòng bị ảnh hưởng (tức là cập nhật thành công)
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            // Bắt và in lỗi nếu có
+            System.err.println("SQL error in updateGroupProfile: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
-
-    public ResGroupDTO getActiveGroup(int groupId) {
-        String sql = "SELECT [group].*, number_of_participant, number_of_post, account.* FROM [group]\n" +
-                "LEFT JOIN \n" +
-                "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +
-                "JOIN account ON account.account_id = participate.account_id\n" +
-                "WHERE account.account_status = 'active'\n" +
-                "GROUP BY participate.group_id) AS participant\n" +
-                "ON [group].group_id = participant.group_id\n" +
-                "LEFT JOIN\n" +
-                "(SELECT group_id, COUNT(*) AS number_of_post FROM post\n" +
-                "WHERE post.post_status = 'publish'\n" +
-                "GROUP BY post.group_id) AS post\n" +
-                "ON post.group_id = [group].group_id\n" +
-                "LEFT JOIN manage ON [group].group_id = manage.group_id\n" +
-                "LEFT JOIN account ON manage.account_id = account.account_id\n" +
-                "WHERE [group].group_id = ? AND group_status = 'active'";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, groupId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                ResGroupDTO group = new ResGroupDTO();
-                group.setId(rs.getInt("group_id"));
-                group.setName(rs.getString("group_name"));
-                group.setImage(rs.getString("group_cover_image"));
-                group.setDescription(rs.getString("group_description"));
-                group.setCreateDate(rs.getTimestamp("group_create_date") != null
-                        ? rs.getTimestamp("group_create_date").toLocalDateTime() : null);
-                group.setStatus(rs.getString("group_status"));
-                group.setNumberParticipants(rs.getInt("number_of_participant"));
-                group.setNumberPosts(rs.getInt("number_of_post"));
-                do{
-                    if (rs.getInt("account_id") != 0){
-                        Account account = new Account();
-                        account.setId(rs.getInt("account_id"));
-                        account.setUsername(rs.getString("username"));
-                        account.setAvatar(rs.getString("avatar"));
-                        account.setFullname(rs.getString("fullname"));
-                        group.addManager(account);
-                    }
-                }while (rs.next());
-                return group;
-            }
-
-            return null;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return null;
-        }
-    }
-
-    public List<ResGroupDTO> getActiveGroups() {
-        String sql = "SELECT [group].*, number_of_participant, number_of_post, account.* FROM [group]\n" +
-                "LEFT JOIN \n" +
-                "(SELECT group_id, COUNT(*) AS number_of_participant FROM participate \n" +
-                "JOIN account ON account.account_id = participate.account_id\n" +
-                "WHERE account.account_status = 'active'\n" +
-                "GROUP BY participate.group_id) AS participant\n" +
-                "ON [group].group_id = participant.group_id\n" +
-                "LEFT JOIN\n" +
-                "(SELECT group_id, COUNT(*) AS number_of_post FROM post\n" +
-                "WHERE post.post_status = 'publish'\n" +
-                "GROUP BY post.group_id) AS post\n" +
-                "ON post.group_id = [group].group_id\n" +
-                "LEFT JOIN manage ON [group].group_id = manage.group_id\n" +
-                "LEFT JOIN account ON manage.account_id = account.account_id\n" +
-                "WHERE group_status = 'active'";
-        Map<Integer, ResGroupDTO> mapGroups = new HashMap<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int groupId = rs.getInt("group_id");
-                ResGroupDTO group = mapGroups.get(groupId);
-                if (group == null) {
-                    group = new ResGroupDTO();
-                    group.setId(groupId);
-                    group.setName(rs.getString("group_name"));
-                    group.setImage(rs.getString("group_cover_image"));
-                    group.setDescription(rs.getString("group_description"));
-                    group.setCreateDate(rs.getTimestamp("group_create_date") != null
-                            ? rs.getTimestamp("group_create_date").toLocalDateTime() : null);
-                    group.setStatus(rs.getString("group_status"));
-                    group.setNumberParticipants(rs.getInt("number_of_participant"));
-                    group.setNumberPosts(rs.getInt("number_of_post"));
-                    mapGroups.put(groupId, group);
-                }
-                if (rs.getInt("account_id") != 0){
-                    Account account = new Account();
-                    account.setId(rs.getInt("account_id"));
-                    account.setUsername(rs.getString("username"));
-                    account.setAvatar(rs.getString("avatar"));
-                    account.setFullname(rs.getString("fullname"));
-                    group.addManager(account);
-                }
-
-            }
-
-            List<ResGroupDTO> groups = new ArrayList<>();
-            groups.addAll(mapGroups.values());
-            return groups;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return null;
-        }
-    }
-
-    public boolean disbandGroup(int groupId) {
-        try {
-            String sql = "UPDATE [group]\n" +
-                    "SET group_status = 'banned'\n" +
-                    "WHERE group_id = ?";
-            PreparedStatement stmt = connection.prepareStatement(sql);
-            stmt.setInt(1, groupId);
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows != 0) {
-                return true;
-            }
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-        }
-        return false;
-    }
-
-    public List<Account> getGroupMembers(int groupId) {
-        String sql = "SELECT * FROM participate\n" +
-                "JOIN account ON participate.account_id = account.account_id\n" +
-                "WHERE group_id = ? AND account_status = 'active' \n" +
-                "AND participate.account_id NOT IN \n" +
-                "(SELECT account_id FROM manage WHERE group_id = ?)";
-        Map<Integer, ResGroupDTO> mapGroups = new HashMap<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, groupId);
-            stmt.setInt(2, groupId);
-            ResultSet rs = stmt.executeQuery();
-
-            List<Account> members = new ArrayList<>();
-            while (rs.next()) {
-                Account account = new Account();
-                account.setId(rs.getInt("account_id"));
-                account.setUsername(rs.getString("username"));
-                account.setAvatar(rs.getString("avatar"));
-                account.setFullname(rs.getString("fullname"));
-                members.add(account);
-            }
-            return members;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return null;
-        }
-    }
-
-    public boolean assignManager(int groupId, int managerId[]) {
-
-            String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
-            try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
-                connection.setAutoCommit(false);
-            for (int manager : managerId) {
-                manageSt.setInt(1, groupId);
-                manageSt.setInt(2, manager);
-                manageSt.addBatch();
-            }
-            int[] listAffectedRows = manageSt.executeBatch();
-                for (int listAffectedRow : listAffectedRows) {
-                    if (listAffectedRow == 0) {
-                        connection.rollback();
-                        return false;
-                    }
-                }
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return false;
-        }
-    }
-
-    public List<Account> getActiveAccountsManagers(int groupId) {
-        List<Account> accounts = new ArrayList<Account>();
-        String sql = "SELECT * FROM account\n" +
-                "JOIN manage ON account.account_id = manage.account_id\n" +
-                "WHERE account.account_role = 'user' AND account.account_status = 'active' AND manage.group_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, groupId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Account account = new Account();
-                account.setId(rs.getInt("account_id"));
-                account.setUsername(rs.getString("username"));
-                account.setFullname(rs.getString("fullname"));
-                account.setAvatar(rs.getString("avatar"));
-                account.setPhone(rs.getString("phone"));
-                account.setEmail(rs.getString("email"));
-                account.setDob(rs.getTimestamp("dob") != null
-                        ? rs.getTimestamp("dob").toLocalDateTime().toLocalDate() : null);
-                accounts.add(account);
-            }
-            return accounts;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return null;
-        }
-
-    }
-
-    public boolean deleteManager(int groupId, int managerId) {
-
-        String manageSql = "DELETE FROM manage\n" +
-                "WHERE group_id = ? AND account_id = ?";
-        try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
-                manageSt.setInt(1, groupId);
-                manageSt.setInt(2, managerId);
-
-                if(manageSt.executeUpdate() > 0){
-                    return true;
-                }
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-        }
-        return false;
-    }
-
-    public static void main(String[] args) {
-        GroupDAO dao = new GroupDAO();
-//        ReqGroupDTO dto = new ReqGroupDTO("Test", "Test", "image");
-//        dto.addManager(1);
-//        System.out.println(dao.createGroup(dto));
-//        System.out.println(dao.getGroupMembers(35));
-        System.out.println(dao.getActiveGroup(35));
-//        List<ResGroupDTO> groups = dao.getActiveGroups();
-//        System.out.println(groups);
-//        System.out.println(dao.assignManager(31, new int[] {1}));
-//        System.out.println(dao.deleteManager(31, 3));
-    }
-
-
 }
