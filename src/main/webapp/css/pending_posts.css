@@ -1,0 +1,196 @@
+/* ================================================== */
+/* ==       1. LAYOUT CHUNG CHO CARD BÀI VIẾT      == */
+/* ================================================== */
+
+/* Vùng chứa tất cả các bài viết đang chờ */
+.pending-posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Khoảng cách giữa các card */
+}
+
+/* Style cho từng card bài viết */
+.pending-post-card {
+    background-color: #ffffff; /* Sử dụng màu trắng trực tiếp nếu --white-color không được định nghĩa */
+    border: 1px solid #e0e0e0;  /* Sử dụng màu xám nhạt nếu --border-color không được định nghĩa */
+    border-radius: 12px; /* Bo góc mềm mại hơn */
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease-in-out;
+}
+
+.pending-post-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+}
+
+/* Phần header của bài viết (chứa avatar, tên và nút bấm) */
+.post-header {
+    display: flex;
+    justify-content: space-between; /* Đẩy avatar và nút bấm về 2 phía */
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-user-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1a1a1a; /* Sử dụng màu đen nếu --black-color không được định nghĩa */
+}
+
+/* Phần nội dung bài viết (văn bản và hình ảnh) */
+.post-content p {
+    margin: 0 0 15px 0;
+    word-wrap: break-word;
+    color: #333333;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Phần Media (Carousel hình ảnh) */
+.post-media {
+    position: relative;
+    margin-bottom: 10px;
+    overflow: hidden; /* Giúp các ảnh con không bị tràn ra ngoài */
+    border-radius: 8px;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.4s ease-in-out;
+}
+
+.carousel-slide {
+    min-width: 100%;
+    display: block;
+    object-fit: cover;
+    max-height: 500px;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(26, 26, 26, 0.6);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.carousel-btn.prev { left: 10px; }
+.carousel-btn.next { right: 10px; }
+
+/* ================================================== */
+/* == 2. STYLE CHUYÊN NGHIỆP CHO CÁC NÚT HÀNH ĐỘNG == */
+/* ================================================== */
+
+/* Vùng chứa các icon hành động */
+.post-actions-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Khoảng cách hoàn hảo giữa 2 nút */
+}
+
+/* Style nền tảng cho cả hai nút icon */
+.icon-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Icon (dấu tick, dấu x) bên trong nút */
+.icon-button i {
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* Style riêng cho nút DUYỆT (Approve) */
+.approve-icon {
+    border-color: #f39c12; /* Viền màu cam */
+    color: #f39c12;       /* Icon màu cam */
+}
+
+.approve-icon:hover {
+    background-color: #f39c12;
+    color: #ffffff;
+    transform: scale(1.1); /* Hiệu ứng phóng to nhẹ khi hover */
+}
+
+/* Style riêng cho nút TỪ CHỐI (Disapprove) */
+.disapprove-icon {
+    border-color: #34495e; /* Viền màu đen/xám than */
+    color: #34495e;       /* Icon màu đen/xám than */
+}
+
+.disapprove-icon:hover {
+    background-color: #34495e;
+    color: #ffffff;
+    transform: scale(1.1); /* Hiệu ứng phóng to nhẹ khi hover */
+}
+
+/* ================================================== */
+/* ==   3. RESPONSIVE DESIGN (CHO MÀN HÌNH NHỎ)   == */
+/* ================================================== */
+
+@media (max-width: 768px) {
+    .pending-post-card {
+        padding: 15px;
+    }
+
+    .post-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .post-user-name {
+        font-size: 1rem;
+    }
+
+    .post-content p {
+        font-size: 0.95rem;
+    }
+
+    /* Có thể làm nút nhỏ hơn một chút trên mobile nếu muốn */
+    .icon-button {
+        width: 32px;
+        height: 32px;
+    }
+    .icon-button i {
+        font-size: 14px;
+    }
+}
