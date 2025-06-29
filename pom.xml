@@ -167,7 +167,6 @@
             <version>9.11.1</version>
         </dependency>
 
-        <!-- Lucene Analyzers -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analysis-common</artifactId>
