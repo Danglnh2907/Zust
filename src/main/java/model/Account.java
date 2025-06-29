@@ -41,16 +41,6 @@ public class Account {
 	@Column(name = "account_role", nullable = false, length = 10)
 	private String accountRole;
 
-	private String googleId;
-
-	public String getGoogleId() {
-		return googleId;
-	}
-
-	public void setGoogleId(String googleId) {
-		this.googleId = googleId;
-	}
-
 	public Integer getId() {
 		return id;
 	}
