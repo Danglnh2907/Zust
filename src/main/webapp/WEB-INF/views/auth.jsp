@@ -206,101 +206,18 @@
             margin-top: 16px;
             position: relative;
             overflow: hidden;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa726 100%);
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
             color: white;
-            box-shadow:
-                    0 10px 30px rgba(255, 107, 53, 0.3),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            position: relative;
-        }
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        .btn-primary:hover::before {
-            left: 100%;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
         }
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow:
-                    0 20px 40px rgba(255, 107, 53, 0.4),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            background: linear-gradient(135deg, #ff8c42 0%, #ffa726 50%, #ffb74d 100%);
+            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.4);
         }
         .btn-primary:active {
             transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.5);
-        }
-        .btn-google {
-            background: white;
-            color: #333;
-            border: 2px solid #e0e0e0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-google::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.1), transparent);
-            transition: left 0.5s;
-        }
-        .btn-google:hover::before {
-            left: 100%;
-        }
-        .btn-google:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            border-color: #4285f4;
-        }
-        .btn-icon {
-            font-size: 18px;
-        }
-        .google-icon {
-            width: 20px;
-            height: 20px;
-        }
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 24px 0;
-            color: #666;
-        }
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e0e0e0;
-        }
-        .divider span {
-            padding: 0 16px;
-            font-size: 14px;
-            font-weight: 500;
         }
         .alert {
             padding: 16px 20px;
@@ -352,27 +269,6 @@
                 gap: 0;
             }
         }
-
-        /* Loading state for buttons */
-        .btn.loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            margin: auto;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -390,43 +286,20 @@
 
     <!-- Login Form -->
     <div id="login" class="form-container ${activeTab == 'login' || empty activeTab ? 'active' : ''}">
-        <c:if test="${not empty successMessage}">
-            <div class="alert alert-success">
-                <span>✅</span>
-                <span><c:out value="${successMessage}"/></span>
-            </div>
-        </c:if>
-        <c:if test="${not empty errorMessage && (activeTab == 'login' || empty activeTab)}">
-            <div class="alert alert-error">
-                <span>❌</span>
-                <span><c:out value="${errorMessage}"/></span>
-            </div>
-        </c:if>
-        <c:if test="${not empty param.error}">
-            <div class="alert alert-error">
-                <span>❌</span>
-                <span><c:out value="${param.error}"/></span>
-            </div>
-        </c:if>
-
-        <!-- Google Login Button -->
-        <a href="${pageContext.request.contextPath}/auth/google?state=login" class="btn btn-google">
-            <svg class="google-icon" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span class="btn-icon">🔐</span>
-            Sign in with Google
-        </a>
-
-        <div class="divider">
-            <span>or</span>
-        </div>
-
-        <form action="${pageContext.request.contextPath}/auth" method="post" onsubmit="showLoading(this)">
+        <form action="${pageContext.request.contextPath}/auth" method="post">
             <input type="hidden" name="action" value="login">
+            <c:if test="${not empty successMessage}">
+                <div class="alert alert-success">
+                    <span>✅</span>
+                    <span><c:out value="${successMessage}"/></span>
+                </div>
+            </c:if>
+            <c:if test="${not empty errorMessage && (activeTab == 'login' || empty activeTab)}">
+                <div class="alert alert-error">
+                    <span>❌</span>
+                    <span><c:out value="${errorMessage}"/></span>
+                </div>
+            </c:if>
 
             <div class="form-group">
                 <label for="loginUsername">Username or Email</label>
@@ -438,40 +311,20 @@
                 <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
             </div>
 
-            <button type="submit" class="btn btn-primary">
-                <span class="btn-icon">🔐</span>
-                Sign In to Zust
-            </button>
+            <button type="submit" class="btn btn-primary">Sign In to Zust</button>
         </form>
     </div>
 
     <!-- Registration Form -->
     <div id="register" class="form-container ${activeTab == 'register' ? 'active' : ''}">
-        <c:if test="${not empty errorMessage && activeTab == 'register'}">
-            <div class="alert alert-error">
-                <span>❌</span>
-                <span><c:out value="${errorMessage}"/></span>
-            </div>
-        </c:if>
-
-        <!-- Google Register Button -->
-        <a href="${pageContext.request.contextPath}/auth/google?state=register" class="btn btn-google">
-            <svg class="google-icon" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span class="btn-icon">🚀</span>
-            Sign up with Google
-        </a>
-
-        <div class="divider">
-            <span>or</span>
-        </div>
-
-        <form action="${pageContext.request.contextPath}/auth" method="post" enctype="multipart/form-data" onsubmit="showLoading(this)">
+        <form action="${pageContext.request.contextPath}/auth" method="post" enctype="multipart/form-data">
             <input type="hidden" name="action" value="register">
+            <c:if test="${not empty errorMessage && activeTab == 'register'}">
+                <div class="alert alert-error">
+                    <span>❌</span>
+                    <span><c:out value="${errorMessage}"/></span>
+                </div>
+            </c:if>
 
             <div class="form-group">
                 <label for="username">Username *</label>
@@ -496,14 +349,14 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" value="<c:out value='${account.phone}'/>">
+                    <input type="tel" id="phone" name="phone" placeholder="Your phone number" value="<c:out value='${account.phone}'/>">
                 </div>
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender">
-                        <option value="">Select Gender</option>
-                        <option value="true" ${account.gender == true ? 'selected' : ''}>Male</option>
-                        <option value="false" ${account.gender == false ? 'selected' : ''}>Female</option>
+                        <option value="" <c:if test="${empty account.gender}">selected</c:if>>Select Gender</option>
+                        <option value="true" <c:if test="${account.gender == true}">selected</c:if>>Male</option>
+                        <option value="false" <c:if test="${account.gender == false}">selected</c:if>>Female</option>
                     </select>
                 </div>
             </div>
@@ -519,123 +372,69 @@
                     <input type="file" id="avatar" name="avatar" class="file-input" accept="image/*">
                     <label for="avatar" class="file-input-label">
                         <span>📷</span>
-                        <span>Choose profile picture</span>
+                        <span>Choose your profile picture</span>
                     </label>
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="bio">Bio</label>
-                <textarea id="bio" name="bio" placeholder="Tell us about yourself..." rows="3"><c:out value='${account.bio}'/></textarea>
+                <textarea id="bio" name="bio" rows="3" placeholder="Tell the Zust community about yourself..."><c:out value="${account.bio}"/></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">
-                <span class="btn-icon">🚀</span>
-                Create Your Zust Account
-            </button>
-        </form>
+            <button type="submit" class="btn btn-primary">Join Zust Community</button>
 
-        <div class="email-instruction">
-            <h4>📧 Email Verification Required</h4>
-            <p>After registration, you'll receive a verification email. Please check your inbox and click the verification link to activate your account.</p>
-        </div>
+            <div class="email-instruction">
+                <h4>📧 Email Verification</h4>
+                <p>After registration, we'll send you a verification email with a link. Click the link to activate your account and start connecting with friends on Zust!</p>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
     function showTab(tabName) {
-        // Hide all containers
         const containers = document.querySelectorAll('.form-container');
         containers.forEach(container => {
             container.classList.remove('active');
+            container.style.display = 'none';
         });
 
-        // Remove active class from all buttons
-        const buttons = document.querySelectorAll('.tab-button');
-        buttons.forEach(button => {
-            button.classList.remove('active');
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
         });
 
-        // Show selected container and activate button
         document.getElementById(tabName).classList.add('active');
-        event.target.classList.add('active');
+        document.getElementById(tabName).style.display = 'block';
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(tab => {
+            if ((tabName === 'login' && tab.textContent === 'Login') ||
+                (tabName === 'register' && tab.textContent === 'Register')) {
+                tab.classList.add('active');
+            }
+        });
     }
 
-    // File input label update
     document.getElementById('avatar').addEventListener('change', function(e) {
-        const label = document.querySelector('.file-input-label span:last-child');
+        const label = document.querySelector('.file-input-label');
         if (e.target.files.length > 0) {
-            label.textContent = e.target.files[0].name;
+            label.innerHTML = `<span>✅</span><span>${e.target.files[0].name}</span>`;
         } else {
-            label.textContent = 'Choose profile picture';
+            label.innerHTML = `<span>📷</span><span>Choose your profile picture</span>`;
         }
     });
 
-    // Loading state for form submission
-    function showLoading(form) {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.classList.add('loading');
-
-        // Prevent multiple submissions
-        setTimeout(() => {
-            submitBtn.disabled = true;
-        }, 100);
+    const urlParams = new URLSearchParams(window.location.search);
+    const successMessage = urlParams.get('successMessage');
+    if (successMessage) {
+        document.getElementById('login').classList.add('active');
+        document.getElementById('login').style.display = 'block';
+        document.querySelector('.tab-button[onclick="showTab(\'login\')]').classList.add('active');
+        document.getElementById('register').classList.remove('active');
+        document.getElementById('register').style.display = 'none';
     }
-
-    // Enhanced button interactions
-    document.querySelectorAll('.btn-primary').forEach(btn => {
-        btn.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-3px) scale(1.02)';
-        });
-
-        btn.addEventListener('mouseleave', function() {
-            if (!this.classList.contains('loading')) {
-                this.style.transform = 'translateY(0) scale(1)';
-            }
-        });
-    });
-
-    // Ripple effect for buttons
-    document.querySelectorAll('.btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-
-            ripple.style.cssText = `
-                position: absolute;
-                width: ${size}px;
-                height: ${size}px;
-                left: ${x}px;
-                top: ${y}px;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: scale(0);
-                animation: ripple 0.6s ease-out;
-                pointer-events: none;
-            `;
-
-            this.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-    });
-
-    // Add ripple animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes ripple {
-            to {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
 </script>
 </body>
 </html>
