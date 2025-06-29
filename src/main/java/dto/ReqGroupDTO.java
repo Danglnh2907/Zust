@@ -8,13 +8,13 @@ public class ReqGroupDTO {
     private String groupName;
     private String groupDescription;
     private String coverImage;
-    private List<Integer> managers;
+    private int managerId;
 
-    public ReqGroupDTO(String groupName, String groupDescription, String coverImage) {
+    public ReqGroupDTO(String groupName, String groupDescription, String coverImage, int managerId) {
         this.groupName = groupName;
         this.groupDescription = groupDescription;
         this.coverImage = coverImage;
-        this.managers = new ArrayList<Integer>();
+        this.managerId = managerId;
     }
 
     public String getGroupName() {
@@ -35,16 +35,10 @@ public class ReqGroupDTO {
     public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
     }
-
-    public List<Integer> getManagers() {
-        return managers;
+    public int getManagerId() {
+        return managerId;
     }
-
-    public void setManagers(List<Integer> managers) {
-        this.managers = managers;
-    }
-
-    public void addManager(Integer manager) {
-        this.managers.add(manager);
+    public void setManagerId(int managerId) {
+        this.managerId = managerId;
     }
 }

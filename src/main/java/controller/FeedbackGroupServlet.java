@@ -34,7 +34,7 @@ public class FeedbackGroupServlet extends HttpServlet {
             return;
         }
 
-        ResGroupDTO groupInfo = groupDAO.getActiveGroup(groupId);
+        ResGroupDTO groupInfo = groupDAO.getGroup(groupId);
         if (groupInfo == null) {
             req.setAttribute("groupInfo", null);
             req.setAttribute("error", "Group information not found for groupId: " + groupId);
@@ -44,7 +44,7 @@ public class FeedbackGroupServlet extends HttpServlet {
 
         // Giả sử không cần GroupDAO riêng, chỉ lấy feedback
         int managerId = 1; // Hardcode để test
-        List<FeedbackGroupDTO> feedbacks = feedbackDAO.getFeedbacksByGroupId(groupId, true); // report_status = 1
+        List<FeedbackGroupDTO> feedbacks = feedbackDAO.getFeedbacksByGroupId(groupId, "sent"); // report_status = 1
         req.setAttribute("feedbacks", feedbacks);
         req.setAttribute("groupId", groupId);
         req.setAttribute("csrfToken", UUID.randomUUID().toString());

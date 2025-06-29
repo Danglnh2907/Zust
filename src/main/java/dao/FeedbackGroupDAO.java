@@ -30,21 +30,21 @@ public class FeedbackGroupDAO extends DBContext {
                     "a.account_id, a.username, a.avatar, a.fullname " +
                     "FROM feedback_group fg " +
                     "JOIN account a ON fg.account_id = a.account_id " +
-                    "WHERE fg.group_id = ? AND fg.report_status = ? " +
+                    "WHERE fg.group_id = ? AND fg.report_status = 'sent' " +
                     "ORDER BY fg.report_create_date DESC";
 
-    public List<FeedbackGroupDTO> getFeedbacksByGroupId(int groupId, boolean status) {
+    public List<FeedbackGroupDTO> getFeedbacksByGroupId(int groupId, String status) {
         List<FeedbackGroupDTO> feedbacks = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(SELECT_FEEDBACK_BY_GROUP_ID)) {
             stmt.setInt(1, groupId);
-            stmt.setBoolean(2, status);
+            stmt.setString(2, status);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     FeedbackGroup feedback = new FeedbackGroup();
                     feedback.setId(rs.getInt("feedback_group_id"));
                     feedback.setFeedbackGroupContent(rs.getString("feedback_group_content"));
-//                    feedback.setReportCreateDate(rs.getObject("report_create_date", LocalDateTime.class));
-                    feedback.setReportStatus(rs.getBoolean("report_status"));
+//              feedback.setReportCreateDate(rs.getObject("report_create_date", LocalDateTime.class));
+                    feedback.setReportStatus(rs.getString("report_status"));
 
                     Account account = new Account();
                     account.setId(rs.getInt("account_id"));
@@ -61,6 +61,7 @@ public class FeedbackGroupDAO extends DBContext {
         }
         return feedbacks;
     }
+
 
 //    public boolean processFeedback(int feedbackId, String action) {
 //        String updateSql = "UPDATE feedback_group SET report_status = ? WHERE feedback_group_id = ?";

@@ -32,7 +32,7 @@ public class JoinGroupRequestDAO extends DBContext {
                     "jgr.join_group_request_status, a.account_id, a.username, a.avatar, a.fullname " +
                     "FROM join_group_request jgr " +
                     "JOIN account a ON jgr.account_id = a.account_id " +
-                    "WHERE jgr.group_id = ? AND jgr.join_group_request_status = 'sended' " +
+                    "WHERE jgr.group_id = ? AND jgr.join_group_request_status = 'sent' " +
                     "ORDER BY jgr.join_group_request_date DESC";
 
     public List<JoinGroupRequestDTO> getRequestsByGroupId(int groupId) {

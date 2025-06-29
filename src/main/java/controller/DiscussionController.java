@@ -28,7 +28,7 @@ public class DiscussionController extends HttpServlet {
         req.setAttribute("posts", posts);
         // Lấy thông tin nhóm (đã có DAO + DTO đầy đủ)
         GroupDAO groupDAO = new GroupDAO();
-        ResGroupDTO groupInfo = groupDAO.getActiveGroup(groupId);
+        ResGroupDTO groupInfo = groupDAO.getGroup(groupId);
         req.setAttribute("groupInfo", groupInfo);
 
         // Chuyển hướng đến groupManager.jsp

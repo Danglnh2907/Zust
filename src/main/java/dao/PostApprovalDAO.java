@@ -30,12 +30,11 @@ public class PostApprovalDAO {
             SELECT p.post_id, p.post_content, p.post_status, p.post_last_update,
                    a.account_id, a.username, a.avatar,
                    (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count,
-                   (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count,
-                   (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count
+                   (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count
             FROM post p
             JOIN account a ON p.account_id = a.account_id
             JOIN manage m ON p.group_id = m.group_id
-            WHERE p.post_status = 'sended' AND m.account_id = ?
+            WHERE p.post_status = 'sent' AND m.account_id = ?
             ORDER BY p.post_create_date DESC
         """;
 

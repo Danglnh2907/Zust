@@ -76,12 +76,24 @@
                         <button class="share-button"><i class="fas fa-share"></i> Share</button>
                     </div>
                 </div>
+<%--                <nav class="group-tabs">--%>
+<%--                    <a href="${pageContext.request.contextPath}/groupManager?groupId=2" class="active">Discussion</a>--%>
+<%--                    <a href="#">Members</a>--%>
+<%--                    <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>--%>
+<%--                    <a href="${pageContext.request.contextPath}/approvePost?groupId=2" onclick="event.stopPropagation();">Pending Posts</a>--%>
+<%--                    <a href="${pageContext.request.contextPath}/viewFeedback?groupId=2" onclick="event.stopPropagation();">View Feedbacks</a>--%>
+<%--                    <div class="tab-actions">--%>
+
+<%--                        <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+<%--                    </div>--%>
+<%--                </nav>--%>
+
                 <nav class="group-tabs">
-                    <a href="${pageContext.request.contextPath}/groupManager?groupId=2" class="active">Discussion</a>
+                    <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="active">Discussion</a>
                     <a href="#">Members</a>
-                    <a <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
-                    <a href="${pageContext.request.contextPath}/approvePost?groupId=2" onclick="event.stopPropagation();">Pending Posts</a>
-                    <a href="${pageContext.request.contextPath}/viewFeedback?groupId=2" onclick="event.stopPropagation();">View Feedbacks</a>
+                    <a href="${pageContext.request.contextPath}/joinRequest?groupId=1">Joining Request</a>
+                    <a href="${pageContext.request.contextPath}/approvePost?groupId=1" onclick="event.stopPropagation();">Pending Posts</a>
+                    <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" onclick="event.stopPropagation();">View Feedbacks</a>
                     <div class="tab-actions">
 
                         <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>

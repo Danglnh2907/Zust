@@ -65,7 +65,7 @@
                             <a href="#">Members</a>
                           <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
                             <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}" class="active">Pending Posts</a>
-                            <a href="${pageContext.request.contextPath}/viewFeedback?groupId=2" onclick="event.stopPropagation();">View Feedbacks</a>
+                            <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" onclick="event.stopPropagation();">View Feedbacks</a>
                             <div class="tab-actions">
                                 <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>
                             </div>

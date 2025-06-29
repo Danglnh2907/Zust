@@ -36,7 +36,7 @@ public class JoinGroupRequestServlet extends HttpServlet {
         }
 
         // Lấy thông tin nhóm từ GroupDAO
-        ResGroupDTO groupInfo = groupDAO.getActiveGroup(groupId);
+        ResGroupDTO groupInfo = groupDAO.getGroup(groupId);
         if (groupInfo == null) {
             req.setAttribute("groupInfo", null);
             req.setAttribute("error", "Group information not found for groupId: " + groupId);
