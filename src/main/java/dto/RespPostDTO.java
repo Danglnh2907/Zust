@@ -14,6 +14,7 @@ public class RespPostDTO {
     private int postId;
     private String postContent;
     private String username;
+    private String avatar;
     private LocalDateTime lastModified;
     private List<String> hashtags;
     private List<String> images;
@@ -67,6 +68,14 @@ public class RespPostDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public LocalDateTime getLastModified() {
@@ -139,7 +148,7 @@ public class RespPostDTO {
         } else {
             lastTimeUpdate = timeDiff.toDays() + " days";
         }
-        String header = String.format(templates[1], getUsername(), lastTimeUpdate, getPostId(), getPostId(), getPostId());
+        String header = String.format(templates[1], getAvatar(), getUsername(), lastTimeUpdate, getPostId(), getPostId(), getPostId());
 
         //Get post content
         String content = String.format(templates[2], getPostContent());

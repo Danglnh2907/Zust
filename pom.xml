@@ -178,7 +178,6 @@
             <artifactId>lucene-backward-codecs</artifactId>
             <version>9.11.1</version>
         </dependency>
-
     </dependencies>
 
     <build>

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
 
+import dao.AccountDAO;
 import dao.PostDAO;
 import dto.ReqPostDTO;
 import dto.RespPostDTO;
@@ -36,6 +37,7 @@ public class PostController extends HttpServlet {
 
         //Fetch userID in sessions
         HttpSession session = request.getSession();
+        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
             Account account = (Account) session.getAttribute("users");
@@ -50,6 +52,17 @@ public class PostController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
+
+        //Get account information from userID
+        AccountDAO accountDAO = new AccountDAO();
+        Account account = accountDAO.getAccountById(userID);
+        if (account == null) {
+            logger.warning("Account not found");
+            //Redirect to /error
+            request.getRequestDispatcher("/error").forward(request, response);
+            return;
+        }
+        request.setAttribute("account", account);
 
         //Get action and id in request parameter
         String action = request.getParameter("action");
@@ -115,6 +128,7 @@ public class PostController extends HttpServlet {
 
         //Fetch userID in sessions
         HttpSession session = request.getSession();
+        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
             Account account = (Account) session.getAttribute("users");
@@ -172,6 +186,7 @@ public class PostController extends HttpServlet {
                     int id = Integer.parseInt(idRaw);
                     ReqPostDTO dto = extractData(userID, request.getParts());
                     if (dto == null) {
+                        //response.sendRedirect("/error");
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Failed to process post data\"}");
                     } else {

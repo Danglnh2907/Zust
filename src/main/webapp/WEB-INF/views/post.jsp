@@ -80,7 +80,7 @@
                     </svg>
                     <span>My Profile</span>
                 </a></li>
-                <li><a href="${pageContext.request.contextPath}/sendCreateGroupRequest">
+                <li><a href="${pageContext.request.contextPath}/createGroup">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -89,7 +89,7 @@
                         <line x1="12" y1="18" x2="12" y2="12"></line>
                         <line x1="9" y1="15" x2="15" y2="15"></line>
                     </svg>
-                    <span>Create Request</span>
+                    <span>Create Group</span>
                 </a></li>
             </ul>
         </nav>
@@ -157,7 +157,7 @@
                 String linkAvatar = account.getAvatar();
             %>
             <a href="#" class="nav-profile">
-                <img src="<%=linkAvatar%>" alt="User Profile Picture">
+                <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>" alt="User Profile Picture">
                 <span><%=account.getFullname()%></span>
             </a>
         </header>

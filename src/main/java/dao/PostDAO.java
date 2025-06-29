@@ -121,7 +121,7 @@ public class PostDAO extends DBContext {
 
     public ArrayList<RespPostDTO> getPosts(int userID) {
         String sql = """
-                SELECT p.post_id, p.post_content, a.username, p.post_last_update, \
+                SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
                 (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                 (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                 (SELECT COUNT(*) FROM repost r WHERE r.post_id = p.post_id) AS repost_count \
@@ -137,6 +137,7 @@ public class PostDAO extends DBContext {
                 post.setPostId(rs.getInt("post_id"));
                 post.setPostContent(rs.getString("post_content"));
                 post.setUsername(rs.getString("username"));
+                post.setAvatar(rs.getString("avatar"));
                 post.setLastModified(rs.getTimestamp("post_last_update") != null
                         ? rs.getTimestamp("post_last_update").toLocalDateTime() : null);
                 post.setLikeCount(rs.getInt("like_count"));
