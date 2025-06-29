@@ -52,7 +52,12 @@ public class AccountDAO extends DBContext {
                 account.setEmail(rs.getString("email"));
                 account.setPhone(rs.getString("phone"));
                 account.setGender(rs.getBoolean("gender"));
-                account.setDob(rs.getDate("dob").toLocalDate());
+                Date dobDate = rs.getDate("dob");
+                if (dobDate != null) {
+                    account.setDob(dobDate.toLocalDate());
+                } else {
+                    account.setDob(null); // or set a default date if needed
+                }
                 account.setAvatar(rs.getString("avatar"));
                 account.setBio(rs.getString("bio"));
                 account.setCredit(rs.getInt("credit"));
