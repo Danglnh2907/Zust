@@ -8,6 +8,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -25,8 +26,18 @@ public class AccountDAO extends DBContext {
                 Account account = new Account();
                 account.setId(rs.getInt("account_id"));
                 account.setUsername(rs.getString("username"));
+                account.setPassword(rs.getString("password"));
                 account.setFullname(rs.getString("fullname"));
+                account.setEmail(rs.getString("email"));
+                account.setPhone(rs.getString("phone"));
+                account.setGender(rs.getBoolean("gender"));
+                account.setDob(rs.getDate("dob") != null
+                        ? rs.getDate("dob").toLocalDate() : null);
                 account.setAvatar(rs.getString("avatar"));
+                account.setBio(rs.getString("bio"));
+                account.setCredit(rs.getInt("credit"));
+                account.setAccountStatus(rs.getString("account_status"));
+                account.setAccountRole(rs.getString("account_role"));
                 accounts.add(account);
             }
             return accounts;
@@ -52,7 +63,8 @@ public class AccountDAO extends DBContext {
                 account.setEmail(rs.getString("email"));
                 account.setPhone(rs.getString("phone"));
                 account.setGender(rs.getBoolean("gender"));
-                account.setDob(rs.getDate("dob").toLocalDate());
+                account.setDob(rs.getDate("dob") != null
+                        ? rs.getDate("dob").toLocalDate() : null);
                 account.setAvatar(rs.getString("avatar"));
                 account.setBio(rs.getString("bio"));
                 account.setCredit(rs.getInt("credit"));

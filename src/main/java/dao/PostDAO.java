@@ -366,6 +366,20 @@ public class PostDAO extends DBContext {
         return false;
     }
 
+    public int getAccountIdByPostId(int postId) throws SQLException {
+        String sql = "SELECT account_id FROM post WHERE post_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, postId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("account_id");
+                }
+            }
+        }
+        return 0; // Return 0 if no account is found
+    }
+
     public static void main(String[] args) {
         PostDAO dao = new PostDAO();
         Scanner sc = new Scanner(System.in);

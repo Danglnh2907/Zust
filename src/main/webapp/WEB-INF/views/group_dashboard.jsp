@@ -96,24 +96,12 @@
 <aside class="sidebar">
     <div class="logo">Zust</div>
     <ul class="nav-menu">
-        <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a>
-        </li>
-        <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a>
-        </li>
-        <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a>
-        </li>
-        <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
-            <a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a>
-        </li>
-        <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
-            <a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a>
-        </li>
-        <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a>
-        </li>
+        <li><a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a></li>
+        <li><a href="accountDashboard"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a></li>
+        <li><a href="notification"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a></li>
+        <li><a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a></li>
+        <li class="active"><a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a></li>
+        <li><a href="reportPost"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a></li>
     </ul>
 </aside>
 
@@ -202,10 +190,10 @@
                 <td><%= group.getCreateDate() != null ? group.getCreateDate().format(formatter) : "N/A" %></td>
                 <%-- Actions Cell --%>
                 <td class="actions">
-                    <a href="#" class="btn btn-assign"><i class="fas fa-user-plus"></i>Assign</a>
-                    <form action="groupDashboard" method="post" onsubmit="return confirm('Are you sure you want to disband this group? This action cannot be undone.');">
+<%--                    <a href="#" class="btn btn-assign"><i class="fas fa-user-plus"></i>Assign</a>--%>
+                    <form action="manage?id=<%= group.getId()%>" method="post" onsubmit="return confirm('Are you sure you want to ban this group? This action cannot be undone.');">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
-                        <input type="submit" name="action" value="Disband" class="btn btn-disband" >
+                        <input type="submit" name="action" value="ban" class="btn btn-disband" >
                     </form>
                 </td>
             </tr>
