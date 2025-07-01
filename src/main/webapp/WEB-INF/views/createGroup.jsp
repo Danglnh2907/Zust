@@ -123,6 +123,48 @@
         .submit-btn:hover {
             transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 133, 47, 0.4);
         }
+
+        .action-buttons-group {
+            display: flex;
+            gap: 15px; /* Khoảng cách giữa 2 nút */
+            margin-top: 40px; /* Thêm khoảng cách với trường bên trên */
+        }
+        /* Style chung cho cả 2 nút */
+        .btn {
+            flex: 1; /* Hai nút sẽ chia đều không gian */
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none; /* Loại bỏ gạch chân cho thẻ <a> */
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Nút Create (chính) */
+        .submit-btn {
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-color-dark));
+            color: #ffffff;
+            border: none;
+        }
+        .submit-btn:hover {
+            box-shadow: 0 6px 15px rgba(255, 133, 47, 0.4);
+        }
+
+        /* Nút Back (phụ) */
+        .back-btn {
+            background-color: var(--bg-color-white);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .back-btn:hover {
+            background-color: #fff8f2; /* Màu nền cam rất nhạt khi hover */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -132,9 +174,9 @@
         <h1>Create a New Group</h1>
     </div>
 
-    <form action="group?action=create" method="POST" enctype="multipart/form-data">
-
-        <!-- 1. Cover Image -->
+    <% int accountId = (int)request.getAttribute("accountId"); %>
+    <form action="${pageContext.request.contextPath}/createGroup" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="managerId" value="<%= accountId%>">
         <div class="form-group">
             <label for="coverImage" class="label-title">Cover Image</label>
             <label for="coverImage" class="cover-image-upload">
@@ -145,60 +187,18 @@
             <div id="image-preview"><img id="preview-img" src="#" alt="Image Preview"/></div>
         </div>
 
-        <!-- 2. Group Name -->
         <div class="form-group">
             <label for="groupName" class="label-title">Group Name</label>
             <input type="text" id="groupName" name="groupName" class="form-control" placeholder="e.g., 'Photography Enthusiasts'" required>
         </div>
 
-        <!-- 3. Group Description -->
         <div class="form-group">
             <label for="groupDesc" class="label-title">Group Description</label>
             <textarea id="groupDesc" name="groupDescription" class="form-control" placeholder="What is this group about?"></textarea>
         </div>
-
-        <!-- 4. Select Managers -->
-        <div class="form-group">
-            <div class="label-title">Select Manager(s)</div>
-
-            <!-- Search/Filter Input Field -->
-            <div class="manager-search-wrapper">
-                <input type="text" id="managerSearchInput" class="form-control" placeholder="Search by name or username...">
-            </div>
-
-            <div class="manager-list" id="managerListContainer">
-                <%
-                    List<Account> accounts = (List<Account>) request.getAttribute("listAccount");
-                    if (accounts == null || accounts.isEmpty()) {
-                %>
-                <p style="text-align:center; color:#888;">No users available to select as manager.</p>
-                <%
-                } else {
-                    for (Account acc : accounts) {
-                %>
-                <label class="manager-item-label">
-                    <div class="manager-item">
-                        <input type="checkbox" name="managerIds" value="<%= acc.getId() %>">
-                        <img src="<%= acc.getAvatar() %>" alt="Avatar" class="manager-avatar">
-                        <div class="manager-info">
-                            <span class="manager-fullname"><%= acc.getFullname() %></span>
-                            <span class="manager-username">@<%= acc.getUsername() %></span>
-                        </div>
-                    </div>
-                </label>
-                <%
-                        }
-                    }
-                %>
-                <!-- Message for no search results, hidden by default -->
-                <div id="noResultsMessage" class="no-results-message" style="display: none;">
-                    No users found matching your search.
-                </div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <button type="submit" class="submit-btn">Create Group</button>
+        <div class="form-group action-buttons-group">
+            <a href="${pageContext.request.contextPath}/post" class="btn back-btn">Back to Home</a>
+            <button type="submit" class="btn submit-btn">Create Group</button>
         </div>
 
     </form>
@@ -227,41 +227,6 @@
             reader.readAsDataURL(file);
         } else {
             previewContainer.style.display = 'none';
-        }
-    });
-
-    // --- Manager Filter Logic ---
-    document.getElementById('managerSearchInput').addEventListener('input', function() {
-        // Get the search term and convert to lower case for case-insensitive matching
-        const searchTerm = this.value.toLowerCase().trim();
-
-        // Get all the manager items and the 'no results' message element
-        const managerList = document.getElementById('managerListContainer');
-        const managerItems = managerList.querySelectorAll('.manager-item-label');
-        const noResultsMessage = document.getElementById('noResultsMessage');
-
-        let visibleCount = 0;
-
-        // Loop through all manager items to show/hide them
-        managerItems.forEach(function(item) {
-            // Find the name and username text within the current item
-            const fullName = item.querySelector('.manager-fullname').textContent.toLowerCase();
-            const username = item.querySelector('.manager-username').textContent.toLowerCase();
-
-            // Check if the search term is part of the full name or username
-            if (fullName.includes(searchTerm) || username.includes(searchTerm)) {
-                item.style.display = 'block'; // Show the item
-                visibleCount++;
-            } else {
-                item.style.display = 'none'; // Hide the item
-            }
-        });
-
-        // Show or hide the 'no results' message based on whether any items are visible
-        if (visibleCount === 0) {
-            noResultsMessage.style.display = 'block';
-        } else {
-            noResultsMessage.style.display = 'none';
         }
     });
 </script>
