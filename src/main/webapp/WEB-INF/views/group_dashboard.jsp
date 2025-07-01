@@ -50,7 +50,7 @@
         .group-info .cover-image { width: 120px; height: 70px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: pointer; transition: transform 0.2s; }
         .group-info .cover-image:hover { transform: scale(1.05); }
         .group-info .text-details .group-name { font-weight: bold; color: var(--black); margin-bottom: 5px; }
-        .group-info .text-details .group-desc { font-size: 0.9em; color: #666; }
+        .group-info .text-details .group-desc { font-size: 0.9em; color: #666; max-width: 300px; }
         .read-more-btn { background: none; border: none; padding: 0; font: inherit; color: var(--orange); text-decoration: underline; cursor: pointer; margin-left: 5px; font-size: 0.9em; font-weight: 600; }
 
         /* Manager List Cell */
@@ -88,6 +88,9 @@
         #modal-caption { text-align: center; color: #ccc; padding: 15px 0; font-size: 1.2rem; animation: fadeIn 0.5s ease; }
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
         @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
+        .description-full { display: none; }
+        .read-more { color: var(--primary-color); font-weight: 600; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -151,7 +154,25 @@
                              data-caption="<%= group.getName() != null ? group.getName() : "Group Cover" %>">
                         <div class="text-details">
                             <div class="group-name"><%= (group.getName() != null) ? group.getName() : "Unnamed Group" %></div>
-                            <div class="group-desc"><%= (group.getDescription() != null) ? group.getDescription() : "No description provided." %></div>
+<%--                            <div class="group-desc"><%= (group.getDescription() != null) ? group.getDescription() : "No description provided." %></div>--%>
+                            <div class="group-desc">
+                                <%
+                                    String desc = group.getDescription();
+                                    int previewLength = 50;
+                                    if (desc != null && desc.length() > previewLength) {
+                                %>
+                                <span class="description-preview">
+                                                <%= desc.substring(0, previewLength) %>...
+                                                <a href="javascript:void(0);" class="read-more" onclick="toggleDescription(this)">more</a>
+                                            </span>
+                                <span class="description-full">
+                                                <%= desc %>
+                                                <a href="javascript:void(0);" class="read-more" onclick="toggleDescription(this)">less</a>
+                                            </span>
+                                <% } else { %>
+                                <%= desc == null ? "" : desc %>
+                                <% } %>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -191,7 +212,7 @@
                 <%-- Actions Cell --%>
                 <td class="actions">
 <%--                    <a href="#" class="btn btn-assign"><i class="fas fa-user-plus"></i>Assign</a>--%>
-                    <form action="manage?id=<%= group.getId()%>" method="post" onsubmit="return confirm('Are you sure you want to ban this group? This action cannot be undone.');">
+                    <form action="groupDashboard" method="post" onsubmit="return confirm('Are you sure you want to ban this group? This action cannot be undone.');">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
                         <input type="submit" name="action" value="ban" class="btn btn-disband" >
                     </form>
@@ -213,6 +234,22 @@
 
 <!-- JavaScript for Interactivity -->
 <script>
+    function toggleDescription(linkElement) {
+        const container = linkElement.closest('td');
+        if (!container) return;
+
+        const preview = container.querySelector('.description-preview');
+        const full = container.querySelector('.description-full');
+
+        if (preview.style.display === 'none') {
+            preview.style.display = 'inline';
+            full.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+            full.style.display = 'inline';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // --- Logic for the Image Modal ---
         const modal = document.getElementById("imageModal");
@@ -234,29 +271,6 @@
         }
         closeBtn.addEventListener('click', closeModal);
         window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
-
-        // --- Logic for "Read More" Description ---
-        const descriptionLimit = 70;
-        document.querySelectorAll('.group-desc').forEach(descElement => {
-            const fullText = descElement.textContent.trim();
-            if (fullText.length > descriptionLimit) {
-                const shortText = fullText.substring(0, descriptionLimit) + '...';
-                descElement.innerHTML = `
-                        <span class="short-desc">${shortText}</span>
-                        <span class="full-desc" style="display: none;">${fullText}</span>
-                        <button class="read-more-btn">Read More</button>
-                    `;
-                descElement.querySelector('.read-more-btn').addEventListener('click', function(event) {
-                    event.stopPropagation();
-                    const shortSpan = this.parentElement.querySelector('.short-desc');
-                    const fullSpan = this.parentElement.querySelector('.full-desc');
-                    const isHidden = fullSpan.style.display === 'none';
-                    fullSpan.style.display = isHidden ? 'inline' : 'none';
-                    shortSpan.style.display = isHidden ? 'none' : 'inline';
-                    this.textContent = isHidden ? 'Read Less' : 'Read More';
-                });
-            }
-        });
 
         // --- Prevent action buttons from triggering parent clicks (good practice) ---
         document.querySelectorAll('.actions .btn').forEach(button => {
