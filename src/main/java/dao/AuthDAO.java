@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -143,22 +144,15 @@ public class AuthDAO extends DBContext{
 
 	private String downloadAndSaveGoogleProfilePicture(String pictureUrl) throws IOException {
 		try {
+			FileService fileService = new FileService();
 			URL url = new URL(pictureUrl);
 			String fileName = "google_profile_" + UUID.randomUUID().toString() + ".jpg";
 
-			// Create uploads directory if it doesn't exist
-			Path uploadsDir = Paths.get("uploads");
-			if (!Files.exists(uploadsDir)) {
-				Files.createDirectories(uploadsDir);
+			try (InputStream inputStream = url.openStream()) {
+				String savedFileName = fileService.saveFile(fileName, inputStream);
+				LOGGER.info("Google profile picture saved as: {}", savedFileName);
+				return savedFileName;
 			}
-
-			Path filePath = uploadsDir.resolve(fileName);
-
-			try (var inputStream = url.openStream()) {
-				Files.copy(inputStream, filePath);
-			}
-
-			return filePath.toString();
 		} catch (Exception e) {
 			LOGGER.warn("Failed to download Google profile picture: {}", e.getMessage());
 			return null;
