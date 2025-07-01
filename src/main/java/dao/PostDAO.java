@@ -282,6 +282,98 @@ public class PostDAO extends DBContext {
         }
     }
 
+    /**
+     * Method to get a list of posts for a user's newsfeed.
+     * This includes posts from the user, their friends, and groups they've joined.
+     *
+     * @param userID - ID of the user requesting the newsfeed.
+     * @return - ArrayList of RespPostDTO for the newsfeed.
+     */
+    public ArrayList<RespPostDTO> getNewsfeedPosts(int userID) {
+        try {
+            Connection conn = getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return null;
+            }
+
+            //Get list of posts for the newsfeed
+            String sql = """
+                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                           (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                           (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                           (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count, \
+                           CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                    FROM post p JOIN account a ON p.account_id = a.account_id \
+                    WHERE p.post_status = 'published' AND \
+                          ( \
+                              /* User's own posts */ \
+                              p.account_id = ? \
+                              /* Posts from friends (public or friend-only) */ \
+                              OR (p.account_id IN (SELECT target_account_id FROM interact WHERE actor_account_id = ? AND interact_status = 'friend' \
+                                                   UNION \
+                                                   SELECT actor_account_id FROM interact WHERE target_account_id = ? AND interact_status = 'friend') \
+                                  AND p.post_privacy IN ('public', 'friend') AND p.group_id IS NULL) \
+                              /* Posts from joined groups */ \
+                              OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
+                          ) \
+                    ORDER BY p.post_create_date DESC""";
+
+            ArrayList<RespPostDTO> posts = new ArrayList<>();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userID);
+            stmt.setInt(2, userID);
+            stmt.setInt(3, userID);
+            stmt.setInt(4, userID);
+            stmt.setInt(5, userID);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                RespPostDTO post = new RespPostDTO();
+                post.setPostId(rs.getInt("post_id"));
+                post.setPostContent(rs.getString("post_content"));
+                post.setUsername(rs.getString("username"));
+                post.setAvatar(rs.getString("avatar"));
+                post.setLastModified(rs.getTimestamp("post_last_update") != null
+                        ? rs.getTimestamp("post_last_update").toLocalDateTime() : null);
+                post.setLikeCount(rs.getInt("like_count"));
+                post.setCommentCount(rs.getInt("comment_count"));
+                post.setRepostCount(rs.getInt("repost_count"));
+                post.setLiked(rs.getBoolean("is_liked"));
+
+                //Fetch images
+                String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
+                try (PreparedStatement imageStmt = conn.prepareStatement(imageSql)) {
+                    imageStmt.setInt(1, post.getPostId());
+                    ResultSet imageRs = imageStmt.executeQuery();
+                    while (imageRs.next()) {
+                        post.getImages().add(imageRs.getString("post_image"));
+                    }
+                }
+
+                //Fetch hashtags
+                String hashtagSql = """
+                        SELECT h.hashtag_name \
+                        FROM tag_hashtag th JOIN hashtag h ON th.hashtag_id = h.hashtag_id \
+                        WHERE th.post_id = ? ORDER BY th.hashtag_index""";
+                try (PreparedStatement hashtagStmt = conn.prepareStatement(hashtagSql)) {
+                    hashtagStmt.setInt(1, post.getPostId());
+                    ResultSet hashtagRs = hashtagStmt.executeQuery();
+                    while (hashtagRs.next()) {
+                        post.getHashtags().add(hashtagRs.getString("hashtag_name"));
+                    }
+                }
+
+                posts.add(post);
+            }
+
+            return posts;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return null;
+        }
+    }
+
     public boolean editPost(int postId, ReqPostDTO postDTO) {
         Connection conn = null;
         try {
@@ -382,7 +474,7 @@ public class PostDAO extends DBContext {
     }
 
     public boolean deletePost(int postId, int accountId) {
-        Connection conn = null;
+        Connection conn;
         try {
             conn = getConnection();
             if (conn == null) {
@@ -647,6 +739,19 @@ public class PostDAO extends DBContext {
                     } else {
                         System.out.println("Report failed");
                     }
+                }
+                case "newsfeed": {
+                    System.out.print("Enter user ID for newsfeed: ");
+                    int userId = sc.nextInt();
+                    ArrayList<RespPostDTO> posts = dao.getNewsfeedPosts(userId);
+                    if (posts != null) {
+                        for (RespPostDTO post : posts) {
+                            System.out.printf("Post by %s: %s (Liked: %b)\n", post.getUsername(), post.getPostContent(), post.isLiked());
+                        }
+                    } else {
+                        System.out.println("Could not retrieve newsfeed.");
+                    }
+                    break;
                 }
             }
         }
