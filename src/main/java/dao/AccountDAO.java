@@ -111,8 +111,8 @@ public class AccountDAO extends DBContext {
         logger.info("Attempting to ban account with ID: " + id);
 
         String sql = "UPDATE account SET account_status = 'banned' WHERE account_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected == 0) {
