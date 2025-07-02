@@ -1,64 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList" %>
+<%@ page import="model.Account" %>
 
-<%--
-  ================================================================================
-  1. DEFINE DATA MODELS (POJO)
-  ================================================================================
---%>
-<%!
-    // Represents a single User with all the new fields
-    public class User {
-        private int id;
-        private String avatarUrl, username, fullName, email, phone, gender, dob, bio, status;
-        private int credit, totalPosts;
-
-        public User(int id, String avatar, String uname, String fname, String email, String phone, String gender, String dob, String bio, int credit, String status, int posts) {
-            this.id = id; this.avatarUrl = avatar; this.username = uname; this.fullName = fname;
-            this.email = email; this.phone = phone; this.gender = gender; this.dob = dob;
-            this.bio = bio; this.credit = credit; this.status = status; this.totalPosts = posts;
-        }
-
-        // Getters for all fields
-        public int getId() { return id; }
-        public String getAvatarUrl() { return avatarUrl; }
-        public String getUsername() { return username; }
-        public String getFullName() { return fullName; }
-        public String getEmail() { return email; }
-        public String getPhone() { return phone; }
-        public String getGender() { return gender; }
-        public String getDob() { return dob; }
-        public String getBio() { return bio; }
-        public int getCredit() { return credit; }
-        public String getStatus() { return status; }
-        public int getTotalPosts() { return totalPosts; }
-    }
-%>
-
-<%--
-  ================================================================================
-  2. SIMULATE DATA RETRIEVAL
-  ================================================================================
---%>
 <%
-    List<User> userList = new ArrayList<>();
-
-    // Sample User 1: Active, all data present, long bio
-    userList.add(new User(101, "https://i.pravatar.cc/150?img=5", "olivia_c", "Olivia Chen", "olivia.chen@example.com", "555-0101", "Female", "1995-08-15", "Photographer and avid traveler. Documenting my journeys one snapshot at a time. I believe in telling stories through my lens and exploring the hidden beauty of the world. Let's connect and share our adventures!", 2500, "active", 142));
-
-    // Sample User 2: Active, some data is null
-    userList.add(new User(102, "https://i.pravatar.cc/150?img=12", "ben_carter", "Benjamin Carter", "ben.carter@example.com", null, "Male", "1990-03-22", "Just a tech enthusiast.", 1200, "active", 58));
-
-    // Sample User 3: Banned user
-    userList.add(new User(103, "https://i.pravatar.cc/150?img=25", "lucas_m", "Lucas Martinez", "lucas.m@example.com", "555-0103", "Male", "1998-11-05", "Former community member.", 0, "banned", 23));
-
-    // Sample User 4: Active, with null phone and bio
-    userList.add(new User(104, "https://i.pravatar.cc/150?img=31", "sophia_w", "Sophia Williams", "sophia.w@example.com", null, "Female", "2000-01-30", null, 1850, "active", 99));
-
-    // Sample User 5: Another banned user
-    userList.add(new User(105, "https://i.pravatar.cc/150?img=40", "alex_jones", "Alex Jones", "alex.j@example.com", "555-0105", null, null, "Account banned for spam.", 0, "banned", 12));
-
-    String currentPage = "user";
+    List<Account> accountList = (List<Account>) request.getAttribute("accountList");
 %>
 
 <!DOCTYPE html>
@@ -135,7 +80,6 @@
     <ul class="nav-menu">
         <li><a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a></li>
         <li class="active"><a href="accountDashboard"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a></li>
-        <li><a href="notification"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a></li>
         <li><a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a></li>
         <li><a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a></li>
         <li><a href="reportPost"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a></li>
@@ -146,6 +90,13 @@
 <main class="main-content">
     <div class="page-header">
         <h1>User Dashboard</h1>
+        <%
+            if(request.getAttribute("msg") != null){
+        %>
+        <p>Message: <%= request.getAttribute("msg")%></p>
+        <%
+            }
+        %>
         <div class="header-controls">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -154,9 +105,17 @@
         </div>
     </div>
 
+    <% if (accountList == null || accountList.isEmpty()) { %>
+    <div class="no-data-message">
+        <div class="icon"><i class="fas fa-search"></i></div>
+        <h2>No Users Found</h2>
+        <p>There are no user to display at this time.</p>
+    </div>
+    <% } else { %>
+
     <div class="page-tabs">
         <div class="tab-item active" data-tab="active">Active Users</div>
-        <div class="tab-item" data-tab="banned">Banned Users</div>
+<%--        <div class="tab-item" data-tab="banned">Banned Users</div>--%>
     </div>
 
     <div class="data-table-container">
@@ -164,19 +123,19 @@
             <thead>
             <tr>
                 <th>ID</th><th>User</th><th>Contact</th><th>Details</th>
-                <th>Bio</th><th>Credit</th><th>Posts</th><th>Status</th><th>Action</th>
+                <th>Bio</th><th>Credit</th><%--<th>Status</th>--%><th>Action</th>
             </tr>
             </thead>
             <tbody id="userTableBody">
-            <% for (User user : userList) { %>
+            <% for (Account user : accountList) { %>
             <%-- The data-search-term contains all text we want to search through --%>
-            <tr data-status="<%= user.getStatus() %>" data-search-term="<%= user.getFullName().toLowerCase() %> <%= user.getUsername().toLowerCase() %>">
+            <tr data-status="<%= user.getAccountStatus() %>" data-search-term="<%= user.getFullname().toLowerCase() %> <%= user.getUsername().toLowerCase() %>">
                 <td><%= user.getId() %></td>
                 <td>
                     <div class="user-info">
-                        <img src="<%= user.getAvatarUrl() %>" alt="Avatar" class="avatar clickable-avatar" data-username="<%= user.getFullName() %>">
+                        <img src="${pageContext.request.contextPath}/static/images/<%= user.getAvatar() %>" alt="Avatar" class="avatar clickable-avatar" data-username="<%= user.getFullname() %>">
                         <div>
-                            <div class="user-name"><%= user.getFullName() %></div>
+                            <div class="user-name"><%= user.getFullname() %></div>
                             <div class="user-username">@<%= user.getUsername() %></div>
                         </div>
                     </div>
@@ -209,18 +168,20 @@
                     %>
                 </td>
                 <td><%= user.getCredit() %></td>
-                <td><%= user.getTotalPosts() %></td>
-                <td><span class="status-badge status-<%= user.getStatus() %>"><%= user.getStatus() %></span></td>
+<%--                <td><span class="status-badge status-<%= user.getAccountStatus()%>"><%= user.getAccountStatus() %></span></td>--%>
                 <td class="actions">
-                    <% if ("active".equals(user.getStatus())) { %>
-                    <button class="btn-ban">Ban</button>
-                    <% } %>
+                    <form action="accountDashboard" method="post" onsubmit="return confirm('Are you sure you want to ban this user? This action cannot be undone.');">
+                        <input type="hidden" name="id" value="<%= user.getId()%>">
+                        <input type="hidden" name="action" value="ban">
+                        <button class="btn-ban">Ban</button>
+                    </form>
                 </td>
             </tr>
             <% } %>
             </tbody>
         </table>
     </div>
+    <% } %>
 </main>
 
 <!-- Image Modal -->

@@ -104,7 +104,6 @@
     <ul class="nav-menu">
         <li><a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a></li>
         <li><a href="accountDashboard"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a></li>
-        <li><a href="notification"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a></li>
         <li><a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a></li>
         <li><a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a></li>
         <li class="active"><a href="reportPost"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a></li>
@@ -140,7 +139,7 @@
                 <% Account reporter = report.getAccount();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src="<%= reporter.getAvatar() != null ? reporter.getAvatar() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
+                    <img src=${pageContext.request.contextPath}/static/images/"<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
                     <div>
                         <div class="user-name"><%= reporter.getFullname() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>
@@ -193,33 +192,6 @@
                     if (post != null) {
                         out.println(post);
                         %>
-<%--                        SimpleUser author = post.getAuthor();--%>
-<%--                        if (author != null) { %>--%>
-<%--                <div class="user-block" style="margin-bottom: 15px;">--%>
-<%--                    <img src="<%= author.getAvatarUrl() != null ? author.getAvatarUrl() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Author Avatar" class="avatar clickable-image" data-caption="<%= author.getFullName() %>">--%>
-<%--                    <div>--%>
-<%--                        <div class="user-name"><%= author.getFullName() %></div>--%>
-<%--                        <div class="user-username">@<%= author.getUsername() %></div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <% } %>--%>
-<%--                <% if (post.getPostImageUrl() != null) { %>--%>
-<%--                <img src="<%= post.getPostImageUrl() %>" alt="Post Image" class="post-image clickable-image" data-caption="Reported Post Image">--%>
-<%--                <% } %>--%>
-<%--                <div class="post-text">--%>
-<%--                    <%--%>
-<%--                        String postText = post.getPostText();--%>
-<%--                        if (postText != null && postText.length() > 120) {--%>
-<%--                            String shortText = postText.substring(0, 120) + "...";--%>
-<%--                    %>--%>
-<%--                    <span class="short-text"><%= shortText %></span>--%>
-<%--                    <span class="full-text hidden"><%= postText %></span>--%>
-<%--                    <button class="read-more-btn">Read More</button>--%>
-<%--                    <% } else { %>--%>
-<%--                    <%= postText != null ? postText : "<i>Post has no text.</i>" %>--%>
-<%--                    <% } %>--%>
-<%--                </div>--%>
-
                 <% } else { %>
                 <p>Reported post data is unavailable.</p>
                 <% } %>

@@ -4,10 +4,7 @@ import dto.ResGroupDTO;
 import model.Account;
 import util.database.DBContext;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,6 +99,26 @@ public class AccountDAO extends DBContext {
             logger.warning("Failed to update user: " + e.getMessage());
         }
         return false;
+    }
+
+    public boolean banAccount(int id) {
+        logger.info("Attempting to ban account with ID: " + id);
+
+        String sql = "UPDATE account SET account_status = 'banned' WHERE account_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                logger.warning("No account found with ID: " + id);
+                return false;
+            }
+            logger.info("Successfully banned account with ID: " + id);
+            return true;
+        } catch (SQLException e) {
+            logger.severe("Failed to ban account with ID: " + id + " - Error: " + e.getMessage());
+            return false;
+        }
     }
 
     public static void main(String[] args) {

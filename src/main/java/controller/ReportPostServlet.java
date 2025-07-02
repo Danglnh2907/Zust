@@ -104,12 +104,10 @@ public class ReportPostServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameter format");
         } catch (SQLException e) {
             LOGGER.severe("Database error processing report: " + e.getMessage());
-            throw new ServletException("Failed to process report", e);
-//            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error processing report: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error processing report: " + e.getMessage());
         } catch (Exception e) {
             LOGGER.severe("Unexpected error processing report: " + e.getMessage());
-            throw new ServletException("Unexpected error", e);
-//            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error processing report: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error processing report: " + e.getMessage());
         }
     }
 }
