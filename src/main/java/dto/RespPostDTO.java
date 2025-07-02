@@ -21,6 +21,7 @@ public class RespPostDTO {
     private int likeCount;
     private int commentCount;
     private int repostCount;
+    private boolean liked;
 
     private final Logger logger = Logger.getLogger(RespPostDTO.class.getName());
     private final String[] templates;
@@ -126,6 +127,14 @@ public class RespPostDTO {
         this.repostCount = repostCount;
     }
 
+    public boolean isLiked() {
+        return liked;
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
+    }
+
     @Override
     public String toString() {
         /*
@@ -165,8 +174,9 @@ public class RespPostDTO {
         }
 
         //Get likes, comment and repost count
-        String action = String.format(templates[4], getLikeCount(), getCommentCount(), getRepostCount());
+        String action = String.format(templates[4], liked ? "liked" : "", getLikeCount(), getCommentCount(), getRepostCount());
 
         return String.format(templates[0], getPostId(), header, content, carousel, action);
     }
+
 }

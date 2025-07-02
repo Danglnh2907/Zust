@@ -8,8 +8,11 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import dao.AccountDAO;
+import dao.CommentDAO;
 import dao.PostDAO;
+import dto.ReportPostDTO;
 import dto.ReqPostDTO;
+import dto.RespCommentDTO;
 import dto.RespPostDTO;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -31,18 +34,18 @@ public class PostController extends HttpServlet {
         /*
          * Handle all post related GET action:
          * /post: Get all post created by a users (UserID fetch in sessions)
-         * /post?id=post_id: Get view a certain post by ID (include comments)
+         * /post?postID=post_id: Get view a certain post by ID (include comments)
          * /post?action=create: create post form
+         * /post?action=report&postID=post_id: show report form
          */
 
         //Fetch userID in sessions
         HttpSession session = request.getSession();
-        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
             Account account = (Account) session.getAttribute("users");
             if (account == null) {
-                // Redirect to login if user is not authenticated
+                // Redirect to login page if user is not authenticated
                 response.sendRedirect(request.getContextPath() + "/auth");
                 return;
             }
@@ -66,13 +69,13 @@ public class PostController extends HttpServlet {
 
         //Get action and id in request parameter
         String action = request.getParameter("action");
-        String idRaw = request.getParameter("id");
+        String idRaw = request.getParameter("postID");
         PostDAO postDAO = new PostDAO();
 
         //No provided id or action -> View all posts belong to a user
         if (action == null && idRaw == null) {
             try {
-                ArrayList<RespPostDTO> posts = postDAO.getPosts(userID);
+                ArrayList<RespPostDTO> posts = postDAO.getPosts(userID, userID);
                 if (posts.isEmpty()) {
                     request.setAttribute("message", "No posts found");
                 } else {
@@ -96,20 +99,24 @@ public class PostController extends HttpServlet {
         if (idRaw != null) {
             try {
                 int id = Integer.parseInt(idRaw);
-                RespPostDTO post = postDAO.getPost(id);
+                RespPostDTO post = postDAO.getPost(id, userID);
+                CommentDAO commentDAO = new CommentDAO();
+                ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(id, account.getId());
                 if (post == null) {
-                    request.setAttribute("message", "No post found");
+                    request.setAttribute("message", "No post/comments found");
                 } else {
                     request.setAttribute("post", post);
+                    request.setAttribute("total_comments", comments.size());
+                    request.setAttribute("comments", commentDAO.filterComment(comments));
                 }
             } catch (NumberFormatException e) {
                 logger.warning("Invalid postID: " + idRaw);
                 request.setAttribute("message", "Invalid post ID");
             } catch (Exception e) {
                 logger.severe("Error fetching post " + idRaw + ": " + e.getMessage());
-                request.setAttribute("message", "Error loading post");
+                request.setAttribute("message", "Error loading post/comments");
             }
-            request.getRequestDispatcher("/WEB-INF/views/post.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/full_post.jsp").forward(request, response);
         }
     }
 
@@ -118,8 +125,12 @@ public class PostController extends HttpServlet {
         /*
          * Handle all post related POST action:
          * /post?action=create: Create new post (UserID fetch in sessions)
-         * /post?action=edit&id=post_id: Edit a post by ID (UserID fetch in sessions)
-         * /post?action=delete&id=post_id: Delete a post by ID (UserID fetch in session)
+         * /post?action=edit&postID=post_id: Edit a post by ID (UserID fetch in sessions)
+         * /post?action=delete&postID=post_id: Delete a post by ID (UserID fetch in session)
+         * /post?action=like&postID=post_id: like post
+         * /post?action=unlike&postID=post_id: unlike a post
+         * /post?action=repost&postID=post_id: repost a post
+         * /post?action=report&postID=post_id: report a post
          */
 
         //Set response content type for JSON responses
@@ -128,7 +139,6 @@ public class PostController extends HttpServlet {
 
         //Fetch userID in sessions
         HttpSession session = request.getSession();
-        String userIDRaw = (String) session.getAttribute("userID"); //May change the attribute name?
         int userID;
         try {
             Account account = (Account) session.getAttribute("users");
@@ -176,7 +186,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "edit" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for edit\"}");
@@ -201,7 +211,7 @@ public class PostController extends HttpServlet {
                     }
                 }
                 case "delete" -> {
-                    String idRaw = request.getParameter("id");
+                    String idRaw = request.getParameter("postID");
                     if (idRaw == null || idRaw.trim().isEmpty()) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write("{\"error\":\"Post ID is required for delete\"}");
@@ -216,6 +226,81 @@ public class PostController extends HttpServlet {
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
+                    }
+                }
+                case "like" -> {
+                    String idRaw = request.getParameter("postID");
+                    if (idRaw == null || idRaw.trim().isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is required for like\"}");
+                        return;
+                    }
+
+                    int id = Integer.parseInt(idRaw);
+                    boolean success = postDAO.likePost(id, userID);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write("{\"message\":\"Post like successfully\"}");
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
+                    }
+                }
+                case "unlike" -> {
+                    String idRaw = request.getParameter("postID");
+                    if (idRaw == null || idRaw.trim().isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is required for unlike\"}");
+                        return;
+                    }
+                    int id = Integer.parseInt(idRaw);
+                    boolean success = postDAO.unlikePost(id, userID);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write("{\"message\":\"Post unlike successfully\"}");
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
+                    }
+                }
+                case "repost" -> {
+                    String idRaw = request.getParameter("postID");
+                    if (idRaw == null || idRaw.trim().isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is required for repost\"}");
+                        return;
+                    }
+
+                    int id = Integer.parseInt(idRaw);
+                    boolean success = postDAO.repost(id, userID);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write("{\"message\":\"Post repost successfully\"}");
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
+                    }
+                }
+                case "report" -> {
+                    try {
+                        int postID = Integer.parseInt(request.getParameter("postID"));
+                        String content = request.getParameter("content");
+
+                        ReportPostDTO dto = new ReportPostDTO();
+                        dto.setContent(content);
+                        dto.setAccountID(userID);
+                        dto.setPostID(postID);
+                        dto.setCreatedAt(LocalDateTime.now());
+                        dto.setStatus("sent");
+                        boolean success = postDAO.report(dto);
+                        if (success) {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        } else {
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        }
+                    } catch (NumberFormatException e) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("{\"error\":\"Post ID is improper for report\"}");
                     }
                 }
                 default -> {
@@ -240,7 +325,7 @@ public class PostController extends HttpServlet {
         String postPrivacy = "public"; // Default privacy
         String hashtags = null;
         int groupID = -1;
-        String postStatus = "public";
+        String postStatus = "publish";
         ArrayList<String> imagePaths = new ArrayList<>();
         ReqPostDTO dto = new ReqPostDTO();
 
@@ -294,16 +379,6 @@ public class PostController extends HttpServlet {
                         }
                     }
                 }
-                //Get posts_status
-                else if (fieldName.equals("is_drafted")) {
-                    String isDraftedRaw = readPartAsString(part);
-                    if (isDraftedRaw != null) {
-                        boolean isDrafted = Boolean.parseBoolean(isDraftedRaw.trim());
-                        if (isDrafted) {
-                            postStatus = "drafted";
-                        }
-                    }
-                }
             }
         } catch (Exception e) {
             logger.severe("Error extracting data from parts: " + e.getMessage());
@@ -325,7 +400,9 @@ public class PostController extends HttpServlet {
         dto.setAccountID(userID);
         dto.setPostContent(htmlContent);
         dto.setPrivacy(postPrivacy);
-        dto.setStatus(postStatus);
+        //When create post, status can only be published (personal) or sent (group)
+        //Edit can not change this status (status = deleted -> delete operation, not related to ReqPostDTO)
+        dto.setStatus(groupID != -1 ? "sent" : postStatus);
         dto.setCreatedAt(LocalDateTime.now());
         dto.setLastModified(LocalDateTime.now());
         dto.setGroupID(groupID);

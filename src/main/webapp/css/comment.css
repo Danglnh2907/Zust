@@ -1,0 +1,231 @@
+/* --- Comment Section Styles --- */
+.comment-section {
+    background-color: var(--white);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    width: 100%;
+    margin-top: 20px;
+}
+
+.comment-section h2 {
+    padding: 16px;
+    margin: 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.comment-form {
+    padding: 16px;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.comment-form-body {
+    display: flex;
+    gap: 12px;
+}
+
+.comment-form .post-avatar {
+    flex-shrink: 0;
+}
+
+.comment-form-main {
+    flex-grow: 1;
+}
+
+.reply-indicator {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.reply-indicator .cancel-reply-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--dark-gray);
+    padding: 0;
+    line-height: 1;
+}
+
+.comment-form-main textarea {
+    width: 100%;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+
+.comment-image-preview {
+    position: relative;
+    margin-top: 12px;
+    display: none;
+}
+
+.comment-image-preview img {
+    max-width: 120px;
+    border-radius: 8px;
+    border: 1px solid var(--light-gray);
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dark-gray);
+    padding: 8px;
+}
+
+.icon-btn:hover {
+    color: var(--accent-color);
+}
+
+.icon-btn:disabled {
+    color: var(--light-gray);
+    cursor: not-allowed;
+}
+
+.post-comment-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    border-radius: 9999px;
+    padding: 8px 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.post-comment-btn:disabled {
+    background-color: #fca76a;
+    cursor: not-allowed;
+}
+
+.comment-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+}
+
+/* NEW: Indentation for replies */
+.comment-item.is-reply {
+    margin-left: 60px;
+    /* Avatar width + gap */
+}
+
+.comment-body {
+    flex-grow: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.comment-user-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.comment-user-handle {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+}
+
+.comment-text {
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+/* NEW: Style for reply tag */
+.reply-tag {
+    color: var(--accent-color);
+    font-weight: 500;
+    text-decoration: none;
+    margin-right: 0.5em;
+}
+
+.reply-tag:hover {
+    text-decoration: underline;
+}
+
+.comment-media img {
+    max-width: 100%;
+    border-radius: 12px;
+    margin-top: 8px;
+    border: 1px solid var(--light-gray);
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+}
+
+.comment-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dark-gray);
+    font-weight: 500;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.comment-actions button:hover {
+    color: var(--accent-color);
+}
+
+.comment-actions .like-btn.liked {
+    color: var(--like-color);
+}
+
+.comment-actions .report-btn {
+    margin-left: auto;
+}

@@ -1,0 +1,177 @@
+:root {
+    --accent-color: #f56a00;
+    --light-gray: #e1e8ed;
+    --medium-gray: #f0f2f5;
+    --dark-gray: #657786;
+    --background-color: #ffffff;
+    --page-background: #f0f2f5;
+    --white: #ffffff;
+    --border-radius: 16px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--page-background);
+    margin: 0;
+    color: #14171a;
+    min-height: 100vh;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.report-form-card {
+    background-color: var(--white);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 550px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    margin: auto;
+}
+
+.report-form-card h1 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.report-form-card form {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    border: 1px solid var(--light-gray);
+    background-color: var(--medium-gray);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(245, 106, 0, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-group p {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    margin: 8px 0 0 0;
+}
+
+/* FIXED: Styles for circular checkboxes and alignment */
+.report-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.report-option {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    /* Vertically center children */
+    gap: 16px;
+    /* Add space between text and checkbox */
+    padding: 16px;
+    border: 1px solid var(--light-gray);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.report-option:hover {
+    background-color: var(--medium-gray);
+}
+
+.report-option .option-text {
+    font-weight: 500;
+    /* Remove flex-grow to prevent pushing the checkbox */
+    /* flex-grow: 1; */
+    margin-right: 8px;
+    /* Optional: small space between text and checkbox */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.report-option input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--light-gray);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease-in-out;
+    flex-shrink: 0;
+    vertical-align: middle;
+    margin-left: 0;
+    /* Remove any extra margin */
+}
+
+.custom-checkbox::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.2s ease-in-out;
+}
+
+.report-option input:checked+.custom-checkbox {
+    border-color: var(--accent-color);
+}
+
+.report-option input:checked+.custom-checkbox::after {
+    transform: scale(1);
+}
+
+.form-footer {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.submit-report-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    border-radius: 9999px;
+    padding: 12px 28px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submit-report-btn:disabled {
+    background-color: #fca76a;
+    cursor: not-allowed;
+}

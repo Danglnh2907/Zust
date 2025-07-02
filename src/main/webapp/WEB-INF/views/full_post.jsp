@@ -1,13 +1,19 @@
-<%@ page import="dto.RespPostDTO" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="model.Account" %>
+<%@ page import="dto.RespPostDTO" %>
+<%@ page import="java.util.LinkedHashMap" %>
+<%@ page import="dto.RespCommentDTO" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Map" %><%--
+  Created by IntelliJ IDEA.
+  User: Asus
+  Date: 6/20/2025
+  Time: 2:05 PM
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>View posts</title>
-
+        <title>Title</title>
         <!-- Font Imports -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +31,27 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
     </head>
-
     <body>
+        <%
+            Account account = (Account) request.getAttribute("account");
+            if (account == null) {
+                request.getRequestDispatcher("/auth").forward(request, response);
+            }
+
+            String message = (String) request.getAttribute("message");
+            if (message != null) {
+                out.println(message);
+                return;
+            }
+
+            RespPostDTO post = (RespPostDTO) request.getAttribute("post");
+
+            //Get total comments and comment
+            int totalComments = (Integer) request.getAttribute("total_comments");
+            LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> comments =
+                    (LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>>) request.getAttribute("comments");
+        %>
+
         <!-- Modal -->
         <div class="modal fade" id="modal" data-bs-backdrop="static" data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
@@ -70,7 +95,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/sendCreateGroupRequest">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -79,7 +104,7 @@
                                 <line x1="12" y1="18" x2="12" y2="12"></line>
                                 <line x1="9" y1="15" x2="15" y2="15"></line>
                             </svg>
-                            <span>Create Group</span>
+                            <span>Create Request</span>
                         </a></li>
                     </ul>
                 </nav>
@@ -143,30 +168,81 @@
                         </div>
                     </div>
 
-                    <%
-                        Account account = (Account) request.getSession().getAttribute("users");
-                        String linkAvatar = account.getAvatar();
-                    %>
                     <a href="#" class="nav-profile">
-                        <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
+                        <img src="${pageContext.request.contextPath}/static/images/<%=account.getAvatar()%>"
                              alt="User Profile Picture">
                         <span><%=account.getFullname()%></span>
                     </a>
                 </header>
 
-                <!-- Feed of Posts -->
                 <div class="feed">
-                    <% ArrayList<RespPostDTO> posts = (ArrayList<RespPostDTO>) request.getAttribute("posts");
-                        if (posts == null || posts.isEmpty()) {
-                            out.println("<p style=\"color: red;\">No posts found</p>");
-                        } else {
-                            for (RespPostDTO post : posts) {
-                                out.println(post);
-                            }
-                        } %>
+                    <!-- Post -->
+                    <%
+                        if (post != null) {
+                            out.println(post);
+                    %>
+
+                            <!-- Comment section -->
+                            <div class="comment-section" id="comment-section">
+                                <h2>Comments (<span id="comment-count"><%= totalComments %></span>)</h2>
+
+                                <div class="comment-form">
+                                    <div class="comment-form-body">
+                                        <img class="post-avatar"
+                                             src="${pageContext.request.contextPath}/static/images/<%=account.getAvatar()%>"
+                                             alt="Your Avatar">
+                                        <div class="comment-form-main">
+                                            <div class="reply-indicator" id="reply-indicator">
+                                                <span>Replying to <b id="reply-to-handle"></b></span>
+                                                <button class="cancel-reply-btn" id="cancel-reply-btn"
+                                                        title="Cancel reply">×
+                                                </button>
+                                            </div>
+                                            <textarea id="comment-textarea" placeholder="Add a comment..."></textarea>
+                                            <div class="comment-image-preview" id="comment-image-preview">
+                                                <button
+                                                        class="remove-image-btn" id="remove-image-btn">×
+                                                </button>
+                                                <img id="preview-image"
+                                                     src="" alt="Image preview"></div>
+                                            <div class="comment-form-actions">
+                                                <button class="icon-btn" id="add-comment-image-btn" title="Add image">
+                                                    <svg
+                                                            xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                            stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                                    </svg>
+                                                </button>
+                                                <button class="post-comment-btn" id="post-comment-btn" disabled>Post
+                                                    Comment
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="comment-list" id="comment-list">
+                                    <%
+                                        for (Map.Entry<RespCommentDTO, ArrayList<RespCommentDTO>> entry : comments.entrySet()) {
+                                            out.println(entry.getKey());
+                                            for (RespCommentDTO reply : entry.getValue()) {
+                                                out.println(reply);
+                                            }
+                                        }
+                                    %>
+                                </div>
+                            </div>
+                    <%
+                        }
+                    %>
                 </div>
             </main>
         </div>
+
+
 
         <!-- Lightbox HTML structure -->
         <div class="lightbox-overlay" id="lightbox">
@@ -189,5 +265,10 @@
         <script src="${pageContext.request.contextPath}/js/post.js"></script>
         <script src="${pageContext.request.contextPath}/js/composer.js"></script>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                attachListener(<%= post.getPostId() %>)
+            });
+        </script>
     </body>
 </html>

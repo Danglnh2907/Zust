@@ -1,31 +1,40 @@
 package dao;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import util.database.DBContext;
 import model.Account;
 import model.Token;
 import util.service.EmailService;
 import util.service.FileService;
+import util.database.DBContext;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.sql.*;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
-import java.util.Arrays;
+import java.util.Map;
+import java.util.UUID;
 
-public class AuthDAO {
+public class AuthDAO extends DBContext{
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuthDAO.class);
 	private final EmailService emailService;
+	private final GoogleOAuthService googleOAuthService;
 	private final Dotenv dotenv;
 
 	public AuthDAO(FileService fileService) {
 		this.emailService = new EmailService(fileService);
+		this.googleOAuthService = new GoogleOAuthService();
 		this.dotenv = Dotenv.configure().filename("save.env").ignoreIfMissing().load();
 	}
 
@@ -76,6 +85,116 @@ public class AuthDAO {
 			LOGGER.error("Registration failed: {}", e.getMessage(), e);
 			throw e;
 		}
+	}
+
+	public Account registerOrLoginWithGoogle(String authorizationCode) throws Exception {
+		LOGGER.info("Processing Google OAuth login/registration");
+
+		try {
+			GoogleOAuthService.GoogleUserInfo googleUserInfo = googleOAuthService.getUserInfo(authorizationCode);
+
+			if (googleUserInfo.getEmail() == null || googleUserInfo.getEmail().trim().isEmpty()) {
+				throw new Exception("Google account does not have a valid email address");
+			}
+
+			try (Connection conn = new DBContext().getConnection()) {
+				// Check if account exists by email
+				Account existingAccount = getAccountByEmail(googleUserInfo.getEmail(), conn);
+
+				if (existingAccount != null) {
+					// Account exists, update Google info if needed and return
+					if (existingAccount.getGoogleId() == null) {
+						updateGoogleInfo(existingAccount.getId(), googleUserInfo.getId(), conn);
+					}
+					LOGGER.info("Google login successful for existing account: {}", existingAccount.getEmail());
+					return existingAccount;
+				} else {
+					// Create new account
+					Account newAccount = createAccountFromGoogle(googleUserInfo);
+					LOGGER.info("Google registration successful for new account: {}", newAccount.getEmail());
+					return newAccount;
+				}
+			}
+		} catch (IOException | InterruptedException e) {
+			LOGGER.error("Google OAuth communication error: {}", e.getMessage(), e);
+			throw new Exception("Failed to communicate with Google OAuth service", e);
+		} catch (SQLException e) {
+			LOGGER.error("Database error during Google OAuth: {}", e.getMessage(), e);
+			throw new Exception("Database error during Google authentication", e);
+		}
+	}
+
+	private String generateUniqueUsername(String baseUsername, Connection conn) throws SQLException {
+		// Clean the base username
+		String cleanUsername = baseUsername.replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+		if (cleanUsername.length() < 3) {
+			cleanUsername = "user" + cleanUsername;
+		}
+
+		String username = cleanUsername;
+		int counter = 1;
+
+		while (isUsernameExists(username, conn)) {
+			username = cleanUsername + counter;
+			counter++;
+		}
+
+		return username;
+	}
+
+	private String downloadAndSaveGoogleProfilePicture(String pictureUrl) throws IOException {
+		try {
+			FileService fileService = new FileService();
+			URL url = new URL(pictureUrl);
+			String fileName = "google_profile_" + UUID.randomUUID().toString() + ".jpg";
+
+			try (InputStream inputStream = url.openStream()) {
+				String savedFileName = fileService.saveFile(fileName, inputStream);
+				LOGGER.info("Google profile picture saved as: {}", savedFileName);
+				return savedFileName;
+			}
+		} catch (Exception e) {
+			LOGGER.warn("Failed to download Google profile picture: {}", e.getMessage());
+			return null;
+		}
+	}
+
+	private void updateGoogleInfo(int accountId, String googleId, Connection conn) throws SQLException {
+		String sql = "UPDATE account SET google_id = ? WHERE account_id = ?";
+		try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.setString(1, googleId);
+			stmt.setInt(2, accountId);
+			stmt.executeUpdate();
+		}
+	}
+
+	private Account getAccountByEmail(String email, Connection conn) throws SQLException {
+		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role, google_id FROM account WHERE email = ?";
+		try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.setString(1, email.trim());
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next()) {
+					Account account = new Account();
+					account.setId(rs.getInt("account_id"));
+					account.setUsername(rs.getString("username"));
+					account.setPassword(rs.getString("password"));
+					account.setFullname(rs.getString("fullname"));
+					account.setEmail(rs.getString("email"));
+					account.setPhone(rs.getString("phone"));
+					account.setGender(rs.getBoolean("gender"));
+					java.sql.Date sqlDate = rs.getDate("dob");
+					account.setDob(sqlDate != null ? sqlDate.toLocalDate() : null);
+					account.setAvatar(rs.getString("avatar"));
+					account.setBio(rs.getString("bio"));
+					account.setCredit(rs.getInt("credit"));
+					account.setAccountStatus(rs.getString("account_status"));
+					account.setAccountRole(rs.getString("account_role"));
+					account.setGoogleId(rs.getString("google_id"));
+					return account;
+				}
+			}
+		}
+		return null;
 	}
 
 	private int saveAccount(Account account, Connection conn) throws SQLException {
@@ -251,7 +370,7 @@ public class AuthDAO {
 
 		String sql = "SELECT password, account_status FROM account WHERE username = ?";
 		try (Connection conn = new DBContext().getConnection();
-		     PreparedStatement stmt = conn.prepareStatement(sql)) {
+			 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
 			stmt.setString(1, username.trim());
 			try (ResultSet rs = stmt.executeQuery()) {
@@ -316,9 +435,9 @@ public class AuthDAO {
 			return null;
 		}
 
-		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role FROM account WHERE username = ?";
+		String sql = "SELECT account_id, username, password, fullname, email, phone, gender, dob, avatar, bio, credit, account_status, account_role, google_id FROM account WHERE username = ?";
 		try (Connection conn = new DBContext().getConnection();
-		     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, username.trim());
 			try (ResultSet rs = pstmt.executeQuery()) {
 				if (rs.next()) {
@@ -337,6 +456,7 @@ public class AuthDAO {
 					account.setCredit(rs.getInt("credit"));
 					account.setAccountStatus(rs.getString("account_status"));
 					account.setAccountRole(rs.getString("account_role"));
+					account.setGoogleId(rs.getString("google_id"));
 					return account;
 				}
 			}
@@ -347,67 +467,82 @@ public class AuthDAO {
 		return null;
 	}
 
-	/**
-	 * Resend verification email for inactive accounts
-	 */
-	public boolean resendVerificationEmail(String email) throws Exception {
-		if (email == null || email.trim().isEmpty()) {
-			throw new IllegalArgumentException("Email cannot be null or empty");
+	public String getGoogleAuthUrl(String state) {
+		return googleOAuthService.getAuthorizationUrl(state);
+	}
+
+	public String getGoogleAuthUrl() {
+		return googleOAuthService.getAuthorizationUrl();
+	}
+
+	public String getGoogleLoginUrl() {
+		return googleOAuthService.getAuthorizationUrl("login");
+	}
+
+	public String getGoogleRegisterUrl() {
+		return googleOAuthService.getAuthorizationUrl("register");
+	}
+
+	private Account createAccountFromGoogle(GoogleOAuthService.GoogleUserInfo googleUserInfo) throws SQLException, IOException {
+		Account account = new Account();
+
+		// Generate unique username from email
+		String baseUsername = googleUserInfo.getEmail().split("@")[0];
+		String username = generateUniqueUsername(baseUsername, getConnection());
+
+		account.setUsername(username);
+		account.setEmail(googleUserInfo.getEmail());
+		account.setFullname(googleUserInfo.getName() != null ? googleUserInfo.getName() : username);
+		account.setGoogleId(googleUserInfo.getId());
+		account.setAccountStatus("active"); // Google accounts are pre-verified
+
+		// Set default values for required fields
+		account.setPassword(""); // Empty password for Google accounts
+		account.setCredit(100);  // Default credit value
+		account.setAccountRole("user"); // Default role
+
+		// Download and save profile picture if available
+		if (googleUserInfo.getPicture() != null && !googleUserInfo.getPicture().isEmpty()) {
+			try {
+				String avatarPath = downloadAndSaveGoogleProfilePicture(googleUserInfo.getPicture());
+				account.setAvatar(avatarPath);
+			} catch (Exception e) {
+				LOGGER.warn("Failed to download Google profile picture for {}: {}", googleUserInfo.getEmail(), e.getMessage());
+			}
 		}
 
-		try (Connection conn = new DBContext().getConnection()) {
-			// Get account by email
-			String accountSql = "SELECT account_id, username, fullname, email, account_status FROM account WHERE email = ?";
-			Account account = null;
+		// Save account
+		int accountId = saveGoogleAccount(account, getConnection());
+		account.setId(accountId);
 
-			try (PreparedStatement stmt = conn.prepareStatement(accountSql)) {
-				stmt.setString(1, email.trim());
-				try (ResultSet rs = stmt.executeQuery()) {
-					if (rs.next()) {
-						account = new Account();
-						account.setId(rs.getInt("account_id"));
-						account.setUsername(rs.getString("username"));
-						account.setFullname(rs.getString("fullname"));
-						account.setEmail(rs.getString("email"));
-						account.setAccountStatus(rs.getString("account_status"));
-					}
+		return account;
+	}
+
+	private int saveGoogleAccount(Account account, Connection conn) throws SQLException {
+		String sql = "INSERT INTO account (username, email, fullname, google_id, avatar, account_status, " +
+				"password, credit, account_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			stmt.setString(1, account.getUsername());
+			stmt.setString(2, account.getEmail());
+			stmt.setString(3, account.getFullname());
+			stmt.setString(4, account.getGoogleId());
+			stmt.setString(5, account.getAvatar());
+			stmt.setString(6, account.getAccountStatus());
+			stmt.setString(7, account.getPassword()); // Will be empty string
+			stmt.setInt(8, account.getCredit());      // Will be 100
+			stmt.setString(9, account.getAccountRole()); // Will be "user"
+
+			int rows = stmt.executeUpdate();
+			if (rows == 0) throw new SQLException("Failed to insert Google account");
+
+			try (ResultSet rs = stmt.getGeneratedKeys()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					throw new SQLException("Failed to retrieve account ID");
 				}
 			}
-
-			if (account == null) {
-				LOGGER.warn("No account found with email: {}", email);
-				return false;
-			}
-
-			if ("active".equalsIgnoreCase(account.getAccountStatus())) {
-				LOGGER.info("Account is already active for email: {}", email);
-				return false; // Account is already verified
-			}
-
-			// Deactivate old tokens
-			String deactivateTokensSql = "UPDATE token SET token_status = 1 WHERE account_id = ? AND token_status = 0";
-			try (PreparedStatement stmt = conn.prepareStatement(deactivateTokensSql)) {
-				stmt.setInt(1, account.getId());
-				stmt.executeUpdate();
-			}
-
-			// Generate new token
-			String tokenContent = generateToken();
-			Instant now = Instant.now();
-			Instant expiresAt = now.plusSeconds(24 * 60 * 60); // 24 hours
-
-			Token newToken = new Token();
-			newToken.setAccount(account);
-			newToken.setTokenContent(tokenContent);
-			newToken.setExpiresAt(expiresAt);
-			newToken.setCreatedAt(now);
-			newToken.setTokenStatus(false);
-
-			saveToken(newToken, conn);
-			sendVerificationEmail(account, tokenContent);
-
-			LOGGER.info("Verification email resent successfully to: {}", email);
-			return true;
 		}
 	}
 }

@@ -2,48 +2,25 @@
 /*==================================*/
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Options Menu (3 dots) Logic ---
+    //Options Menu (3 dots) toggle
     const optionsBtns = document.querySelectorAll('.options-btn');
     const optionsMenus = document.querySelectorAll('.options-menu');
-
     optionsBtns.forEach((btn, index) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             optionsMenus[index].classList.toggle('show');
         });
-    });
-
-    // Close menu if clicked outside
+    }); //Show menu if click 3-dot button
     window.addEventListener('click', () => {
         optionsMenus.forEach(menu => {
             if (menu.classList.contains('show')) {
                 menu.classList.remove('show');
             }
         });
-    });
+    }); //Close menu if click outside
 
-    // --- Like Button Logic ---
-    const likeBtns = document.querySelectorAll('.like-btn');
-    const likeCounts = document.querySelectorAll('.like-count');
-
-    likeBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
-            const isLiked = btn.classList.toggle('liked');
-            let likeCount = parseInt(likeCounts[index].textContent);
-
-            if (isLiked) {
-                likeCount++;
-            } else {
-                likeCount--;
-            }
-
-            likeCounts[index].textContent = String(likeCount);
-        });
-    });
-
-    // --- Image Carousel Logic ---
+    //Image Carousel Logic
     const tracks = document.querySelectorAll('.carousel-track');
-
     tracks.forEach(track => {
         const slides = Array.from(track.children);
         const nextButton = track.parentElement.querySelector('.carousel-btn.next');
@@ -98,9 +75,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Edit Post Logic ---
-    const editModal = new bootstrap.Modal(document.getElementById('edit_post'));
-    const editQuill = new Quill('#edit-editor', {
+    //Lightbox Logic (for full image preview)
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox.querySelector('.lightbox-image');
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+
+    function openLightbox(imageSrc) {
+        lightboxImg.src = imageSrc;
+        lightbox.classList.add('active');
+        document.body.classList.add('lightbox-open');
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.classList.remove('lightbox-open');
+        lightboxImg.src = ''; // Clear the source
+    }
+
+    document.querySelectorAll('.carousel-slide').forEach(img => {
+        img.addEventListener('click', () => openLightbox(img.src));
+    }); //Add event listener to all images
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    }); //Close if click outside
+    closeBtn.addEventListener('click', closeLightbox); //Close if click close ('X') button
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+            closeLightbox();
+        }
+    }); //Close lightbox if press Esc
+
+    /*=== Buttons actions ===*/
+    //Initialize editor
+    const modal = new bootstrap.Modal(document.getElementById('modal'));
+    const quill = new Quill('#edit-editor', {
         modules: {
             toolbar: [
                 ['bold', 'italic', 'underline'],
@@ -110,98 +120,82 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         theme: 'snow'
     });
-
     let postId;
 
-    // Handle edit button clicks
-    document.querySelectorAll('.options-menu .edit').forEach(editBtn => {
-        editBtn.addEventListener('click', (e) => {
+    //Like Button Logic (toggle animation and send request to server)
+    const likeBtns = document.querySelectorAll('.like-btn');
+    const likeCounts = document.querySelectorAll('.like-count');
+    likeBtns.forEach((btn, index) => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
-            const postElement = e.target.closest('.post');
-            postId = postElement.dataset.postId;
-            // Get content with images
-            let content = postElement.querySelector('.post-content').innerHTML;
-            // Get existing images and add them to content
-            const images = postElement.querySelectorAll('.carousel-track img');
-            images.forEach(img => {
-                content += `<p><img src="${img.src}"></p>`;
-            });
+            const isLiked = btn.classList.contains('liked');
+            let likeCount = parseInt(likeCounts[index].textContent);
 
-            // Set editor content with text and images
-            editQuill.root.innerHTML = content;
+            postId = e.target.closest(".post").dataset.postId;
 
-            // Store post data for submission
-            const modal = document.getElementById('edit_post');
-            modal.dataset.postId = postId;
-
-            // Show modal
-            editModal.show();
+            if (!isLiked) { //If not liked before, send like request
+                //Called to server
+                fetch(`/zust/post?action=like&postID=${postId}`, {
+                    method: "POST"
+                })
+                    .then(resp => {
+                        if (resp.status === 200) {
+                            likeCount++;
+                            likeCounts[index].textContent = String(likeCount);
+                            btn.classList.add("liked");
+                        }
+                    })
+                    .catch(error => console.log(error))
+            } else { //If already like, send unlike request
+                //Called to server
+                fetch(`/zust/post?action=unlike&postID=${postId}`, {
+                    method: "POST"
+                })
+                    .then(resp => {
+                        if (resp.status === 200) {
+                            likeCount--;
+                            likeCounts[index].textContent = String(likeCount);
+                            //Remove the liked class
+                            btn.classList.remove("liked");
+                        }
+                    })
+                    .catch(error => console.log(error))
+            }
         });
     });
 
-    // Handle save changes button
-    document.getElementById('save-edit').addEventListener('click', async () => {
-        const modal = document.getElementById('edit_post');
-        const postId = modal.dataset.postId;
-        const contentHTML = editQuill.root.innerHTML;
-        const privacy = document.getElementById('edit_post_privacy').value;
+    //Comment button logic (open comment in modal)
+    const commentBtns = document.querySelectorAll(".comment-btn");
+    commentBtns.forEach(btn => {
+        btn.addEventListener("click", e => {
+            e.preventDefault();
 
-        const formData = new FormData();
-        formData.append('htmlContent', contentHTML);
-        formData.append('post_privacy', privacy); // Changed to match create form field name
+            //Fetch postID from post
+            const postElement = e.target.closest(".post");
+            postId = postElement.dataset.postId;
 
-        // Handle all images in editor
-        const images = editQuill.root.querySelectorAll('img');
-        const imagePromises = [];
-        let imageCount = 0;
-
-        for (let i = 0; i < images.length; i++) {
-            const img = images[i];
-            if (img.src.startsWith('data:image')) {
-                // New images (from upload)
-                imagePromises.push(
-                    fetch(img.src)
-                        .then(res => res.blob())
-                        .then(blob => {
-                            formData.append(`image${imageCount}`, blob, `image${imageCount}.png`);
-                            imageCount++;
-                        })
-                );
-            } else {
-                // Existing images (from server)
-                const urlParts = img.src.split('/');
-                const filename = urlParts[urlParts.length - 1];
-                formData.append(`image${imageCount}`, filename);
-                imageCount++;
-            }
-        }
-
-        // Extract hashtags from content
-        const hashtagRegex = /#\w+/g;
-        const hashtags = Array.from(contentHTML.match(hashtagRegex) || []);
-        formData.append('hashtags', hashtags.join(''));
-
-        // Submit after all new images are processed
-        Promise.all(imagePromises).then(() => {
-            fetch(`/zust/post?action=edit&id=${postId}`, {
-                method: 'POST',
-                body: formData
-            })
+            //Fetch data from server
+            fetch(`/zust/comment?postID=${postId}`)
                 .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        throw new Error('Failed to edit post');
+                    if (response.status === 302) {
+                        return response.text();
+                    } else if (response.status === 404) {
+                        return response.text();
                     }
+                })
+                .then(html => {
+                    document.getElementById("modal-body").innerHTML = html;
+                    document.getElementById("modal-title-label").innerText = "Comment section";
+                    modal.show();
+                    attachListener(postId);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to edit post. Please try again.');
                 });
-        });
-    });
+        })
+    })
 
-    // --- Delete Post Logic ---
+    //Delete Post Logic
     document.querySelectorAll('.options-menu .delete').forEach(deleteBtn => {
         deleteBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -210,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Show confirmation dialog
             if (confirm('Are you sure you want to delete this post?')) {
-                fetch(`/zust/post?action=delete&id=${postId}`, {
+                fetch(`/zust/post?action=delete&postID=${postId}`, {
                     method: 'POST'
                 })
                     .then(response => {
@@ -228,42 +222,214 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Lightbox Logic ---
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = lightbox.querySelector('.lightbox-image');
-    const closeBtn = lightbox.querySelector('.lightbox-close');
+    //Handle edit button clicks
+    document.querySelectorAll('.options-menu .edit').forEach(editBtn => {
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            //Get the post that triggered the event
+            const postElement = e.target.closest('.post');
+            //Get postID
+            const postId = postElement.dataset.postId;
+            //Get post privacy
+            let privacy = postElement.dataset.privacy || "public";
+            //Get avatar src
+            const avatar = postElement.querySelector(".post-avatar").getAttribute("src");
+            //Get content
+            let content = postElement.querySelector('.post-content').innerHTML;
+            // Get images
+            const images = [];
+            postElement.querySelectorAll(".carousel-slide").forEach(image => {
+                images.push(image.getAttribute("src"));
+            });
 
-    function openLightbox(imageSrc) {
-        lightboxImg.src = imageSrc;
-        lightbox.classList.add('active');
-        document.body.classList.add('lightbox-open');
-    }
+            // Clean content to remove invalid image-blot-container nodes
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            const invalidBlots = tempDiv.querySelectorAll('.image-blot-container:not(:has(img))');
+            invalidBlots.forEach(blot => blot.remove());
+            content = tempDiv.innerHTML;
 
-    function closeLightbox() {
-        lightbox.classList.remove('active');
-        document.body.classList.remove('lightbox-open');
-        lightboxImg.src = ''; // Clear the source
-    }
+            // Generate modal content
+            const modalBody = document.querySelector('#modal-body');
+            modalBody.innerHTML = generateComposerHTML(avatar, 'Save Changes');
 
-    // Add click listeners to all carousel images
-    document.querySelectorAll('.carousel-slide').forEach(img => {
-        img.addEventListener('click', () => openLightbox(img.src));
-    });
+            // Initialize components
+            const quill = initializeQuill(content, images);
+            const privacySelector = initializePrivacySelector('privacy-selector', privacy);
+            setupSaveButton(quill, 'submit');
 
-    // Close lightbox when clicking outside the image
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            closeLightbox();
-        }
-    });
+            // Set up save button
+            const saveButton = document.getElementById('submit');
+            saveButton.addEventListener('click', () => {
+                submitPost(quill, () => privacySelector.getPrivacy(), 'edit', postId);
+            });
 
-    // Close lightbox when clicking close button
-    closeBtn.addEventListener('click', closeLightbox);
-
-    // Close lightbox when pressing Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-            closeLightbox();
-        }
+            // Show modal
+            modal.show();
+        });
     });
 });
+
+function attachListener(postId) {
+    //Comment action (comment button)
+    const commentTextarea = document.getElementById('comment-textarea');
+    const postCommentBtn = document.getElementById('post-comment-btn');
+    let selectedImageBase64 = null;
+    function updatePostButtonState() {
+        const hasText = commentTextarea.value.trim().length > 0;
+        postCommentBtn.disabled = !hasText && !selectedImageBase64;
+    }
+    commentTextarea.addEventListener('input', updatePostButtonState);
+
+    //Comment action (cancel reply)
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+    const replyIndicator = document.getElementById('reply-indicator');
+    let currentReplyTarget = -1;
+    function cancelReply() {
+        currentReplyTarget = null;
+        replyIndicator.style.display = 'none';
+        commentTextarea.placeholder = 'Add a comment...';
+    }
+    cancelReplyBtn.addEventListener('click', cancelReply);
+
+    //Comment action (send request to create comment)
+    const removeImageBtn = document.getElementById('remove-image-btn');
+    postCommentBtn.addEventListener('click', () => {
+        const commentText = commentTextarea.value.trim();
+        if (!commentText && !selectedImageBase64) return;
+
+        //Gather data
+        let formData = new FormData();
+        formData.append("content", commentText);
+        if (selectedImageBase64 !== null) {
+            // Extract MIME type from data URL
+            const mimeType = selectedImageBase64.split(',')[0].split(':')[1].split(';')[0];
+            const blob = (base64, mimeType) => {
+                // Remove data URL prefix if present
+                const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+
+                const byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: mimeType });
+            };
+            formData.append("image", blob(selectedImageBase64, mimeType), "image." + mimeType.split('/')[1]);
+        }
+        formData.append("replyID", currentReplyTarget);
+        formData.append("postID", postId)
+
+        fetch('/zust/comment?action=create', {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (response.status === 201) {
+                    console.log("Create comment successfully");
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.log(error);
+                alert("Error: " + error);
+            })
+
+        commentTextarea.value = '';
+        removeImageBtn.click();
+        cancelReply();
+    });
+
+    //Comment section action (like, reply, report)
+    const replyToHandle = document.getElementById('reply-to-handle');
+    document.getElementById('comment-section').addEventListener('click', (e) => {
+        //Get commentID
+        const commentID = e.target.closest(".comment-item").dataset.commentId;
+
+        const likeBtn = e.target.closest('.like-btn');
+        if (likeBtn) {
+            //Check if it has 'liked' class
+            const isCmtLiked = likeBtn.classList.contains("liked");
+            if (isCmtLiked) { //If this comment has been liked by current user, unlike
+                //Send request to comment?action=like
+                fetch(`/zust/comment?action=unlike&commentID=${commentID}`, {
+                    method: "POST"
+                })
+                    .then(response => {
+                        if (response.status === 201) {
+                            //Change style
+                            likeBtn.classList.remove('liked');
+                            const countSpan = likeBtn.querySelector('span');
+                            countSpan.textContent = parseInt(countSpan.textContent) - 1;
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            } else {
+                //Send request to comment?action=like
+                fetch(`/zust/comment?action=like&commentID=${commentID}`, {
+                    method: "POST"
+                })
+                    .then(response => {
+                        if (response.status === 201) {
+                            //Change style
+                            likeBtn.classList.add('liked');
+                            const countSpan = likeBtn.querySelector('span');
+                            countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            }
+        }
+
+        const replyBtn = e.target.closest('.reply-btn');
+        if (replyBtn) {
+            const commentItem = replyBtn.closest('.comment-item');
+            const userHandle = commentItem.querySelector('.comment-user-handle').textContent;
+
+            currentReplyTarget = commentID;
+            replyToHandle.textContent = userHandle;
+            replyIndicator.style.display = 'flex';
+            commentTextarea.placeholder = `Replying to ${userHandle}...`;
+            commentTextarea.focus();
+        }
+    });
+
+    //Image previewer for comment form
+    const addImageBtn = document.getElementById('add-comment-image-btn');
+    const imagePreviewContainer = document.getElementById('comment-image-preview');
+    const previewImage = document.getElementById('preview-image');
+    addImageBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    selectedImageBase64 = e.target.result;
+                    previewImage.src = selectedImageBase64;
+                    imagePreviewContainer.style.display = 'inline-block';
+                    addImageBtn.disabled = true;
+                    updatePostButtonState();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    });
+    removeImageBtn.addEventListener('click', () => {
+        selectedImageBase64 = null;
+        imagePreviewContainer.style.display = 'none';
+        previewImage.src = '';
+        addImageBtn.disabled = false;
+        updatePostButtonState();
+    });
+}
