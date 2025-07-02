@@ -139,7 +139,7 @@ public class GroupDAO extends DBContext {
                 "ON [group].group_id = participant.group_id\n" +
                 "LEFT JOIN\n" +
                 "(SELECT group_id, COUNT(*) AS number_of_post FROM post\n" +
-                "WHERE post.post_status = 'publish'\n" +
+                "WHERE post.post_status = 'published'\n" +
                 "GROUP BY post.group_id) AS post\n" +
                 "ON post.group_id = [group].group_id\n" +
                 "LEFT JOIN manage ON [group].group_id = manage.group_id\n" +
@@ -219,7 +219,7 @@ public class GroupDAO extends DBContext {
         return null;
     }
 
-    public boolean disbandGroup(int groupId) {
+    public boolean banGroup(int groupId) {
         try {
             String sql = "UPDATE [group]\n" +
                     "SET group_status = 'banned'\n" +

@@ -178,4 +178,5 @@ public class RespPostDTO {
 
         return String.format(templates[0], getPostId(), header, content, carousel, action);
     }
+
 }

@@ -25,8 +25,18 @@ public class AccountDAO extends DBContext {
                 Account account = new Account();
                 account.setId(rs.getInt("account_id"));
                 account.setUsername(rs.getString("username"));
+                account.setPassword(rs.getString("password"));
                 account.setFullname(rs.getString("fullname"));
+                account.setEmail(rs.getString("email"));
+                account.setPhone(rs.getString("phone"));
+                account.setGender(rs.getBoolean("gender"));
+                account.setDob(rs.getDate("dob") != null
+                        ? rs.getDate("dob").toLocalDate() : null);
                 account.setAvatar(rs.getString("avatar"));
+                account.setBio(rs.getString("bio"));
+                account.setCredit(rs.getInt("credit"));
+                account.setAccountStatus(rs.getString("account_status"));
+                account.setAccountRole(rs.getString("account_role"));
                 accounts.add(account);
             }
             return accounts;
@@ -95,6 +105,26 @@ public class AccountDAO extends DBContext {
             logger.warning("Failed to update user: " + e.getMessage());
         }
         return false;
+    }
+
+    public boolean banAccount(int id) {
+        logger.info("Attempting to ban account with ID: " + id);
+
+        String sql = "UPDATE account SET account_status = 'banned' WHERE account_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                logger.warning("No account found with ID: " + id);
+                return false;
+            }
+            logger.info("Successfully banned account with ID: " + id);
+            return true;
+        } catch (SQLException e) {
+            logger.severe("Failed to ban account with ID: " + id + " - Error: " + e.getMessage());
+            return false;
+        }
     }
 
     public static void main(String[] args) {

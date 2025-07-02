@@ -15,8 +15,6 @@ import java.io.IOException;
 
 import dao.GroupDAO;
 
-import model.Account;
-
 @WebServlet(
         name = "GroupDashboardServlet",
         value = "/groupDashboard"
@@ -38,19 +36,19 @@ public class GroupDashboardServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         GroupDAO dao = new GroupDAO();
         String action = request.getParameter("action");
-        if(action.equalsIgnoreCase("Disband")) {
+        if(action.equalsIgnoreCase("ban")) {
             try {
                 int id = Integer.parseInt(request.getParameter("groupId"));
-                if (dao.disbandGroup(id)) {
-                    request.setAttribute("msg", "Disbanded group successfully.");
-                    LOGGER.log(Level.INFO, "Disbanded group successfully.");
+                if (dao.banGroup(id)) {
+                    request.setAttribute("msg", "Banned group successfully.");
+                    LOGGER.log(Level.INFO, "Banned group successfully.");
                 } else {
                     request.setAttribute("msg", "Failed to disband group.");
                     LOGGER.log(Level.INFO, "Failed to disband group.");
                 }
             } catch (Exception e) {
                 LOGGER.warning("Failed to disband group: " + e.getMessage());
-                response.sendRedirect("/error");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
         }
