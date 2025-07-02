@@ -3,7 +3,7 @@ package controller;
 import dao.PostDAO;
 import dao.ReportPostDAO;
 import dto.AcceptReportDTO;
-import dto.ReportPostDTO;
+import dto.ResReportPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -30,7 +30,7 @@ public class ReportPostServlet extends HttpServlet {
 
         try {
             // Retrieve all report posts
-            List<ReportPostDTO> reportPostList = reportPostDAO.getAll();
+            List<ResReportPostDTO> reportPostList = reportPostDAO.getAll();
             LOGGER.info("Successfully retrieved " + reportPostList.size() + " report posts");
 
             // Set the report post list as a request attribute

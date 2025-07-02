@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReportPostDTO {
+public class ResReportPostDTO {
     private int reportId;
     private List<String> reportContent;
     private Account account;
@@ -13,11 +13,11 @@ public class ReportPostDTO {
     private String reportStatus;
 
     // Constructor
-    public ReportPostDTO() {
+    public ResReportPostDTO() {
     }
 
-    public ReportPostDTO(int reportId, String reportContent, Account account, RespPostDTO post,
-                         LocalDateTime reportCreateDate, String reportStatus) {
+    public ResReportPostDTO(int reportId, String reportContent, Account account, RespPostDTO post,
+                            LocalDateTime reportCreateDate, String reportStatus) {
         this.reportId = reportId;
         this.reportContent = extractContent(reportContent);
         this.account = account;

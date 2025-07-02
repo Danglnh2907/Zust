@@ -1,7 +1,7 @@
 package dao;
 
 import dto.AcceptReportDTO;
-import dto.ReportPostDTO;
+import dto.ResReportPostDTO;
 import dto.RespPostDTO;
 import model.Account;
 import util.database.DBContext;
@@ -18,8 +18,8 @@ public class ReportPostDAO extends DBContext {
 
     private final Logger LOGGER = Logger.getLogger(RespPostDTO.class.getName());
 
-    public List<ReportPostDTO> getAll() {
-        List<ReportPostDTO> reportPostList = new ArrayList<>();
+    public List<ResReportPostDTO> getAll() {
+        List<ResReportPostDTO> reportPostList = new ArrayList<>();
         String sql = "SELECT rp.report_id, rp.report_content, rp.report_create_date, rp.report_status, " +
                 "ra.account_id AS reporter_account_id, ra.username AS reporter_username, ra.password AS reporter_password, ra.fullname AS reporter_fullname, ra.email AS reporter_email, ra.phone AS reporter_phone, ra.gender AS reporter_gender, ra.dob AS reporter_dob, ra.avatar AS reporter_avatar, ra.bio AS reporter_bio, ra.credit AS reporter_credit, ra.account_status AS reporter_account_status, ra.account_role AS reporter_account_role, " +
                 "pa.account_id AS poster_account_id, pa.username AS poster_username, pa.avatar AS poster_avatar, " +
@@ -42,14 +42,14 @@ public class ReportPostDAO extends DBContext {
              ResultSet rs = stmt.executeQuery()) {
 
             // Use a map to group results by report_id to avoid duplicates
-            java.util.Map<Integer, ReportPostDTO> reportMap = new java.util.HashMap<>();
+            java.util.Map<Integer, ResReportPostDTO> reportMap = new java.util.HashMap<>();
 
             while (rs.next()) {
                 int reportId = rs.getInt("report_id");
 
                 // Create or get existing ReportPostDTO
-                ReportPostDTO reportPostDTO = reportMap.computeIfAbsent(reportId, k -> {
-                    ReportPostDTO dto = new ReportPostDTO();
+                ResReportPostDTO reportPostDTO = reportMap.computeIfAbsent(reportId, k -> {
+                    ResReportPostDTO dto = new ResReportPostDTO();
                     try {
                         dto.setReportId(reportId);
                         dto.setReportContent(rs.getString("report_content"));

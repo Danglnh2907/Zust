@@ -1,12 +1,12 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList, java.time.LocalDate" %>
-<%@ page import="dto.ReportPostDTO" %>
+<%@ page import="dto.ResReportPostDTO" %>
 <%@ page import="model.Account" %>
 <%@ page import="dto.RespPostDTO" %>
 
 
 <%
-    List<ReportPostDTO> reportList = (List<ReportPostDTO>) request.getAttribute("reportPostList");
+    List<ResReportPostDTO> reportList = (List<ResReportPostDTO>) request.getAttribute("reportPostList");
     String currentPage = "report";
 %>
 
@@ -131,7 +131,7 @@
     <% } else { %>
 
     <div class="report-list">
-        <% for (ReportPostDTO report : reportList) { %>
+        <% for (ResReportPostDTO report : reportList) { %>
         <div class="report-card">
             <!-- Column 1: Reporter Info -->
             <div class="report-section reporter-info">
