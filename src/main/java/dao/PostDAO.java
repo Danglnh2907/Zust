@@ -316,6 +316,8 @@ public class PostDAO extends DBContext {
                                   AND p.post_privacy IN ('public', 'friend') AND p.group_id IS NULL) \
                               /* Posts from joined groups */ \
                               OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
+                              /* All public posts from anyone */ \
+                              OR (p.post_privacy = 'public' AND p.group_id IS NULL) \
                           ) \
                     ORDER BY p.post_create_date DESC""";
 

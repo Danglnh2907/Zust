@@ -28,7 +28,7 @@
 
     <body>
         <!-- Modal -->
-        <div class="modal fade" id="modal" data-bs-backdrop="static" data-bs-keyboard="false"
+        <div class="modal fade" id="modal" data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-lg">
                 <div class="modal-content">
@@ -156,14 +156,21 @@
 
                 <!-- Feed of Posts -->
                 <div class="feed">
-                    <% ArrayList<RespPostDTO> posts = (ArrayList<RespPostDTO>) request.getAttribute("posts");
-                        if (posts == null || posts.isEmpty()) {
-                            out.println("<p style=\"color: red;\">No posts found</p>");
-                        } else {
+                    <%
+                        ArrayList<RespPostDTO> posts = (ArrayList<RespPostDTO>) request.getAttribute("posts");
+                        ArrayList<RespPostDTO> feeds = (ArrayList<RespPostDTO>) request.getAttribute("feeds");
+                        if (posts != null && !posts.isEmpty()) {
                             for (RespPostDTO post : posts) {
                                 out.println(post);
                             }
-                        } %>
+                        } else if (feeds != null && !feeds.isEmpty()) {
+                            for (RespPostDTO feed : feeds) {
+                                out.println(feed);
+                            }
+                        } else {
+                            out.println("<p style=\"color: red;\">No posts found</p>");
+                        }
+                    %>
                 </div>
             </main>
         </div>
