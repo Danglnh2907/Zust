@@ -30,9 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Details:", additionalDetails);
 
         alert('Thank you, your report has been submitted. Our team will review it shortly.');
-
-        reportForm.reset();
-        validateForm();
+        window.location.href = "/zust/";
     });
 
     validateForm();

@@ -164,6 +164,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    //Repost button logic
+    const repostBtns = document.querySelectorAll(".repost-btn");
+    repostBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            postId = e.target.closest(".post").dataset.postId;
+
+            fetch(`/zust/post?action=repost&postID=${postId}`, {
+                method: "POST"
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        alert("repost successfully");
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.log("Failed to repost!")
+                    console.log(error);
+                })
+        })
+    })
+
     //Comment button logic (open comment in modal)
     const commentBtns = document.querySelectorAll(".comment-btn");
     commentBtns.forEach(btn => {

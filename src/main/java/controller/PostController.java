@@ -22,10 +22,7 @@ import model.Account;
 import util.service.FileService;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")
-@MultipartConfig(
-        maxFileSize = 10 * 1024 * 1024, // 10MB
-        maxRequestSize = 50 * 1024 * 1024 // 50MB
-)
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024) //5MB
 public class PostController extends HttpServlet {
     //Logger for debug
     private final Logger logger = Logger.getLogger(this.getClass().getName());
