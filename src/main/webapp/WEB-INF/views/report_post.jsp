@@ -94,6 +94,7 @@
         .modal-content { max-width: 80%; max-height: 80%; border-radius: 5px; animation: zoomIn 0.3s ease; }
         /*.modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }*/
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
+        .clickable-image:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -186,15 +187,17 @@
             </div>
 
             <!-- Column 3: Reported Post -->
-            <div class="report-section reported-post feed">
-<%--                <h3><i class="fas fa-file-alt"></i> Reported Content</h3>--%>
-                <% RespPostDTO post = report.getPost();
-                    if (post != null) {
-                        out.println(post);
-                        %>
-                <% } else { %>
-                <p>Reported post data is unavailable.</p>
-                <% } %>
+            <div class="report-section reported-post">
+                <h3><i class="fas fa-file-alt"></i> Reported Content</h3>
+                <div class="feed">
+                    <% RespPostDTO post = report.getPost();
+                        if (post != null) {
+                            out.println(post);
+                    %>
+                    <% } else { %>
+                    <p>Reported post data is unavailable.</p>
+                    <% } %>
+                </div>
             </div>
         </div>
         <% } %>

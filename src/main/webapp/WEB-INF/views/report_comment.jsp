@@ -131,7 +131,8 @@
         .image-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
         .modal-content { max-width: 80%; max-height: 80%; border-radius: 5px; animation: zoomIn 0.3s ease; }
         .modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
-        @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
+        @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);}}
+        .clickable-image:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
