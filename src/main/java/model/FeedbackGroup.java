@@ -25,7 +25,7 @@ public class FeedbackGroup {
 	@Column(name = "report_create_date", nullable = false)
 	private Instant reportCreateDate;
 	@Column(name = "report_status")
-	private Boolean reportStatus;
+	private String  reportStatus;
 
 	public Integer getId() {
 		return id;
@@ -67,12 +67,21 @@ public class FeedbackGroup {
 		this.reportCreateDate = reportCreateDate;
 	}
 
-	public Boolean getReportStatus() {
+//	public Boolean getReportStatus() {
+//		return reportStatus;
+//	}
+//
+//	public void setReportStatus(Boolean reportStatus) {
+//		this.reportStatus = reportStatus;
+//	}
+
+	public String getReportStatus() {
 		return reportStatus;
 	}
 
-	public void setReportStatus(Boolean reportStatus) {
+	public void setReportStatus(String reportStatus) {
 		this.reportStatus = reportStatus;
 	}
+
 
 }
