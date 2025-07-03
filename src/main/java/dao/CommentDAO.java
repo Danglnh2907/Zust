@@ -73,7 +73,7 @@ public class CommentDAO extends DBContext {
             }
 
             String sql = """
-                    SELECT comment_id, comment_content, comment_image, comment_create_date, comment_last_update, \
+                    SELECT comment_id, comment_content, comment_image, comment_create_date, comment_last_update, c.account_id, \
                     (SELECT COUNT(*) FROM like_comment WHERE comment_id = c.comment_id) AS total_likes, \
                     c.account_id, a.username, a.avatar, post_id, reply_comment_id \
                     FROM comment c \
@@ -97,6 +97,7 @@ public class CommentDAO extends DBContext {
                 dto.setPostID(rs.getInt("post_id"));
                 //SQL Server treat NULL value as 0
                 dto.setReplyID(rs.getInt("reply_comment_id") == 0 ? -1 : rs.getInt("reply_comment_id"));
+                dto.setOwnComment(rs.getInt("account_id") == userID);
 
                 //Check if current requester has liked this comment
                 String likeSQL = "SELECT * FROM like_comment WHERE comment_id = ? AND account_id = ?";
