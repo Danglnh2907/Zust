@@ -139,7 +139,7 @@
                 <% Account reporter = report.getAccount();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src=${pageContext.request.contextPath}/static/images/"<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
                     <div>
                         <div class="user-name"><%= reporter.getFullname() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>
