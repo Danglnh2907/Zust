@@ -56,7 +56,7 @@ public class JoinGroupRequestServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        int managerId = 1; // Hardcode để test
+//        int managerId = 1; // Hardcode để test
 
         String sessionCsrfToken = (String) req.getSession().getAttribute("csrfToken");
         String requestCsrfToken = req.getParameter("csrfToken");

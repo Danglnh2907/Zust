@@ -70,7 +70,7 @@
               <a href="#">Members</a>
               <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
               <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}">Pending Posts</a>
-              <a href="${pageContext.request.contextPath}/viewFeedback?groupId=${groupId}" class="active">View Feedbacks</a>
+              <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" class="active">View Feedbacks</a>
               <div class="tab-actions">
                 <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>
               </div>

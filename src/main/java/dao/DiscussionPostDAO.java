@@ -41,10 +41,17 @@ public class DiscussionPostDAO {
                     post.setPostContent(rs.getString("post_content"));
                     post.setUsername(rs.getString("username"));
                     post.setAvatar(rs.getString("avatar"));
-                    post.setLastModified(rs.getTimestamp("post_last_update").toLocalDateTime());
+//                    post.setLastModified(rs.getTimestamp("post_last_update").toLocalDateTime());
+//                    Timestamp ts = rs.getTimestamp("post_last_update");
+//                    if (ts != null) {
+//                        post.setLastModified(ts.toLocalDateTime());
+//                    } else {
+//                        post.setLastModified(null); // hoặc LocalDateTime.now()
+//                    }
+
                     post.setLikeCount(rs.getInt("like_count"));
                     post.setCommentCount(rs.getInt("comment_count"));
-                    post.setRepostCount(rs.getInt("repost_count"));
+//                    post.setRepostCount(rs.getInt("repost_count"));
 
                     // Fetch images (similar to PostDAO)
                     String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";

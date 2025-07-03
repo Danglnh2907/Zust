@@ -58,7 +58,7 @@
             <div class="background_img">
                 <img src="${pageContext.request.contextPath}/static/images/<%= groupInfo.getImage() %>" alt="Group Cover"
                      class="cover-img" />
-                <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=2'">
+                <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=1'">
                     <i class="fas fa-pencil-alt"></i> Edit
                 </button>
             </div>
@@ -88,15 +88,22 @@
 <%--                    </div>--%>
 <%--                </nav>--%>
 
-                <nav class="group-tabs">
-                    <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="active">Discussion</a>
-                    <a href="#">Members</a>
-                    <a href="${pageContext.request.contextPath}/joinRequest?groupId=1">Joining Request</a>
-                    <a href="${pageContext.request.contextPath}/approvePost?groupId=1" onclick="event.stopPropagation();">Pending Posts</a>
-                    <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" onclick="event.stopPropagation();">View Feedbacks</a>
-                    <div class="tab-actions">
-
-                        <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>
+                <nav class= " group-heafer" >
+                    <nav class="group-tabs">
+                        <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="active">Discussion</a>
+                        <a href="#">Members</a>
+                        <a href="${pageContext.request.contextPath}/joinRequest?groupId=<%= groupInfo.getId() %>">Joining Request</a>
+                        <a href="${pageContext.request.contextPath}/approvePost?groupId=<%= groupInfo.getId() %>">Pending Posts</a>
+                        <a href="${pageContext.request.contextPath}/viewFeedback?groupId=<%= groupInfo.getId() %>">View Feedbacks</a>
+    <%--                    <div class="tab-actions">--%>
+    <%--                        <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+    <%--&lt;%&ndash;                        <a href="#" class="Disband group"> Disban group</a>&ndash;%&gt;--%>
+    <%--&lt;%&ndash;                        <a href="#" class="Disband group"> Disban group</a>&ndash;%&gt;--%>
+    <%--                    </div>--%>
+                    </nav>
+                    <div class="options-menu-tab">
+                        <a href="#" class="Disband group"> Disban group</a>
+                        <a href="#" class="Disband group"> Assign managers to group</a>
                     </div>
                 </nav>
             </div>

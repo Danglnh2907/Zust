@@ -69,7 +69,7 @@
                         <nav class="group-tabs">
                             <a href="${pageContext.request.contextPath}/groupManager?groupId=${groupId}">Discussion</a>
                             <a href="#">Members</a>
-                            <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}" class="active">Joining Request</a>
+                            <a href="${pageContext.request.contextPath}/joinRequest?groupId=1" class="active">Joining Request</a>
                             <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}">Pending Posts</a>
                             <a href="${pageContext.request.contextPath}/viewFeedback?groupId=${groupId}">View Feedbacks</a>
                             <div class="tab-actions">

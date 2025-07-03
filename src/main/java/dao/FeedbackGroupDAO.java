@@ -37,13 +37,13 @@ public class FeedbackGroupDAO extends DBContext {
         List<FeedbackGroupDTO> feedbacks = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(SELECT_FEEDBACK_BY_GROUP_ID)) {
             stmt.setInt(1, groupId);
-            stmt.setString(2, status);
+//            stmt.setString(2, status);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     FeedbackGroup feedback = new FeedbackGroup();
                     feedback.setId(rs.getInt("feedback_group_id"));
                     feedback.setFeedbackGroupContent(rs.getString("feedback_group_content"));
-//              feedback.setReportCreateDate(rs.getObject("report_create_date", LocalDateTime.class));
+//             feedback.setReportCreateDate(rs.getObject("report_create_date", LocalDateTime.class));
                     feedback.setReportStatus(rs.getString("report_status"));
 
                     Account account = new Account();
@@ -54,6 +54,7 @@ public class FeedbackGroupDAO extends DBContext {
 
                     FeedbackGroupDTO dto = new FeedbackGroupDTO(feedback, account);
                     feedbacks.add(dto);
+                    LOGGER.info("Fetched " + feedbacks.size() + " feedbacks for groupId: " + groupId);
                 }
             }
         } catch (SQLException e) {

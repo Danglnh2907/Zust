@@ -21,10 +21,12 @@ public class DiscussionController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Lấy groupId từ request
         String groupIdParam = req.getParameter("groupId");
-        int groupId = (groupIdParam != null) ? Integer.parseInt(groupIdParam) : 2; // Mặc định groupId = 1
+        int groupId = (groupIdParam != null) ? Integer.parseInt(groupIdParam) : 1;
+        System.out.println("Group ID: " + groupId);
 
         // Lấy danh sách bài post từ DAO
         List<DiscussionPostDTO> posts = discussionPostDAO.getAllPostsByGroupId(groupId);
+        System.out.println("Posts size: " + (posts != null ? posts.size() : "null"));
         req.setAttribute("posts", posts);
         // Lấy thông tin nhóm (đã có DAO + DTO đầy đủ)
         GroupDAO groupDAO = new GroupDAO();
@@ -38,6 +40,6 @@ public class DiscussionController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Placeholder cho xử lý POST (có thể mở rộng sau)
-        resp.sendRedirect(req.getContextPath() + "/groupManager?groupId=2");
+        resp.sendRedirect(req.getContextPath() + "/groupManager?groupId=1");
     }
 }

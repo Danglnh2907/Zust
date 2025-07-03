@@ -32,7 +32,7 @@
     </header>
 
     <div class="back-link-container">
-        <a href="${pageContext.request.contextPath}/groupManager?groupId=2" class="back-link">
+        <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="back-link">
             <i class="fas fa-arrow-left"></i>
             <span>Back</span>
         </a>
