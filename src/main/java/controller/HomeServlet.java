@@ -1,15 +1,23 @@
 package controller;
 
+import dao.PostDAO;
+import dto.RespPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.Account;
+
 import java.io.IOException;
+import java.io.Serial;
+import java.util.ArrayList;
 
 @WebServlet("/")
 public class HomeServlet extends HttpServlet {
 
+	@Serial
 	private static final long serialVersionUID = 1L; // Recommended for Servlets
 
 	public HomeServlet() {
@@ -18,7 +26,18 @@ public class HomeServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		request.getRequestDispatcher("WEB-INF/views/auth.jsp").forward(request, response);
+		HttpSession session = request.getSession();
+		Account account = (Account) session.getAttribute("users");
+		if (account == null) {
+			request.getRequestDispatcher("WEB-INF/views/auth.jsp").forward(request, response);
+			return;
+		}
+
+		//Get feed
+		PostDAO dao = new PostDAO();
+		ArrayList<RespPostDTO> feed = dao.getNewsfeedPosts(account.getId());
+		request.setAttribute("feeds", feed);
+		request.getRequestDispatcher("WEB-INF/views/post.jsp").forward(request, response);
 	}
 
 	@Override

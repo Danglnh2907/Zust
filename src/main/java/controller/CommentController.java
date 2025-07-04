@@ -68,13 +68,13 @@ public class CommentController extends HttpServlet {
 
         //Prepare the comment form and template
         String template = """
-                    <div class="comment-section" id="comment-section">
-                        <h2>Comments (<span id="comment-count">%d</span>)</h2>
+                <div class="comment-section" id="comment-section">
+                    <h2>Comments (<span id="comment-count">%d</span>)</h2>
+                    %s
+                    <div class="comment-list" id="comment-list">
                         %s
-                        <div class="comment-list" id="comment-list">
-                            %s
-                        </div>
-                    </div>""";
+                    </div>
+                </div>""";
         String form = new String(this.getClass().getClassLoader()
                 .getResourceAsStream("templates/comment_form.html").readAllBytes());
 
@@ -85,7 +85,7 @@ public class CommentController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setContentType("text/html");
             response.setCharacterEncoding("UTF-8");
-            out.println(String.format(template, comments.size(),  String.format(form, account.getAvatar()), ""));
+            out.println(String.format(template, comments.size(), String.format(form, account.getAvatar()), ""));
         } else {
             //We return the HTML directly
             response.setStatus(HttpServletResponse.SC_FOUND);
@@ -160,7 +160,38 @@ public class CommentController extends HttpServlet {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 }
             }
-            case "edit", "delete" -> {
+            case "edit" -> {
+                try {
+                    //Extract commentID
+                    int commentID = Integer.parseInt(request.getParameter("commentID"));
+
+                    //Extract data
+                    ReqCommentDTO commentDTO = extractData(account.getId(), request.getParts());
+                    boolean success = commentDAO.updateComment(commentID, commentDTO);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                }
+            }
+            case "delete" -> {
+                //Extract commentID
+                try {
+                    int commentID = Integer.parseInt(request.getParameter("commentID"));
+                    boolean success = commentDAO.deleteComment(commentID, account.getId());
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                }
             }
             case "like" -> {
                 try {

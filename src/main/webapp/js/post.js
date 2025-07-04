@@ -164,6 +164,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    //Repost button logic
+    const repostBtns = document.querySelectorAll(".repost-btn");
+    repostBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            postId = e.target.closest(".post").dataset.postId;
+
+            fetch(`/zust/post?action=repost&postID=${postId}`, {
+                method: "POST"
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        alert("repost successfully");
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.log("Failed to repost!")
+                    console.log(error);
+                })
+        })
+    })
+
     //Comment button logic (open comment in modal)
     const commentBtns = document.querySelectorAll(".comment-btn");
     commentBtns.forEach(btn => {
@@ -285,10 +308,19 @@ function attachListener(postId) {
     const cancelReplyBtn = document.getElementById('cancel-reply-btn');
     const replyIndicator = document.getElementById('reply-indicator');
     let currentReplyTarget = -1;
+    let editingCommentId = null;
     function cancelReply() {
         currentReplyTarget = null;
         replyIndicator.style.display = 'none';
         commentTextarea.placeholder = 'Add a comment...';
+
+        // Reset edit state
+        if (editingCommentId) {
+            editingCommentId = null;
+            postCommentBtn.textContent = 'Post';
+            commentTextarea.value = '';
+            removeImageBtn.click();
+        }
     }
     cancelReplyBtn.addEventListener('click', cancelReply);
 
@@ -296,47 +328,94 @@ function attachListener(postId) {
     const removeImageBtn = document.getElementById('remove-image-btn');
     postCommentBtn.addEventListener('click', () => {
         const commentText = commentTextarea.value.trim();
-        if (!commentText && !selectedImageBase64) return;
 
-        //Gather data
-        let formData = new FormData();
-        formData.append("content", commentText);
-        if (selectedImageBase64 !== null) {
-            // Extract MIME type from data URL
-            const mimeType = selectedImageBase64.split(',')[0].split(':')[1].split(';')[0];
-            const blob = (base64, mimeType) => {
-                // Remove data URL prefix if present
-                const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+        if (editingCommentId) {
+            // Handle editing a comment
+            if (!commentText && !previewImage.src) return;
 
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
+            const formData = new FormData();
+            formData.append("postID", postId);
+            formData.append("content", commentText);
 
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
+            if (selectedImageBase64) { // A new image was selected
+                const mimeType = selectedImageBase64.split(',')[0].split(':')[1].split(';')[0];
+                const blob = (base64, mimeType) => {
+                    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+                    const byteCharacters = atob(base64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    return new Blob([byteArray], { type: mimeType });
+                };
+                formData.append("image", blob(selectedImageBase64, mimeType), "image." + mimeType.split('/')[1]);
+            } else if (previewImage.src) { // An existing image should be kept
+                const imageUrl = previewImage.src;
+                const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+                formData.append("image", filename);
+            }
 
-                const byteArray = new Uint8Array(byteNumbers);
-                return new Blob([byteArray], { type: mimeType });
-            };
-            formData.append("image", blob(selectedImageBase64, mimeType), "image." + mimeType.split('/')[1]);
-        }
-        formData.append("replyID", currentReplyTarget);
-        formData.append("postID", postId)
-
-        fetch('/zust/comment?action=create', {
-            method: "POST",
-            body: formData
-        })
+            fetch(`/zust/comment?action=edit&commentID=${editingCommentId}`, {
+                method: "POST",
+                body: formData
+            })
             .then(response => {
-                if (response.status === 201) {
-                    console.log("Create comment successfully");
+                if (response.ok) {
+                    console.log("Update comment successfully");
                     window.location.reload();
+                } else {
+                    throw new Error('Failed to edit comment');
                 }
             })
             .catch(error => {
                 console.log(error);
                 alert("Error: " + error);
+            });
+
+        } else {
+            // Handle creating a new comment
+            if (!commentText && !selectedImageBase64) return;
+
+            let formData = new FormData();
+            formData.append("content", commentText);
+            if (selectedImageBase64 !== null) {
+                // Extract MIME type from data URL
+                const mimeType = selectedImageBase64.split(',')[0].split(':')[1].split(';')[0];
+                const blob = (base64, mimeType) => {
+                    // Remove data URL prefix if present
+                    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+                    const byteCharacters = atob(base64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+
+                    const byteArray = new Uint8Array(byteNumbers);
+                    return new Blob([byteArray], { type: mimeType });
+                };
+                formData.append("image", blob(selectedImageBase64, mimeType), "image." + mimeType.split('/')[1]);
+            }
+            formData.append("replyID", currentReplyTarget);
+            formData.append("postID", postId)
+
+            fetch('/zust/comment?action=create', {
+                method: "POST",
+                body: formData
             })
+                .then(response => {
+                    if (response.status === 201) {
+                        console.log("Create comment successfully");
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                    alert("Error: " + error);
+                })
+        }
 
         commentTextarea.value = '';
         removeImageBtn.click();
@@ -346,58 +425,105 @@ function attachListener(postId) {
     //Comment section action (like, reply, report)
     const replyToHandle = document.getElementById('reply-to-handle');
     document.getElementById('comment-section').addEventListener('click', (e) => {
-        //Get commentID
-        const commentID = e.target.closest(".comment-item").dataset.commentId;
+        const target = e.target;
 
-        const likeBtn = e.target.closest('.like-btn');
+        // Like comment button
+        const likeBtn = target.closest('.like-btn');
         if (likeBtn) {
-            //Check if it has 'liked' class
+            const commentItem = likeBtn.closest(".comment-item");
+            if (!commentItem) return;
+            const commentID = commentItem.dataset.commentId;
             const isCmtLiked = likeBtn.classList.contains("liked");
-            if (isCmtLiked) { //If this comment has been liked by current user, unlike
-                //Send request to comment?action=like
-                fetch(`/zust/comment?action=unlike&commentID=${commentID}`, {
-                    method: "POST"
-                })
-                    .then(response => {
-                        if (response.status === 201) {
-                            //Change style
-                            likeBtn.classList.remove('liked');
-                            const countSpan = likeBtn.querySelector('span');
-                            countSpan.textContent = parseInt(countSpan.textContent) - 1;
-                        }
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    })
-            } else {
-                //Send request to comment?action=like
-                fetch(`/zust/comment?action=like&commentID=${commentID}`, {
-                    method: "POST"
-                })
-                    .then(response => {
-                        if (response.status === 201) {
-                            //Change style
-                            likeBtn.classList.add('liked');
-                            const countSpan = likeBtn.querySelector('span');
-                            countSpan.textContent = parseInt(countSpan.textContent) + 1;
-                        }
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    })
-            }
+            const action = isCmtLiked ? 'unlike' : 'like';
+
+            fetch(`/zust/comment?action=${action}&commentID=${commentID}`, {
+                method: "POST"
+            })
+            .then(response => {
+                if (response.status === 201) {
+                    const countSpan = likeBtn.querySelector('span');
+                    const currentCount = parseInt(countSpan.textContent);
+                    if (isCmtLiked) {
+                        likeBtn.classList.remove('liked');
+                        countSpan.textContent = currentCount - 1;
+                    } else {
+                        likeBtn.classList.add('liked');
+                        countSpan.textContent = currentCount + 1;
+                    }
+                }
+            })
+            .catch(error => console.log(error));
+            return;
         }
 
-        const replyBtn = e.target.closest('.reply-btn');
-        if (replyBtn) {
-            const commentItem = replyBtn.closest('.comment-item');
-            const userHandle = commentItem.querySelector('.comment-user-handle').textContent;
+        // Edit comment button
+        const editBtn = target.closest(".edit-btn");
+        if (editBtn) {
+            cancelReply();
+            commentTextarea.value = '';
+            removeImageBtn.click();
 
-            currentReplyTarget = commentID;
-            replyToHandle.textContent = userHandle;
-            replyIndicator.style.display = 'flex';
-            commentTextarea.placeholder = `Replying to ${userHandle}...`;
+            const commentItem = editBtn.closest('.comment-item');
+            if (!commentItem) return;
+
+            editingCommentId = commentItem.dataset.commentId;
+            const commentContentEl = commentItem.querySelector('.comment-text');
+            const commentImage = commentItem.querySelector('.comment-media img');
+
+            commentTextarea.value = commentContentEl ? commentContentEl.innerText.trim() : '';
+            if (commentImage) {
+                previewImage.src = commentImage.src;
+                imagePreviewContainer.style.display = 'inline-block';
+                addImageBtn.disabled = true;
+            }
+
+            postCommentBtn.textContent = 'Save';
             commentTextarea.focus();
+
+            // Show editing indicator
+            replyToHandle.textContent = 'Editing comment';
+            replyIndicator.style.display = 'flex';
+            commentTextarea.placeholder = 'Edit your comment...';
+            return;
+        }
+
+        // Delete comment button
+        const deleteBtn = target.closest(".delete-btn");
+        if (deleteBtn) {
+            const commentItem = deleteBtn.closest(".comment-item");
+            if (!commentItem) return;
+            const commentID = commentItem.dataset.commentId;
+
+            fetch(`/zust/comment?action=delete&commentID=${commentID}`, {
+                method: "POST"
+            })
+            .then(resp => {
+                if (resp.status === 200) {
+                    console.log("Delete comment successfully");
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.log(error));
+            return;
+        }
+
+        // Reply comment button
+        const replyBtn = target.closest('.reply-btn');
+        if (replyBtn) {
+            cancelReply();
+
+            const commentItem = replyBtn.closest('.comment-item');
+            if (!commentItem) return;
+
+            const userHandleEl = commentItem.querySelector('.comment-user-handle');
+            if (!userHandleEl) return;
+
+            currentReplyTarget = commentItem.dataset.commentId;
+            replyToHandle.textContent = userHandleEl.textContent;
+            replyIndicator.style.display = 'flex';
+            commentTextarea.placeholder = `Replying to ${userHandleEl.textContent}...`;
+            commentTextarea.focus();
+            return;
         }
     });
 

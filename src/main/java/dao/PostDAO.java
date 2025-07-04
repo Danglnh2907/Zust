@@ -139,7 +139,7 @@ public class PostDAO extends DBContext {
 
             //Get list of posts
             String sql = """
-                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                    SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
                     (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                     (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                     (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count \
@@ -161,6 +161,7 @@ public class PostDAO extends DBContext {
                 post.setLikeCount(rs.getInt("like_count"));
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
+                post.setOwnPost(rs.getInt("account_id") == userID);
 
                 //Check if the current user request this post has liked this post or not
                 String likeSql = "SELECT * FROM like_post WHERE post_id = ? AND account_id = ?";
@@ -192,6 +193,12 @@ public class PostDAO extends DBContext {
                     }
                 }
 
+                int repostId = rs.getInt("repost_post_id");
+                if (repostId > 0) {
+                    RespPostDTO repostedPost = getPost(repostId, userID);
+                    post.setRepost(repostedPost);
+                }
+
                 posts.add(post);
             }
 
@@ -220,7 +227,7 @@ public class PostDAO extends DBContext {
 
             //Get post
             String sql = """
-                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                    SELECT p.post_id, p.post_content, p.account_id, p.repost_post_id, a.username, a.avatar, p.post_last_update, \
                     (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                     (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                     (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count \
@@ -241,7 +248,7 @@ public class PostDAO extends DBContext {
                 post.setLikeCount(rs.getInt("like_count"));
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
-
+                post.setOwnPost(rs.getInt("account_id") == userID);
                 //Check if the current user request this post has liked this post or not
                 String likeSql = "SELECT * FROM like_post WHERE post_id = ? AND account_id = ?";
                 PreparedStatement likeStmt = conn.prepareStatement(likeSql);
@@ -272,6 +279,13 @@ public class PostDAO extends DBContext {
                     }
                 }
 
+                //Fetch the repost
+                int repostId = rs.getInt("repost_post_id");
+                if (repostId > 0) {
+                    RespPostDTO repostedPost = getPost(repostId, userID);
+                    post.setRepost(repostedPost);
+                }
+
                 return post;
             }
 
@@ -299,7 +313,7 @@ public class PostDAO extends DBContext {
 
             //Get list of posts for the newsfeed
             String sql = """
-                    SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update, \
+                    SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
                            (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                            (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                            (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id) AS repost_count, \
@@ -316,6 +330,8 @@ public class PostDAO extends DBContext {
                                   AND p.post_privacy IN ('public', 'friend') AND p.group_id IS NULL) \
                               /* Posts from joined groups */ \
                               OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
+                              /* All public posts from anyone */ \
+                              OR (p.post_privacy = 'public' AND p.group_id IS NULL) \
                           ) \
                     ORDER BY p.post_create_date DESC""";
 
@@ -340,6 +356,7 @@ public class PostDAO extends DBContext {
                 post.setCommentCount(rs.getInt("comment_count"));
                 post.setRepostCount(rs.getInt("repost_count"));
                 post.setLiked(rs.getBoolean("is_liked"));
+                post.setOwnPost(rs.getInt("account_id") == userID);
 
                 //Fetch images
                 String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -362,6 +379,12 @@ public class PostDAO extends DBContext {
                     while (hashtagRs.next()) {
                         post.getHashtags().add(hashtagRs.getString("hashtag_name"));
                     }
+                }
+
+                int repostId = rs.getInt("repost_post_id");
+                if (repostId > 0) {
+                    RespPostDTO repostedPost = getPost(repostId, userID);
+                    post.setRepost(repostedPost);
                 }
 
                 posts.add(post);
@@ -565,19 +588,17 @@ public class PostDAO extends DBContext {
             if (conn == null) {
                 return false;
             }
-            conn.setAutoCommit(false);
-
-            String sql = "INSERT INTO repost (account_id, post_id, repost_create_date) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO post (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, repost_post_id) VALUES ('', ?, ?, ?, 'public', 'published', ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, accountId);
-            stmt.setInt(2, postId);
+            stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             stmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setInt(4, postId);
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
                 logger.warning("Failed to repost");
-                conn.rollback();
+                return false;
             }
-            conn.commit();
             return true;
         } catch (SQLException e) {
             logger.warning(e.getMessage());
@@ -716,12 +737,19 @@ public class PostDAO extends DBContext {
                     //Get post ID
                     System.out.print("Enter post ID: ");
                     int postId = sc.nextInt();
-                    RespPostDTO post = dao.getPost(postId, 1);
+
+                    //Get account ID
+                    System.out.print("Enter account ID: ");
+                    int accountId = sc.nextInt();
+
+                    RespPostDTO post = dao.getPost(postId, accountId);
                     if (post != null) {
-                        System.out.printf("Post content: %s\n", post.getPostContent());
+//                        System.out.printf("Post content: %s\n", post.getPostContent());
+                        System.out.println(post);
                     } else {
                         System.out.println("Post not found");
                     }
+                    break;
                 }
                 case "like": {
                     System.out.print("Enter post ID: ");
@@ -732,6 +760,7 @@ public class PostDAO extends DBContext {
                     } else {
                         System.out.println("Like post failed");
                     }
+                    break;
                 }
                 case "report": {
                     System.out.print("Enter post ID: ");
@@ -753,6 +782,7 @@ public class PostDAO extends DBContext {
                     } else {
                         System.out.println("Report failed");
                     }
+                    break;
                 }
                 case "newsfeed": {
                     System.out.print("Enter user ID for newsfeed: ");
