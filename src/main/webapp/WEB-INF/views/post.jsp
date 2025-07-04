@@ -147,11 +147,16 @@
                         Account account = (Account) request.getSession().getAttribute("users");
                         String linkAvatar = account.getAvatar();
                     %>
-                    <a href="#" class="nav-profile">
-                        <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
-                             alt="User Profile Picture">
-                        <span><%=account.getFullname()%></span>
-                    </a>
+                    <div class="nav-profile-container">
+                        <a href="#" class="nav-profile">
+                            <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
+                                 alt="User Profile Picture">
+                            <span><%=account.getFullname()%></span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+                        </div>
+                    </div>
                 </header>
 
                 <!-- Feed of Posts -->
