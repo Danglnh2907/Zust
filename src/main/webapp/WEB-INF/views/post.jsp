@@ -26,8 +26,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/group.css">
-
         <style>
             .no-data-message { background-color: var(--white); border-radius: 5px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
             .no-data-message .icon { font-size: 1.5rem; color: var(--orange); margin-bottom: 10px; }
@@ -52,7 +50,6 @@
                 font-weight: 600;
                 padding: 2px 8px;
                 border-radius: 12px;
-                text-transform: capitalize;
                 margin-top: 4px;
                 width: fit-content;
             }

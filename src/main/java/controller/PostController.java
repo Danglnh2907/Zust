@@ -72,11 +72,11 @@ public class PostController extends HttpServlet {
 
         //No provided id or action -> View all posts belong to a user
         if (action == null && idRaw == null) {
+            GroupDAO groupDAO = new GroupDAO();
+            List<InteractGroupDTO> groups = groupDAO.getJoinedGroups(userID);
+            request.setAttribute("joinedGroups", groups);
             try {
                 ArrayList<RespPostDTO> posts = postDAO.getPosts(userID, userID);
-                GroupDAO groupDAO = new GroupDAO();
-                List<InteractGroupDTO> groups = groupDAO.getJoinedGroups(userID);
-                request.setAttribute("joinedGroups", groups);
                 if (posts.isEmpty()) {
                     request.setAttribute("message", "No posts found");
                 } else {
