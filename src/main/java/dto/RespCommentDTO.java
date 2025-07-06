@@ -16,6 +16,7 @@ public class RespCommentDTO {
     private int postID;
     private int replyID;
     private boolean liked;
+    private boolean ownComment;
 
     private String template;
     private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -138,6 +139,30 @@ public class RespCommentDTO {
         this.liked = liked;
     }
 
+    public boolean isOwnComment() {
+        return ownComment;
+    }
+
+    public void setOwnComment(boolean ownComment) {
+        this.ownComment = ownComment;
+    }
+
+    private String getCommentAction() {
+        /*
+         * If the requester is the owner of the comment, then we only show the edit + delete button
+         * Else, we only show the report button
+         */
+        if (ownComment) {
+            return """
+                    <button class="edit-btn">Edit</button>
+                    <button class="delete-btn">Delete</button>""";
+        }
+        return String.format(
+                "<a target=\"_blank\" class=\"report-btn\" href=\"/zust/report?type=comment&id=%d\" style=\"text-decoration: none\">Report</a>",
+                id
+        );
+    }
+
     @Override
     public String toString() {
         String imageURL = String.format("<img src=\"/zust/static/images/%s\" alt=\"Comment image\">", image);
@@ -153,6 +178,6 @@ public class RespCommentDTO {
                 image == null || image.isEmpty() ? "" : imageURL,
                 liked ? "liked" : "",
                 totalLikes,
-                id);
+                getCommentAction());
     }
 }

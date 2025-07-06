@@ -115,14 +115,13 @@
                             if (resp.status === 201) {
                                 alert("Report success");
                                 console.log("Report success " + resp.status);
+                                    window.location.href = "/zust/"
                             }
                         })
                         .catch(error => {
                             console.log(error);
                             alert(error);
                         })
-                    reportForm.reset();
-                    validateForm();
                 });
 
                 validateForm();
