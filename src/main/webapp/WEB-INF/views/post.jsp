@@ -95,7 +95,7 @@
 
     <body>
         <!-- Modal -->
-        <div class="modal fade" id="modal" data-bs-backdrop="static" data-bs-keyboard="false"
+        <div class="modal fade" id="modal" data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-lg">
                 <div class="modal-content">
@@ -227,23 +227,35 @@
                         Account account = (Account) request.getSession().getAttribute("users");
                         String linkAvatar = account.getAvatar();
                     %>
-                    <a href="#" class="nav-profile">
-                        <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
-                             alt="User Profile Picture">
-                        <span><%=account.getFullname()%></span>
-                    </a>
+                    <div class="nav-profile-container">
+                        <a href="#" class="nav-profile">
+                            <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
+                                 alt="User Profile Picture">
+                            <span><%=account.getFullname()%></span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+                        </div>
+                    </div>
                 </header>
 
                 <!-- Feed of Posts -->
                 <div class="feed">
-                    <% ArrayList<RespPostDTO> posts = (ArrayList<RespPostDTO>) request.getAttribute("posts");
-                        if (posts == null || posts.isEmpty()) {
-                            out.println("<p style=\"color: red;\">No posts found</p>");
-                        } else {
+                    <%
+                        ArrayList<RespPostDTO> posts = (ArrayList<RespPostDTO>) request.getAttribute("posts");
+                        ArrayList<RespPostDTO> feeds = (ArrayList<RespPostDTO>) request.getAttribute("feeds");
+                        if (posts != null && !posts.isEmpty()) {
                             for (RespPostDTO post : posts) {
                                 out.println(post);
                             }
-                        } %>
+                        } else if (feeds != null && !feeds.isEmpty()) {
+                            for (RespPostDTO feed : feeds) {
+                                out.println(feed);
+                            }
+                        } else {
+                            out.println("<p style=\"color: red;\">No posts found</p>");
+                        }
+                    %>
                 </div>
             </main>
         </div>

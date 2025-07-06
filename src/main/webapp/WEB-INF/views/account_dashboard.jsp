@@ -146,7 +146,7 @@
                     <div style="color: #666;"><%= user.getPhone() != null ? user.getPhone() : "N/A" %></div>
                 </td>
                 <td>
-                    <div><strong>Gender:</strong> <%= user.getGender() != null ? user.getGender() : "N/A" %></div>
+                    <div><strong>Gender:</strong> <%= user.getGender() != null ? (user.getGender() ? "Male" : "Female") : "N/A" %></div>
                     <div><strong>DOB:</strong> <%= user.getDob() != null ? user.getDob() : "N/A" %></div>
                 </td>
                 <td class="bio-cell">
