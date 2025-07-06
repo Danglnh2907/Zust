@@ -123,6 +123,7 @@
         .modal-content { max-width: 80%; max-height: 80%; border-radius: 5px; animation: zoomIn 0.3s ease; }
         .modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
+        .clickable-image:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -168,7 +169,7 @@
                 <% SimpleUser reporter = report.getReporter();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src="<%= reporter.getAvatarUrl() != null ? reporter.getAvatarUrl() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullName() %>">
+                    <img src="<%= reporter.getAvatarUrl()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullName() %>">
                     <div>
                         <div class="user-name"><%= reporter.getFullName() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>

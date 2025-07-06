@@ -1,5 +1,7 @@
 package dao;
 
+import dto.InteractGroupDTO;
+import dto.MemberDTO;
 import model.Account;
 import util.database.DBContext;
 
@@ -368,20 +370,333 @@ public class GroupDAO extends DBContext {
         return false;
     }
 
+    public List<InteractGroupDTO> getAllGroups(int accountId) {
+        logger.info("Retrieving all groups for account ID: " + accountId);
+        List<InteractGroupDTO> groupList = new ArrayList<>();
+        String sql = "SELECT g.group_id, g.group_name, g.group_cover_image, g.group_description, g.account_id AS creater_id, g.group_create_date, g.group_status, " +
+                "(SELECT COUNT(*) FROM participate p WHERE p.group_id = g.group_id) AS member_count, " +
+                "(SELECT COUNT(*) FROM post p WHERE p.group_id = g.group_id AND p.post_status = 'published') AS post_count, " +
+                "CASE " +
+                "    WHEN g.account_id = ? THEN 'LEADER' " +
+                "    WHEN EXISTS (SELECT 1 FROM manage m WHERE m.group_id = g.group_id AND m.account_id = ?) THEN 'MANAGER' " +
+                "    WHEN EXISTS (SELECT 1 FROM participate p WHERE p.group_id = g.group_id AND p.account_id = ?) THEN 'JOINED' " +
+                "    WHEN EXISTS (SELECT 1 FROM join_group_request jgr WHERE jgr.group_id = g.group_id AND jgr.account_id = ? AND jgr.join_group_request_status = 'sent') THEN 'SENT' " +
+                "    ELSE 'UNJOINED' " +
+                "END AS interact_status " +
+                "FROM [group] g " +
+                "WHERE g.group_status = 'active'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId); // For LEADER check
+            stmt.setInt(2, accountId); // For MANAGER check
+            stmt.setInt(3, accountId); // For JOINED check
+            stmt.setInt(4, accountId); // For SENT check
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    InteractGroupDTO groupDTO = new InteractGroupDTO();
+                    groupDTO.setId(rs.getInt("group_id"));
+                    groupDTO.setName(rs.getString("group_name"));
+                    groupDTO.setCoverImage(rs.getString("group_cover_image"));
+                    groupDTO.setDescription(rs.getString("group_description"));
+                    groupDTO.setCreaterId(rs.getInt("creater_id"));
+                    groupDTO.setCreateDate(rs.getTimestamp("group_create_date").toLocalDateTime());
+                    groupDTO.setStatus(rs.getString("group_status"));
+                    groupDTO.setMemberCount(rs.getInt("member_count"));
+                    groupDTO.setPostCount(rs.getInt("post_count"));
+                    groupDTO.setInteractStatus(InteractGroupDTO.InteractStatus.valueOf(rs.getString("interact_status")));
+
+                    groupList.add(groupDTO);
+                }
+            }
+            logger.info("Successfully retrieved " + groupList.size() + " groups for account ID: " + accountId);
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve groups for account ID: " + accountId + " - Error: " + e.getMessage());
+        }
+        return groupList;
+    }
+
+    public InteractGroupDTO getGroup(int accountId, int groupId) {
+        logger.info("Retrieving group with ID: " + groupId + " for account ID: " + accountId);
+        InteractGroupDTO groupDTO = null;
+        String sql = "SELECT g.group_id, g.group_name, g.group_cover_image, g.group_description, g.account_id AS creater_id, g.group_create_date, g.group_status, " +
+                "(SELECT COUNT(*) FROM participate p WHERE p.group_id = g.group_id) AS member_count, " +
+                "(SELECT COUNT(*) FROM post p WHERE p.group_id = g.group_id AND p.post_status = 'published') AS post_count, " +
+                "CASE " +
+                "    WHEN g.account_id = ? THEN 'LEADER' " +
+                "    WHEN EXISTS (SELECT 1 FROM manage m WHERE m.group_id = g.group_id AND m.account_id = ?) THEN 'MANAGER' " +
+                "    WHEN EXISTS (SELECT 1 FROM participate p WHERE p.group_id = g.group_id AND p.account_id = ?) THEN 'JOINED' " +
+                "    WHEN EXISTS (SELECT 1 FROM join_group_request jgr WHERE jgr.group_id = g.group_id AND jgr.account_id = ? AND jgr.join_group_request_status = 'sent') THEN 'SENT' " +
+                "    ELSE 'UNJOINED' " +
+                "END AS interact_status " +
+                "FROM [group] g WHERE g.group_id = ? AND g.group_status = 'active'";
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId); // For LEADER check
+            stmt.setInt(2, accountId); // For MANAGER check
+            stmt.setInt(3, accountId); // For JOINED check
+            stmt.setInt(4, accountId); // For SENT check
+            stmt.setInt(5, groupId);        // For group_id filter
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    groupDTO = new InteractGroupDTO();
+                    groupDTO.setId(rs.getInt("group_id"));
+                    groupDTO.setName(rs.getString("group_name"));
+                    groupDTO.setCoverImage(rs.getString("group_cover_image"));
+                    groupDTO.setDescription(rs.getString("group_description"));
+                    groupDTO.setCreaterId(rs.getInt("creater_id"));
+                    groupDTO.setCreateDate(rs.getTimestamp("group_create_date").toLocalDateTime());
+                    groupDTO.setStatus(rs.getString("group_status"));
+                    groupDTO.setMemberCount(rs.getInt("member_count"));
+                    groupDTO.setPostCount(rs.getInt("post_count"));
+                    groupDTO.setInteractStatus(InteractGroupDTO.InteractStatus.valueOf(rs.getString("interact_status")));
+                    logger.info("Successfully retrieved group with ID: " + groupId);
+                } else {
+                    logger.warning("No group found with ID: " + groupId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve group with ID: " + groupId + " - Error: " + e.getMessage());
+        }
+
+        return groupDTO;
+    }
+
+    public List<InteractGroupDTO> getJoinedGroups(int accountId) {
+        logger.info("Retrieving joined groups for account ID: " + accountId);
+        List<InteractGroupDTO> groupList = new ArrayList<>();
+        String sql = "SELECT g.group_id, g.group_name, g.group_cover_image, g.group_description, g.account_id AS creater_id, g.group_create_date, g.group_status, " +
+                "(SELECT COUNT(*) FROM participate p WHERE p.group_id = g.group_id) AS member_count, " +
+                "(SELECT COUNT(*) FROM post p WHERE p.group_id = g.group_id AND p.post_status = 'published') AS post_count, " +
+                "CASE " +
+                "    WHEN g.account_id = ? THEN 'LEADER' " +
+                "    WHEN EXISTS (SELECT 1 FROM manage m WHERE m.group_id = g.group_id AND m.account_id = ?) THEN 'MANAGER' " +
+                "    WHEN EXISTS (SELECT 1 FROM participate p WHERE p.group_id = g.group_id AND p.account_id = ?) THEN 'JOINED' " +
+                "    ELSE 'UNJOINED' " + // Should not occur due to JOIN conditions
+                "END AS interact_status " +
+                "FROM [group] g " +
+                "WHERE g.group_status = 'active' AND EXISTS (SELECT 1 FROM participate p WHERE p.group_id = g.group_id AND p.account_id = ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId); // For LEADER check in CASE
+            stmt.setInt(2, accountId); // For MANAGER check in CASE
+            stmt.setInt(3, accountId); // For JOINED check in CASE
+            stmt.setInt(4, accountId); // For JOINED check in WHERE
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    InteractGroupDTO groupDTO = new InteractGroupDTO();
+                    groupDTO.setId(rs.getInt("group_id"));
+                    groupDTO.setName(rs.getString("group_name"));
+                    groupDTO.setCoverImage(rs.getString("group_cover_image"));
+                    groupDTO.setDescription(rs.getString("group_description"));
+                    groupDTO.setCreaterId(rs.getInt("creater_id"));
+                    groupDTO.setCreateDate(rs.getTimestamp("group_create_date").toLocalDateTime());
+                    groupDTO.setStatus(rs.getString("group_status"));
+                    groupDTO.setMemberCount(rs.getInt("member_count"));
+                    groupDTO.setPostCount(rs.getInt("post_count"));
+                    groupDTO.setInteractStatus(InteractGroupDTO.InteractStatus.valueOf(rs.getString("interact_status")));
+
+                    groupList.add(groupDTO);
+                }
+            }
+            logger.info("Successfully retrieved " + groupList.size() + " joined groups for account ID: " + accountId);
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve joined groups for account ID: " + accountId + " - Error: " + e.getMessage());
+        }
+
+        return groupList;
+    }
+
+    public List<MemberDTO> getMembers(int accountId, int groupId) {
+        logger.info("Retrieving members for group ID: " + groupId + " for account ID: " + accountId);
+        List<MemberDTO> memberList = new ArrayList<>();
+        String sql = "SELECT a.account_id, a.username, a.avatar, p.participate_start_date, " +
+                "CASE " +
+                "    WHEN a.account_id = ? THEN 'SELF' " +
+                "    WHEN EXISTS (SELECT 1 FROM interact i WHERE i.actor_account_id = ? AND i.target_account_id = a.account_id AND i.interact_status = 'friend') THEN 'FRIEND' " +
+                "    WHEN EXISTS (SELECT 1 FROM interact i WHERE i.actor_account_id = ? AND i.target_account_id = a.account_id AND i.interact_status = 'block') THEN 'BLOCK' " +
+                "    ELSE 'NORMAL' " +
+                "END AS interact_status " +
+                "FROM participate p " +
+                "INNER JOIN account a ON p.account_id = a.account_id " +
+                "WHERE p.group_id = ? AND a.account_status = 'active' " +
+                "AND NOT EXISTS (SELECT 1 FROM manage m WHERE m.group_id = p.group_id AND m.account_id = p.account_id)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId); // For SELF check
+            stmt.setInt(2, accountId); // For FRIEND check
+            stmt.setInt(3, accountId); // For BLOCK check
+            stmt.setInt(4, groupId);   // For group_id filter
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    MemberDTO memberDTO = new MemberDTO();
+                    memberDTO.setId(rs.getInt("account_id"));
+                    memberDTO.setName(rs.getString("username"));
+                    memberDTO.setAvatar(rs.getString("avatar"));
+                    memberDTO.setInteractStatus(MemberDTO.InteractStatus.valueOf(rs.getString("interact_status")));
+                    memberDTO.setDate(rs.getTimestamp("participate_start_date").toLocalDateTime());
+                    memberList.add(memberDTO);
+                }
+            }
+            logger.info("Successfully retrieved " + memberList.size() + " members for group ID: " + groupId);
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve members for group ID: " + groupId + " - Error: " + e.getMessage());
+        }
+
+        return memberList;
+    }
+
+    public List<MemberDTO> getManagers(int accountId, int groupId) {
+        logger.info("Retrieving managers for group ID: " + groupId + " for account ID: " + accountId);
+        List<MemberDTO> managerList = new ArrayList<>();
+        String sql = "SELECT a.account_id, a.username, a.avatar, m.manage_start_date, " +
+                "CASE " +
+                "    WHEN a.account_id = ? THEN 'SELF' " +
+                "    WHEN EXISTS (SELECT 1 FROM interact i WHERE i.actor_account_id = ? AND i.target_account_id = a.account_id AND i.interact_status = 'friend') THEN 'FRIEND' " +
+                "    WHEN EXISTS (SELECT 1 FROM interact i WHERE i.actor_account_id = ? AND i.target_account_id = a.account_id AND i.interact_status = 'block') THEN 'BLOCK' " +
+                "    ELSE 'NORMAL' " +
+                "END AS interact_status " +
+                "FROM manage m " +
+                "INNER JOIN account a ON m.account_id = a.account_id " +
+                "WHERE m.group_id = ? AND a.account_status = 'active'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId); // For SELF check
+            stmt.setInt(2, accountId); // For FRIEND check
+            stmt.setInt(3, accountId); // For BLOCK check
+            stmt.setInt(4, groupId);   // For group_id filter
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    MemberDTO memberDTO = new MemberDTO();
+                    memberDTO.setId(rs.getInt("account_id"));
+                    memberDTO.setName(rs.getString("username"));
+                    memberDTO.setAvatar(rs.getString("avatar"));
+                    memberDTO.setInteractStatus(MemberDTO.InteractStatus.valueOf(rs.getString("interact_status")));
+                    memberDTO.setDate(rs.getTimestamp("manage_start_date").toLocalDateTime());
+                    managerList.add(memberDTO);
+                }
+            }
+            logger.info("Successfully retrieved " + managerList.size() + " managers for group ID: " + groupId);
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve managers for group ID: " + groupId + " - Error: " + e.getMessage());
+        }
+
+        return managerList;
+    }
+
+    public boolean leaveGroup(int accountId, int groupId) {
+        logger.info("Attempting to remove account ID: " + accountId + " from group ID: " + groupId);
+        boolean success = false;
+
+        try (Connection conn = getConnection()) {
+            // Delete from participate table
+            String participateSql = "DELETE FROM participate WHERE account_id = ? AND group_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(participateSql)) {
+                stmt.setInt(1, accountId);
+                stmt.setInt(2, groupId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    logger.info("Successfully removed account ID: " + accountId + " from participate table for group ID: " + groupId);
+                    success = true;
+                }
+            }
+
+            // Delete from manage table
+            String manageSql = "DELETE FROM manage WHERE account_id = ? AND group_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(manageSql)) {
+                stmt.setInt(1, accountId);
+                stmt.setInt(2, groupId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    logger.info("Successfully removed account ID: " + accountId + " from manage table for group ID: " + groupId);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                logger.warning("Account ID: " + accountId + " was not found in participate or manage tables for group ID: " + groupId);
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to remove account ID: " + accountId + " from group ID: " + groupId + " - Error: " + e.getMessage());
+            return false;
+        }
+
+        return success;
+    }
+
+    public boolean feedback(int accountId, int groupId, String content) {
+        logger.info("Attempting to insert feedback for account ID: " + accountId + " and group ID: " + groupId);
+
+        String sql = "INSERT INTO feedback_group (account_id, group_id, feedback_group_content) " +
+                "VALUES (?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            stmt.setInt(2, groupId);
+            stmt.setString(3, content);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                logger.warning("Failed to insert feedback for account ID: " + accountId + " and group ID: " + groupId);
+                return false;
+            }
+            logger.info("Successfully inserted feedback for account ID: " + accountId + " and group ID: " + groupId);
+            return true;
+        } catch (SQLException e) {
+            logger.severe("Failed to insert feedback for account ID: " + accountId + " and group ID: " + groupId + " - Error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isManager(int accountId, int groupId) {
+        logger.info("Checking if account ID: " + accountId + " is a manager for group ID: " + groupId);
+        String sql = "SELECT 1 FROM manage WHERE account_id = ? AND group_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            stmt.setInt(2, groupId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    logger.info("Account ID: " + accountId + " is a manager for group ID: " + groupId);
+                    return true;
+                } else {
+                    logger.info("Account ID: " + accountId + " is not a manager for group ID: " + groupId);
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to check manager status for account ID: " + accountId + " and group ID: " + groupId + " - Error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isLeader(int accountId, int groupId) {
+        logger.info("Checking if account ID: " + accountId + " is the leader for group ID: " + groupId);
+        String sql = "SELECT 1 FROM [group] WHERE account_id = ? AND group_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            stmt.setInt(2, groupId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    logger.info("Account ID: " + accountId + " is the leader for group ID: " + groupId);
+                    return true;
+                } else {
+                    logger.info("Account ID: " + accountId + " is not the leader for group ID: " + groupId);
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to check leader status for account ID: " + accountId + " and group ID: " + groupId + " - Error: " + e.getMessage());
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-//        ReqGroupDTO dto = new ReqGroupDTO("Test", "Test", "image");
-//        dto.addManager(1);
-//        System.out.println(dao.createGroup(dto));
-//        System.out.println(dao.getGroupMembers(35));
-//        System.out.println(dao.getActiveGroup(35));
-        List<ResGroupDTO> groups = dao.getActiveGroups();
-        System.out.println(groups);
-//        System.out.println(dao.assignManager(31, new int[] {1}));
-//        System.out.println(dao.deleteManager(31, 3));
-//        System.out.println(dao.getInactiveGroups());
-//        System.out.println(dao.rejectGroup(1));
-//        System.out.println(dao.acceptGroup(1));
+        System.out.println(dao.feedback(2, 1, "Some feedback"));
     }
 
 

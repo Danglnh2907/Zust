@@ -184,6 +184,6 @@ public class ReportPostDAO extends DBContext {
 
     public static void main(String[] args) {
         ReportPostDAO reportPostDAO = new ReportPostDAO();
-        System.out.println(reportPostDAO.getAll().get(1).getPost());
+        System.out.println(reportPostDAO.getAll().get(0).getPost());
     }
 }
