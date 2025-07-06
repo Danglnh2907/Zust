@@ -9,11 +9,9 @@ import java.util.logging.Logger;
 
 import dao.AccountDAO;
 import dao.CommentDAO;
+import dao.GroupDAO;
 import dao.PostDAO;
-import dto.ReportPostDTO;
-import dto.ReqPostDTO;
-import dto.RespCommentDTO;
-import dto.RespPostDTO;
+import dto.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -76,6 +74,9 @@ public class PostController extends HttpServlet {
         if (action == null && idRaw == null) {
             try {
                 ArrayList<RespPostDTO> posts = postDAO.getPosts(userID, userID);
+                GroupDAO groupDAO = new GroupDAO();
+                List<InteractGroupDTO> groups = groupDAO.getJoinedGroups(userID);
+                request.setAttribute("joinedGroups", groups);
                 if (posts.isEmpty()) {
                     request.setAttribute("message", "No posts found");
                 } else {
