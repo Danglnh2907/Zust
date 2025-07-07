@@ -9,6 +9,7 @@
 <%
 
     InteractGroupDTO group = (InteractGroupDTO) request.getAttribute("group");
+
     List<MemberDTO> managerList = (List<MemberDTO>) request.getAttribute("managers");
     List<MemberDTO> memberList = (List<MemberDTO>) request.getAttribute("members");
 %>
@@ -83,7 +84,7 @@
         <div class="logo">Zust</div>
         <nav class="sidebar-nav">
             <ul>
-                <li><a href="${pageContext.request.contextPath}/post" class="active">
+                <li><a href="${pageContext.request.contextPath}/" class="active">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -116,7 +117,7 @@
         </nav>
         <div class="sidebar-divider"></div>
 
-        <% List<InteractGroupDTO> myGroups = (List<InteractGroupDTO>) request.getAttribute("myGroups");%>
+        <% List<InteractGroupDTO> myGroups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
         <div class="groups-header">
             <h2>My Groups</h2>
             <span class="groups-count"><%= myGroups != null ? myGroups.size() : 0 %></span>
@@ -243,7 +244,7 @@
 
         <!-- Administration List -->
         <div class="member-list-section">
-            <h3><i class="fas fa-crown"></i> Administration</h3>
+            <h3><i class="fas fa-crown"></i> Managers</h3>
             <div class="member-cards-container">
                 <% if (managerList == null || managerList.isEmpty()) { %>
                 <p>No managers found.</p>

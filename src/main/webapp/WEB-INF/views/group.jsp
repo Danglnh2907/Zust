@@ -20,39 +20,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= group != null ? group.getName() : "Group" %> - Zust</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
         crossorigin="anonymous">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/group.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
   <style>
     .post-feed-section { margin-top: 20px; }
     .feed-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; }
     .no-data-message-post { background-color: white; border-radius: 8px; padding: 40px; text-align: center; color: #777; }
     .feed-container { display: flex; flex-direction: column; gap: 15px; }
-    /* Assume .post-card style comes from your post.css */
-
-    /* Modal Styles */
-    /*.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }*/
-    /*.modal-content-wrapper { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; }*/
-    /*.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }*/
-    /*.modal-header h2 { margin: 0; }*/
-    /*.modal-close { font-size: 1.8rem; font-weight: bold; cursor: pointer; background: none; border: none; }*/
-    /*.modal-body textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }*/
-    /*.modal-footer { text-align: right; margin-top: 20px; }*/
-    /*.modal-footer .btn-submit { background-color: #FF852F; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }*/
   </style>
 </head>
 
 <body>
+
+<div class="modal fade" id="modal" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title-label"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close">×</button>
+  <img class="lightbox-image" src="" alt="Full-screen image view">
+</div>
+
 <div class="app-layout">
   <aside class="left-sidebar">
       <div class="logo">Zust</div>
       <nav class="sidebar-nav">
         <ul>
-          <li><a href="${pageContext.request.contextPath}/post" class="active">
+          <li><a href="${pageContext.request.contextPath}/" class="active">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
@@ -205,14 +224,14 @@
 
     <div class="create-post-bar">
 <%--      <img src="${pageContext.request.contextPath}/static/images/default_avatar.png" alt="Your Avatar">--%>
-      <a href="${pageContext.request.contextPath}/createPost?groupId=<%= group.getId() %>" class="create-post-link">What's on your mind?</a>
+      <a href="${pageContext.request.contextPath}/post?action=create&groupId=<%= group.getId() %>" class="create-post-link">What's on your mind?</a>
     </div>
 
     <!-- Your Pending Posts Section -->
     <% if (pendingPosts != null && !pendingPosts.isEmpty()) { %>
     <div class="post-feed-section">
       <h2 class="feed-header">Your Pending Posts</h2>
-      <div class="feed-container">
+      <div class="feed">
         <% for (RespPostDTO post : pendingPosts) {
         out.println(post);
         } %>
@@ -223,7 +242,7 @@
     <!-- Main Group Feed Section -->
     <div class="post-feed-section">
       <h2 class="feed-header">Group Discussion</h2>
-      <div class="feed-container">
+      <div class="feed">
         <% if (groupPosts == null || groupPosts.isEmpty()) { %>
         <div class="no-data-message-post">
           <h3>It's quiet in here...</h3>
@@ -283,10 +302,7 @@
   <button class="modal-close">×</button>
   <img class="modal-content-image" id="modalImage" src="" alt="Group Cover Image">
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
-<script src="${pageContext.request.contextPath}/js/post.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // --- "Read More" for Group Description ---
@@ -306,7 +322,7 @@
 
     const feedbackModal = document.getElementById('feedbackModal');
     const joinModal = document.getElementById('joinRequestModal');
-    const allModals = document.querySelectorAll('.modal');
+    const allModals = document.querySelectorAll('#feedbackModal, #joinRequestModal, #imageModal');
 
     // Generic close function
     function closeModal(modal) {
@@ -375,5 +391,11 @@
     }
   });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/post.js"></script>
+<script src="${pageContext.request.contextPath}/js/composer.js"></script>
 </body>
 </html>

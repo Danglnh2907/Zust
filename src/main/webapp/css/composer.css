@@ -302,3 +302,12 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.disabled-privacy-selector {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.disabled-privacy-selector .privacy-dropdown-menu {
+    display: none !important;
+}

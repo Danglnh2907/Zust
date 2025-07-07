@@ -92,6 +92,19 @@ public class PostController extends HttpServlet {
 
         //If the action is create, serve the create form (post_upload.jsp)
         if (action != null && action.toLowerCase().trim().equals("create")) {
+
+            int groupId = -1;
+            String groupIdParam = request.getParameter("groupId");
+            try {
+                if (groupIdParam != null && !groupIdParam.isEmpty()) {
+                    groupId = Integer.parseInt(groupIdParam);
+                }
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid GroupID: " + groupIdParam);
+                response.sendRedirect(request.getContextPath() + "/post");
+                return;
+            }
+            request.setAttribute("groupId", groupId);
             request.getRequestDispatcher("/WEB-INF/views/post_upload.jsp").forward(request, response);
             return;
         }
@@ -178,6 +191,11 @@ public class PostController extends HttpServlet {
                     } else {
                         boolean success = postDAO.createPost(dto);
                         if (success) {
+                            String redirectURL = "/zust/post";
+                            if(dto.getGroupID() != -1){
+                                redirectURL = "/zust/group?id=" + dto.getGroupID();
+                            }
+                            response.getWriter().write("{\"redirectURL\": \"" + redirectURL + "\"}");
                             response.setStatus(HttpServletResponse.SC_CREATED);
                             response.getWriter().write("{\"message\":\"Post created successfully\"}");
                         } else {

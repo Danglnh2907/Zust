@@ -82,8 +82,8 @@ public class GroupServlet extends HttpServlet {
         if (tag == null || (!tag.equals("members") && !tag.equals("requests") && !tag.equals("pending") && !tag.equals("feedback") && !tag.equals("assign"))) {
             PostDAO postDAO = new PostDAO();
             logger.info("Fetching posts and pending posts for group ID: " + groupId);
-            List<RespPostDTO> posts = postDAO.getPosts(groupId);
             List<RespPostDTO> pendingPosts = postDAO.getPendingPosts(userID, groupId);
+            List<RespPostDTO> posts = postDAO.getPostsInGroup(userID, groupId);
             request.setAttribute("posts", posts);
             request.setAttribute("pendingPosts", pendingPosts);
 

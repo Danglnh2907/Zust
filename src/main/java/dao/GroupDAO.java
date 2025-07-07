@@ -3,6 +3,7 @@ package dao;
 import dto.InteractGroupDTO;
 import dto.MemberDTO;
 import model.Account;
+import model.Post;
 import util.database.DBContext;
 
 import java.sql.*;
@@ -696,7 +697,8 @@ public class GroupDAO extends DBContext {
 
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-        System.out.println(dao.feedback(2, 1, "Some feedback"));
+        PostDAO postDao = new PostDAO();
+        System.out.println(postDao.getPostsInGroup(1, 3));
     }
 
 

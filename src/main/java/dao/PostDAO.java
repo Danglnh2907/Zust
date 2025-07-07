@@ -562,142 +562,37 @@ public class PostDAO extends DBContext {
         return 0; // Return 0 if no account is found
     }
 
-    public List<RespPostDTO> getPosts(int groupId) {
-        logger.info("Retrieving published posts for group ID: " + groupId);
-        List<RespPostDTO> postList = new ArrayList<>();
-        String sql = "SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_modified, " +
-                "(SELECT COUNT(*) FROM post_like pl WHERE pl.post_id = p.post_id) AS like_count, " +
-                "(SELECT COUNT(*) FROM post_comment pc WHERE pc.post_id = p.post_id) AS comment_count, " +
-                "(SELECT COUNT(*) FROM post_repost pr WHERE pr.post_id = p.post_id) AS repost_count " +
-                "FROM post p " +
-                "INNER JOIN account a ON p.account_id = a.account_id " +
-                "WHERE p.group_id = ? AND p.post_status = 'published'";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, groupId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    RespPostDTO postDTO = new RespPostDTO();
-                    postDTO.setPostId(rs.getInt("post_id"));
-                    postDTO.setPostContent(rs.getString("post_content"));
-                    postDTO.setUsername(rs.getString("username"));
-                    postDTO.setAvatar(rs.getString("avatar"));
-                    postDTO.setLastModified(rs.getTimestamp("post_last_modified").toLocalDateTime());
-                    postDTO.setLikeCount(rs.getInt("like_count"));
-                    postDTO.setCommentCount(rs.getInt("comment_count"));
-                    postDTO.setRepostCount(rs.getInt("repost_count"));
-                    postDTO.setLiked(false); // No accountId provided to check liked status
-
-                    // Fetch hashtags
-                    List<String> hashtags = getHashtags(postDTO.getPostId());
-                    postDTO.setHashtags(hashtags);
-
-                    // Fetch images
-                    List<String> images = getImages(postDTO.getPostId());
-                    postDTO.setImages(images);
-
-                    postList.add(postDTO);
-                }
-            }
-            logger.info("Successfully retrieved " + postList.size() + " published posts for group ID: " + groupId);
-        } catch (SQLException e) {
-            logger.severe("Failed to retrieve published posts for group ID: " + groupId + " - Error: " + e.getMessage());
-        }
-
-        return postList;
-    }
-
     public List<RespPostDTO> getPendingPosts(int accountId, int groupId) {
         logger.info("Retrieving pending posts for account ID: " + accountId + " and group ID: " + groupId);
-        List<RespPostDTO> postList = new ArrayList<>();
-        String sql = "SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_modified, " +
-                "(SELECT COUNT(*) FROM post_like pl WHERE pl.post_id = p.post_id) AS like_count, " +
-                "(SELECT COUNT(*) FROM post_comment pc WHERE pc.post_id = p.post_id) AS comment_count, " +
-                "(SELECT COUNT(*) FROM post_repost pr WHERE pr.post_id = p.post_id) AS repost_count, " +
-                "EXISTS (SELECT 1 FROM post_like pl WHERE pl.post_id = p.post_id AND pl.account_id = ?) AS liked " +
-                "FROM post p " +
-                "INNER JOIN account a ON p.account_id = a.account_id " +
-                "WHERE p.group_id = ? AND p.account_id = ? AND p.post_status = 'sent'";
+        ArrayList<RespPostDTO> posts = new ArrayList<>();
+        String SQL = """
+                SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
+                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                FROM post p JOIN account a ON p.account_id = a.account_id \
+                WHERE p.post_status = 'sent' AND a.account_id = ? AND p.group_id = ? ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, accountId); // For liked check
-            stmt.setInt(2, groupId);   // For group_id filter
-            stmt.setInt(3, accountId); // For account_id filter
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    RespPostDTO postDTO = new RespPostDTO();
-                    postDTO.setPostId(rs.getInt("post_id"));
-                    postDTO.setPostContent(rs.getString("post_content"));
-                    postDTO.setUsername(rs.getString("username"));
-                    postDTO.setAvatar(rs.getString("avatar"));
-                    postDTO.setLastModified(rs.getTimestamp("post_last_modified").toLocalDateTime());
-                    postDTO.setLikeCount(rs.getInt("like_count"));
-                    postDTO.setCommentCount(rs.getInt("comment_count"));
-                    postDTO.setRepostCount(rs.getInt("repost_count"));
-                    postDTO.setLiked(rs.getBoolean("liked"));
-
-                    // Fetch hashtags
-                    List<String> hashtags = getHashtags(postDTO.getPostId());
-                    postDTO.setHashtags(hashtags);
-
-                    // Fetch images
-                    List<String> images = getImages(postDTO.getPostId());
-                    postDTO.setImages(images);
-
-                    postList.add(postDTO);
-                }
+        try {
+            if (connection == null) {
+                logger.warning("No connection available!");
+                return posts;
             }
-            logger.info("Successfully retrieved " + postList.size() + " pending posts for account ID: " + accountId + " and group ID: " + groupId);
-        } catch (SQLException e) {
-            logger.severe("Failed to retrieve pending posts for account ID: " + accountId + " and group ID: " + groupId + " - Error: " + e.getMessage());
-        }
-
-        return postList;
-    }
-
-    private List<String> getHashtags(int postId) {
-        List<String> hashtags = new ArrayList<>();
-        String sql = "SELECT h.hashtag_content " +
-                "FROM post_hashtag ph " +
-                "INNER JOIN hashtag h ON ph.hashtag_id = h.hashtag_id " +
-                "WHERE ph.post_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, postId);
-            try (ResultSet rs = stmt.executeQuery()) {
+            try (PreparedStatement stmt = connection.prepareStatement(SQL)) {
+                stmt.setInt(1, accountId);
+                stmt.setInt(2, groupId);
+                stmt.setInt(3, accountId);
+                ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    hashtags.add(rs.getString("hashtag_content"));
+                    posts.add(mapResultSetToPost(rs, accountId, connection));
                 }
             }
         } catch (SQLException e) {
-            logger.severe("Failed to retrieve hashtags for post ID: " + postId + " - Error: " + e.getMessage());
+            logger.warning(e.getMessage());
         }
 
-        return hashtags;
-    }
-
-    private List<String> getImages(int postId) {
-        List<String> images = new ArrayList<>();
-        String sql = "SELECT pi.image_url " +
-                "FROM post_image pi " +
-                "WHERE pi.post_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, postId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    images.add(rs.getString("image_url"));
-                }
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to retrieve images for post ID: " + postId + " - Error: " + e.getMessage());
-        }
-
-        return images;
+        return posts;
     }
 
     public static void main(String[] args) {
