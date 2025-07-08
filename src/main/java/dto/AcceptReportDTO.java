@@ -4,18 +4,19 @@ public class AcceptReportDTO {
     private int reportId;
     private int reportAccountId;
     private int reportedAccountId;
-    private int reportedPostId;
+    private int reportedId;
     private String notificationContent;
+
 
     // Constructor
     public AcceptReportDTO() {
     }
 
-    public AcceptReportDTO(int reportId, int reportAccountId, int reportedAccountId, int reportedPostId, String notificationContent) {
+    public AcceptReportDTO(int reportId, int reportAccountId, int reportedAccountId, int reportedId, String notificationContent) {
         this.reportId = reportId;
         this.reportAccountId = reportAccountId;
         this.reportedAccountId = reportedAccountId;
-        this.reportedPostId = reportedPostId;
+        this.reportedId = reportedId;
         this.notificationContent = notificationContent;
     }
 
@@ -44,12 +45,12 @@ public class AcceptReportDTO {
         this.reportedAccountId = reportedAccountId;
     }
 
-    public int getReportedPostId() {
-        return reportedPostId;
+    public int getReportedId() {
+        return reportedId;
     }
 
-    public void setReportedPostId(int reportedPostId) {
-        this.reportedPostId = reportedPostId;
+    public void setReportedId(int reportedId) {
+        this.reportedId = reportedId;
     }
 
     public String getNotificationContent() {

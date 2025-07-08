@@ -54,6 +54,7 @@
         .user-info .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
         .user-info .user-name { font-weight: 600; }
         .user-info .user-username { font-size: 0.9em; color: #777; }
+        .clickable-avatar:hover { transform: scale(1.1); }
 
         .bio-cell { white-space: normal; max-width: 250px;}
         .bio-cell .bio-content { white-space: normal; max-width: 250px;}

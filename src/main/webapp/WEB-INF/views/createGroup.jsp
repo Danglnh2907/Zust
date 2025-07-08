@@ -165,6 +165,19 @@
             background-color: #fff8f2; /* Màu nền cam rất nhạt khi hover */
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
         }
+
+        .char-counter {
+            display: block; /* Make it appear on its own line */
+            text-align: right; /* Align to the right */
+            font-size: 0.85em;
+            color: #6c757d; /* A muted gray color */
+            margin-top: 5px;
+        }
+
+        .char-counter.is-maxed {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -176,7 +189,7 @@
 
     <% int accountId = (int)request.getAttribute("accountId"); %>
     <form action="${pageContext.request.contextPath}/createGroup" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="managerId" value="<%= accountId%>">
+        <input type="hidden" name="creatorId" value="<%= accountId%>">
         <div class="form-group">
             <label for="coverImage" class="label-title">Cover Image</label>
             <label for="coverImage" class="cover-image-upload">
@@ -189,31 +202,47 @@
 
         <div class="form-group">
             <label for="groupName" class="label-title">Group Name</label>
-            <input type="text" id="groupName" name="groupName" class="form-control" placeholder="e.g., 'Photography Enthusiasts'" required>
+            <input type="text" id="groupName" name="groupName" class="form-control" placeholder="e.g., 'Computer engineer group'" required maxlength="100">
         </div>
 
         <div class="form-group">
             <label for="groupDesc" class="label-title">Group Description</label>
-            <textarea id="groupDesc" name="groupDescription" class="form-control" placeholder="What is this group about?"></textarea>
+            <textarea id="groupDesc" name="groupDescription" class="form-control" placeholder="What is this group about?" minlength="10"></textarea>
         </div>
         <div class="form-group action-buttons-group">
-            <a href="${pageContext.request.contextPath}/post" class="btn back-btn">Back to Home</a>
+            <a href="${pageContext.request.contextPath}/" class="btn back-btn">Back to Home</a>
             <button type="submit" class="btn submit-btn">Create Group</button>
         </div>
 
     </form>
-    <%
-        if(request.getAttribute("msg") != null){
-    %>
-    <p>Message: <%= request.getAttribute("msg")%></p>
-    <%
-        }
-    %>
+
 </div>
 
 <!-- JavaScript for Image Preview and Manager Filter -->
 <script>
-    // --- Image Preview Logic ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const groupNameInput = document.getElementById('groupName');
+
+        if (groupNameInput) {
+            const maxLength = groupNameInput.getAttribute('maxlength');
+            const charCounter = document.createElement('small');
+            charCounter.className = 'char-counter';
+            groupNameInput.insertAdjacentElement('afterend', charCounter);
+            function updateCounter() {
+                const currentLength = groupNameInput.value.length;
+                charCounter.textContent = currentLength + '/' + maxLength;
+                if (currentLength >= maxLength) {
+                    charCounter.classList.add('is-maxed');
+                } else {
+                    charCounter.classList.remove('is-maxed');
+                }
+            }
+            updateCounter();
+            groupNameInput.addEventListener('input', updateCounter);
+        } else {
+            console.error("Error: Input element with id 'groupName' was not found.");
+        }
+    });
     document.getElementById('coverImage').addEventListener('change', function(event) {
         const previewContainer = document.getElementById('image-preview');
         const previewImage = document.getElementById('preview-img');
@@ -229,6 +258,14 @@
             previewContainer.style.display = 'none';
         }
     });
+
+    <%
+            if(request.getAttribute("msg") != null){
+        %>
+    alert("<%= request.getAttribute("msg")%>");
+    <%
+        }
+    %>
 </script>
 </body>
 </html>
