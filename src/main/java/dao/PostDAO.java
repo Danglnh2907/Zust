@@ -581,8 +581,8 @@ public class PostDAO extends DBContext {
             }
             try (PreparedStatement stmt = connection.prepareStatement(SQL)) {
                 stmt.setInt(1, accountId);
-                stmt.setInt(2, groupId);
-                stmt.setInt(3, accountId);
+                stmt.setInt(2, accountId);
+                stmt.setInt(3, groupId);
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     posts.add(mapResultSetToPost(rs, accountId, connection));

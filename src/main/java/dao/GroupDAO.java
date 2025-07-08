@@ -698,7 +698,7 @@ public class GroupDAO extends DBContext {
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
         PostDAO postDao = new PostDAO();
-        System.out.println(postDao.getPostsInGroup(1, 3));
+        System.out.println(postDao.getPendingPosts(2, 1));
     }
 
 
