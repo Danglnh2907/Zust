@@ -42,7 +42,7 @@ public class CreateGroupServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/createGroup.jsp").forward(request, response);
         }catch (Exception e) {
             LOGGER.error("Create group: Error in get user Id from session: {}", e.getMessage());
-            response.sendRedirect("error.jsp");
+            response.sendRedirect("/");
         }
 
     }
@@ -54,15 +54,15 @@ public class CreateGroupServlet extends HttpServlet {
         ReqGroupDTO groupDTO = extractData(request.getParts());
         if(groupDTO == null) {
             LOGGER.error("Create group: Error in parsing data");
-            response.sendRedirect("error.jsp");
+            request.setAttribute("msg", "Failed to send data");
         } else {
             boolean success = groupDAO.createGroup(groupDTO);
             if (success) {
                 LOGGER.info("Create group: Success");
-                request.setAttribute("msg", "Created group successfully.");
+                request.setAttribute("msg", "Created group successfully. Please wait for admin approval.");
             } else {
                 LOGGER.error("Create group: Error");
-                request.setAttribute("msg", "Failed to create group.");
+                request.setAttribute("msg", "Failed to create group. Try again.");
             }
         }
         doGet(request, response);
@@ -75,7 +75,7 @@ public class CreateGroupServlet extends HttpServlet {
         String groupName = null;
         String groupDescription = null;
         String imagePath = null;
-        int managerId = 0;
+        int creatorId = 0;
 
         if (!uploadDir.exists()) {
             //Create directory and check if it success
@@ -90,7 +90,7 @@ public class CreateGroupServlet extends HttpServlet {
                 if (fieldName == null) continue;
 
                 if (fieldName.equals("groupName")) {
-                    groupName = readPartAsString(part);
+                    groupName = readPartAsString(part).trim();
                     if (groupName == null) {
                         LOGGER.warn("Failed to read HTML content");
                         return null;
@@ -102,11 +102,11 @@ public class CreateGroupServlet extends HttpServlet {
                 else if (fieldName.startsWith("coverImage")) {
                     imagePath = handleImagePart(part, uploadDir);
                 }
-                else if (fieldName.equals("managerId")) {
+                else if (fieldName.equals("creatorId")) {
                     String managerIDRaw = readPartAsString(part);
                     if (managerIDRaw != null && !managerIDRaw.trim().isEmpty()) {
                         try {
-                            managerId = Integer.parseInt(managerIDRaw.trim());
+                            creatorId = Integer.parseInt(managerIDRaw.trim());
                         } catch (NumberFormatException e) {
                             LOGGER.warn("Invalid group ID format: " + managerIDRaw);
                         }
@@ -118,7 +118,7 @@ public class CreateGroupServlet extends HttpServlet {
             return null;
         }
 
-        ReqGroupDTO groupDTO = new ReqGroupDTO(groupName, groupDescription, imagePath, managerId);
+        ReqGroupDTO groupDTO = new ReqGroupDTO(groupName, groupDescription, imagePath, creatorId);
         return groupDTO;
     }
 
@@ -174,12 +174,4 @@ public class CreateGroupServlet extends HttpServlet {
         }
         return imagePath;
     }
-
-//    private boolean isImageFile(String fileName) {
-//        String lowerCaseFileName = fileName.toLowerCase();
-//        return lowerCaseFileName.endsWith(".jpg") ||
-//                lowerCaseFileName.endsWith(".jpeg") ||
-//                lowerCaseFileName.endsWith(".png") ||
-//                lowerCaseFileName.endsWith(".gif");
-//    }
 }

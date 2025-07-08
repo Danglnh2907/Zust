@@ -1,72 +1,14 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList" %>
+<%@ page import="dto.RespCommentDTO" %>
+<%@ page import="model.Account" %>
+<%@ page import="dto.ResReportCommentDTO" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 
-<%--
-  ================================================================================
-  1. DEFINE DATA MODELS (POJOs)
-  ================================================================================
---%>
-<%!
-    // Reusable SimpleUser class
-    public class SimpleUser {
-        private String avatarUrl, fullName, username;
-        public SimpleUser(String a, String f, String u) { avatarUrl=a; fullName=f; username=u; }
-        public String getAvatarUrl() { return avatarUrl; }
-        public String getFullName() { return fullName; }
-        public String getUsername() { return username; }
-    }
 
-    // Represents the reported comment
-    public class ReportedComment {
-        private SimpleUser commenter; // The user who posted the comment
-        private String content;
-        private String imageUrl;
-        public ReportedComment(SimpleUser c, String content, String img) { this.commenter=c; this.content=content; this.imageUrl=img; }
-        public SimpleUser getCommenter() { return commenter; }
-        public String getContent() { return content; }
-        public String getImageUrl() { return imageUrl; }
-    }
-
-    // The main CommentReport object
-    public class CommentReport {
-        private int reportId;
-        private SimpleUser reporter;
-        private ReportedComment reportedComment;
-        private String reportMessage;
-        private String reportDate;
-        public CommentReport(int id, SimpleUser r, ReportedComment c, String msg, String date) {
-            this.reportId=id; this.reporter=r; this.reportedComment=c; this.reportMessage=msg; this.reportDate=date;
-        }
-        public int getReportId() { return reportId; }
-        public SimpleUser getReporter() { return reporter; }
-        public ReportedComment getReportedComment() { return reportedComment; }
-        public String getReportMessage() { return reportMessage; }
-        public String getReportDate() { return reportDate; }
-    }
-%>
-
-<%--
-  ================================================================================
-  2. SIMULATE DATA RETRIEVAL
-  ================================================================================
---%>
 <%
-    List<CommentReport> reportList = new ArrayList<>();
-
-    // --- Create some sample users ---
-    SimpleUser reporter1 = new SimpleUser("https://i.pravatar.cc/150?img=21", "Chloe Garcia", "chloe_g");
-    SimpleUser commenter1 = new SimpleUser("https://i.pravatar.cc/150?img=28", "Ethan Wright", "ethan_w");
-    SimpleUser commenter2 = new SimpleUser(null, "Mystery User", "mystery"); // User with no avatar
-
-    // --- Create sample reported comments ---
-    ReportedComment comment1 = new ReportedComment(commenter1, "This is harassment. The user is being incredibly aggressive and rude towards others in this thread. This is not the first time this has happened with this user.", null);
-    ReportedComment comment2 = new ReportedComment(commenter2, "Spam link!", "https://images.unsplash.com/photo-1599507593498-273c2f64e1f8?q=80&w=800"); // Comment with an image
-
-    // --- Create sample reports ---
-    reportList.add(new CommentReport(601, reporter1, comment1, "This user is harassing me and others. Please check their comment history.", "2023-11-02"));
-    reportList.add(new CommentReport(602, commenter1, comment2, "This is clearly a spam bot. The account was created today and is just posting this image with a link everywhere.", "2023-11-01"));
-
-    String currentPage = "report";
+    SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
+    List<ResReportCommentDTO> reportList = (List<ResReportCommentDTO>) request.getAttribute("reports");
 %>
 
 <!DOCTYPE html>
@@ -165,33 +107,32 @@
     <% if (reportList == null || reportList.isEmpty()) { %>
     <div class="no-data-message">
         <div class="icon"><i class="fas fa-search"></i></div>
-        <h2>No Groups Found</h2>
-        <p>There are no groups to display at this time.</p>
+        <h2>No Report Found</h2>
+        <p>There are no pending report at this time.</p>
     </div>
     <% } else { %>
 
     <div class="report-list">
-        <% for (CommentReport report : reportList) { %>
+        <% for (ResReportCommentDTO report : reportList) { %>
         <div class="report-card">
             <!-- Column 1: Reporter Info -->
             <div class="report-section reporter-info">
                 <h3><i class="fas fa-user-shield"></i> Reported By</h3>
-                <% SimpleUser reporter = report.getReporter();
+                <% Account reporter = report.getReporter();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src="<%= reporter.getAvatarUrl() != null ? reporter.getAvatarUrl() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullName() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
                     <div>
-                        <div class="user-name"><%= reporter.getFullName() %></div>
+                        <div class="user-name"><%= reporter.getFullname() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>
                     </div>
                 </div>
                 <% } %>
             </div>
 
-            <!-- Column 2: Report Details -->
             <div class="report-section report-details">
                 <h3><i class="fas fa-envelope-open-text"></i> Report Reason</h3>
-                <div class="report-date">Date: <%= report.getReportDate() %></div>
+                <div class="report-date">Date: <%= dt.format(report.getReportDate())%></div>
                 <div class="report-message">
                     <% String message = report.getReportMessage();
                         if (message != null && message.length() > 100) {
@@ -202,31 +143,42 @@
                     <% } else { %><%= message != null ? message : "N/A" %><% } %>
                 </div>
                 <div class="report-actions">
-                    <button class="btn btn-delete">Delete Comment</button>
-                    <button class="btn btn-dismiss">Dismiss Report</button>
+                    <form action="reportComment" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deleted this comment? This action cannot be undone.');">
+                        <input type="hidden" name="action" value="accept">
+                        <input type="hidden" name="reportId" value="<%= report.getId() %>">
+                        <input type="hidden" name="reportAccountId" value="<%= report.getReporter().getId() %>">
+                        <input type="hidden" name="reportedAccountId" value="<%= report.getCommenter().getId() %>">
+                        <input type="hidden" name="reportedId" value="<%= report.getCommentId() %>">
+                        <input type="hidden" name="notificationContent" value="<%= report.getReportMessage()%>">
+                        <button type="submit" class="btn btn-delete">Delete Comment</button>
+                    </form>
+                    <form action="reportComment" method="POST" style="display: inline;">
+                        <input type="hidden" name="action" value="dismiss">
+                        <input type="hidden" name="reportId" value="<%= report.getId()%>">
+                        <button type="submit" class="btn btn-dismiss">Dismiss Report</button>
+                    </form>
                 </div>
             </div>
 
             <!-- Column 3: Reported Comment -->
             <div class="report-section reported-comment">
                 <h3><i class="fas fa-comment-dots"></i> Reported Comment</h3>
-                <% ReportedComment comment = report.getReportedComment();
-                    if (comment != null) {
-                        SimpleUser commenter = comment.getCommenter();
+                <%
+                        Account commenter = report.getCommenter();
                         if (commenter != null) { %>
                 <div class="user-block" style="margin-bottom: 15px;">
-                    <img src="<%= commenter.getAvatarUrl() != null ? commenter.getAvatarUrl() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Commenter Avatar" class="avatar clickable-image" data-caption="<%= commenter.getFullName() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= commenter.getAvatar()%>" alt="Commenter Avatar" class="avatar clickable-image" data-caption="<%= commenter.getFullname() %>">
                     <div>
-                        <div class="user-name"><%= commenter.getFullName() %></div>
+                        <div class="user-name"><%= commenter.getFullname() %></div>
                         <div class="user-username">@<%= commenter.getUsername() %></div>
                     </div>
                 </div>
                 <% } %>
-                <% if (comment.getImageUrl() != null) { %>
-                <img src="<%= comment.getImageUrl() %>" alt="Comment Image" class="comment-image clickable-image" data-caption="Reported Comment Image">
+                <% if (report.getCommentImage() != null && !report.getCommentImage().isEmpty()) { %>
+                <img src="${pageContext.request.contextPath}/static/images/<%= report.getCommentImage() %>" alt="Comment Image" class="comment-image clickable-image" data-caption="Reported Comment Image">
                 <% } %>
                 <div class="comment-content">
-                    <% String content = comment.getContent();
+                    <% String content = report.getCommentContent();
                         if (content != null && !content.isEmpty()) {
                             if (content.length() > 120) {
                                 String shortContent = content.substring(0, 120) + "..."; %>
@@ -238,9 +190,6 @@
                     <i>Comment has no text.</i>
                     <% } %>
                 </div>
-                <% } else { %>
-                <p>Reported comment data is unavailable.</p>
-                <% } %>
             </div>
         </div>
         <% } %>
@@ -286,6 +235,13 @@
             });
         });
     });
+    <%
+            if(request.getAttribute("msg") != null){
+        %>
+    alert("<%= request.getAttribute("msg")%>");
+    <%
+        }
+    %>
 </script>
 </body>
 </html>

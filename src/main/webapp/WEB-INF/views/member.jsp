@@ -403,7 +403,7 @@
 
         const feedbackModal = document.getElementById('feedbackModal');
         const joinModal = document.getElementById('joinRequestModal');
-        const allModals = document.querySelectorAll('.modal');
+        const allModals = document.querySelectorAll('#feedbackModal, #joinRequestModal, #imageModal');
 
         // Generic close function
         function closeModal(modal) {

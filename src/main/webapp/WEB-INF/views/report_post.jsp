@@ -176,7 +176,7 @@
                             data-reporter-id="<%= reporter != null ? reporter.getId() : "0" %>"
                             data-reported-id="<%= report.getPost().getUsername() != null ? report.getPost().getUsername() : "0" %>"
                             data-reported-post-id="<%= report.getPost().getPostId()%>">
-                        Suspend User
+                        Takedown Post
                     </button>
                     <form action="reportPost" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
@@ -232,7 +232,7 @@
                 <input type="hidden" id="hiddenReportedPostId" name="reportedPostId">
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn-submit">Confirm Suspension</button>
+                <button type="submit" class="btn-submit">Confirm</button>
             </div>
         </form>
     </div>

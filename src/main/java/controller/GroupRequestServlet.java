@@ -52,7 +52,7 @@ public class GroupRequestServlet extends HttpServlet {
             doGet(request, response);
         }catch (Exception e){
             LOGGER.warning("Failed to get request parameters: " + e.getMessage());
-            response.sendRedirect("error.jsp");
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }
