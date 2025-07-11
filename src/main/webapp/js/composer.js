@@ -144,7 +144,7 @@ function initializeQuill(content, images) {
 }
 
 // Initialize privacy selector
-function initializePrivacySelector(selectorId, initialPrivacy = 'public') {
+function initializePrivacySelector(selectorId, initialPrivacy = 'public', disableSelector = false) {
     const privacySelector = document.getElementById(selectorId);
     const privacyIconDisplay = privacySelector.querySelector('#privacy-icon-display');
     const privacyDisplayText = privacySelector.querySelector('#privacy-display-text');
@@ -213,24 +213,28 @@ function initializePrivacySelector(selectorId, initialPrivacy = 'public') {
         }
     }
 
-    privacySelector.addEventListener('click', toggleDropdown);
-    privacyOptions.forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentPrivacy = option.dataset.value;
-            updatePrivacyDisplay();
-            toggleDropdown();
+    if (!disableSelector) {
+        privacySelector.addEventListener('click', toggleDropdown);
+        privacyOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentPrivacy = option.dataset.value;
+                updatePrivacyDisplay();
+                toggleDropdown();
+            });
         });
-    });
-
-    updatePrivacyDisplay();
-    return {
-        getPrivacy: () => currentPrivacy,
-        setPrivacy: (privacy) => {
-            currentPrivacy = privacy;
-            updatePrivacyDisplay();
-        }
-    };
+    }  else {
+        privacySelector.classList.add('disabled-privacy-selector');
+        privacySelector.style.pointerEvents = 'none';
+    }
+        updatePrivacyDisplay();
+        return {
+            getPrivacy: () => currentPrivacy,
+            setPrivacy: (privacy) => {
+                currentPrivacy = privacy;
+                updatePrivacyDisplay();
+            }
+        };
 }
 
 // Setup save/post button
@@ -243,7 +247,7 @@ function setupSaveButton(quill, buttonId) {
 }
 
 // Submit post
-function submitPost(quill, getPrivacy, action, postId = null) {
+function submitPost(quill, getPrivacy, action, postId = null, groupId = null) {
     let contentHTML = quill.root.innerHTML;
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = contentHTML;
@@ -289,6 +293,9 @@ function submitPost(quill, getPrivacy, action, postId = null) {
     const formData = new FormData();
     formData.append('htmlContent', contentHTML);
     formData.append('post_privacy', getPrivacy());
+    if (groupId !== null && groupId !== -1) {
+        formData.append('group_id', groupId);
+    }
 
     const images = quill.root.querySelectorAll('img');
     const imagePromises = [];
@@ -345,7 +352,7 @@ function submitPost(quill, getPrivacy, action, postId = null) {
 }
 
 // Generate composer HTML for the modal
-function generateComposerHTML(avatarSrc, buttonText) {
+function generateComposerHTML(avatarSrc, buttonText, groupId) {
     return `
         <div class="composer-container">
             <div class="composer-body">
@@ -400,6 +407,7 @@ function generateComposerHTML(avatarSrc, buttonText) {
                     <button class="ql-link"></button>
                     <button class="ql-image"></button>
                 </div>
+                <input type="hidden" id="groupIdHidden" name="group_id" value="${groupId}">
                 <button class="post-button" id="submit" disabled>${buttonText}</button>
             </div>
         </div>

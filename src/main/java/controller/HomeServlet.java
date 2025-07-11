@@ -1,6 +1,8 @@
 package controller;
 
+import dao.GroupDAO;
 import dao.PostDAO;
+import dto.InteractGroupDTO;
 import dto.RespPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,6 +15,7 @@ import model.Account;
 import java.io.IOException;
 import java.io.Serial;
 import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/")
 public class HomeServlet extends HttpServlet {
@@ -37,6 +40,9 @@ public class HomeServlet extends HttpServlet {
 		PostDAO dao = new PostDAO();
 		ArrayList<RespPostDTO> feed = dao.getNewsfeedPosts(account.getId());
 		request.setAttribute("feeds", feed);
+		GroupDAO groupDAO = new GroupDAO();
+		List<InteractGroupDTO> groups = groupDAO.getJoinedGroups(account.getId());
+		request.setAttribute("joinedGroups", groups);
 		request.getRequestDispatcher("WEB-INF/views/post.jsp").forward(request, response);
 	}
 

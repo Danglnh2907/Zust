@@ -93,7 +93,7 @@ public class ReqPostDTO {
 
     public void setStatus(String status) {
         status = status.toLowerCase().trim();
-        if (!status.equals("drafted") && !status.equals("published") && !status.equals("rejected") && !status.equals("deleted")) {
+        if (!status.equals("drafted") && !status.equals("published") && !status.equals("rejected") && !status.equals("deleted") && !status.equals("sent")) {
             status = "published";
         }
         this.status = status;

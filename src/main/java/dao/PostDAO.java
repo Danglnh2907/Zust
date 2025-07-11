@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
@@ -559,6 +560,39 @@ public class PostDAO extends DBContext {
             }
         }
         return 0; // Return 0 if no account is found
+    }
+
+    public List<RespPostDTO> getPendingPosts(int accountId, int groupId) {
+        logger.info("Retrieving pending posts for account ID: " + accountId + " and group ID: " + groupId);
+        ArrayList<RespPostDTO> posts = new ArrayList<>();
+        String SQL = """
+                SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
+                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                FROM post p JOIN account a ON p.account_id = a.account_id \
+                WHERE p.post_status = 'sent' AND a.account_id = ? AND p.group_id = ? ORDER BY p.post_create_date DESC""";
+
+        try {
+            if (connection == null) {
+                logger.warning("No connection available!");
+                return posts;
+            }
+            try (PreparedStatement stmt = connection.prepareStatement(SQL)) {
+                stmt.setInt(1, accountId);
+                stmt.setInt(2, accountId);
+                stmt.setInt(3, groupId);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    posts.add(mapResultSetToPost(rs, accountId, connection));
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+
+        return posts;
     }
 
     public static void main(String[] args) {
