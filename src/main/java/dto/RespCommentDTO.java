@@ -1,53 +1,71 @@
 package dto;
 
 import java.time.LocalDateTime;
-import java.util.logging.Logger;
 
 public class RespCommentDTO {
-    private int id;
-    private String content;
-    private String image;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private int totalLikes;
-    private int accountID;
+    private int commentId;
+    private String commentContent;
+    private String commentImage;
     private String username;
-    private String avatar;
-    private int postID;
-    private int replyID;
-    private boolean liked;
-
-    private String template;
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private LocalDateTime createdAt;
+    private LocalDateTime lastModified;
+    private Integer replyCommentId;
+    private int likeCount;
+    private int accountId;
+    private int postId; // Added postId field
 
     public RespCommentDTO() {
-        this.id = -1;
-        this.content = "";
-        this.image = "";
-        this.createdAt = null;
-        this.updatedAt = null;
-        this.totalLikes = 0;
-        this.accountID = -1;
+        this.commentId = 0;
+        this.commentContent = "";
+        this.commentImage = null;
         this.username = "";
-        this.avatar = "";
-        this.postID = -1;
-        this.replyID = -1;
-        this.liked = false;
-
-        try {
-            template = new String(this.getClass().getClassLoader()
-                    .getResourceAsStream("templates/comment_item.html").readAllBytes());
-        } catch (Exception e) {
-            logger.severe("Failed to load template\nError: " + e.getMessage());
-        }
+        this.createdAt = null;
+        this.lastModified = null;
+        this.replyCommentId = null;
+        this.likeCount = 0;
+        this.accountId = 0;
+        this.postId = 0; // Initialize postId
     }
 
-    public String getAvatar() {
-        return avatar;
+    public RespCommentDTO(int commentId, String commentContent, String commentImage, String username,
+                          LocalDateTime createdAt, LocalDateTime lastModified, Integer replyCommentId,
+                          int likeCount, int accountId, int postId) {
+        this.commentId = commentId;
+        this.commentContent = commentContent;
+        this.commentImage = commentImage;
+        this.username = username;
+        this.createdAt = createdAt;
+        this.lastModified = lastModified;
+        this.replyCommentId = replyCommentId;
+        this.likeCount = likeCount;
+        this.accountId = accountId;
+        this.postId = postId; // Set postId
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
+    // Existing getters and setters...
+
+    public int getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(int commentId) {
+        this.commentId = commentId;
+    }
+
+    public String getCommentContent() {
+        return commentContent;
+    }
+
+    public void setCommentContent(String commentContent) {
+        this.commentContent = commentContent;
+    }
+
+    public String getCommentImage() {
+        return commentImage;
+    }
+
+    public void setCommentImage(String commentImage) {
+        this.commentImage = commentImage;
     }
 
     public String getUsername() {
@@ -58,22 +76,6 @@ public class RespCommentDTO {
         this.username = username;
     }
 
-    public int getAccountID() {
-        return accountID;
-    }
-
-    public void setAccountID(int accountID) {
-        this.accountID = accountID;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -82,77 +84,43 @@ public class RespCommentDTO {
         this.createdAt = createdAt;
     }
 
-    public int getId() {
-        return id;
+    public LocalDateTime getLastModified() {
+        return lastModified;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setLastModified(LocalDateTime lastModified) {
+        this.lastModified = lastModified;
     }
 
-    public String getImage() {
-        return image;
+    public Integer getReplyCommentId() {
+        return replyCommentId;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public void setReplyCommentId(Integer replyCommentId) {
+        this.replyCommentId = replyCommentId;
     }
 
-    public int getTotalLikes() {
-        return totalLikes;
+    public int getLikeCount() {
+        return likeCount;
     }
 
-    public void setTotalLikes(int totalLikes) {
-        this.totalLikes = totalLikes;
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
     }
 
-    public int getPostID() {
-        return postID;
+    public int getAccountId() {
+        return accountId;
     }
 
-    public void setPostID(int postID) {
-        this.postID = postID;
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
-    public int getReplyID() {
-        return replyID;
+    public int getPostId() {
+        return postId;
     }
 
-    public void setReplyID(int replyID) {
-        this.replyID = replyID;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public boolean isLiked() {
-        return liked;
-    }
-
-    public void setLiked(boolean liked) {
-        this.liked = liked;
-    }
-
-    @Override
-    public String toString() {
-        String imageURL = String.format("<img src=\"/zust/static/images/%s\" alt=\"Comment image\">", image);
-
-        //The template UI have no display for last_update yet
-        return String.format(template,
-                replyID == -1 ? "" : "is-reply",
-                id,
-                avatar,
-                username,
-                username.toLowerCase().replaceAll(" ", ""),
-                content,
-                image == null || image.isEmpty() ? "" : imageURL,
-                liked ? "liked" : "",
-                totalLikes,
-                id);
+    public void setPostId(int postId) {
+        this.postId = postId;
     }
 }

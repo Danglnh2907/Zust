@@ -1,14 +1,12 @@
 package controller;
 
 import dao.CommentDAO;
-import dto.ReportCommentDTO;
 import dto.ReqCommentDTO;
 import dto.RespCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import model.Account;
 import util.service.FileService;
 
 import java.io.File;
@@ -16,300 +14,279 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Scanner;
+import java.util.UUID;
 import java.util.logging.Logger;
 
-@WebServlet(urlPatterns = {"/comment"})
-@MultipartConfig(maxFileSize = 5 * 1024 * 1024) //5MB
+/*
+ * Handle all comment-related HTTP requests:
+ * - GET /comment: Retrieve all comments for a specific post
+ * - POST /comment?action=create: Create a new comment
+ * - POST /comment?action=edit&id=comment_id: Edit an existing comment
+ * - POST /comment?action=delete&id=comment_id: Delete a comment
+ */
+@WebServlet(name = "CommentControllerServlet", value = "/comment")
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024) // 5MB
 public class CommentController extends HttpServlet {
+    // Logger for debugging
     private final Logger logger = Logger.getLogger(this.getClass().getName());
-    private PrintWriter out;
+    // FileService for handling file uploads
+    private final FileService fileService = new FileService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        /*
-         * /comment?postID=post_id: Get all comments by postID
-         * /comment?action=report: show report comment form
-         */
-
-        out = response.getWriter();
-
-        //Fetch userID in sessions
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        // Fetch userID from session
         HttpSession session = request.getSession();
-        Account account;
+        String userIDRaw = (String) session.getAttribute("userID");
+        int userID;
         try {
-            account = (Account) session.getAttribute("users");
-            if (account == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"User not authenticated\"}");
-                return;
-            }
-        } catch (Exception e) {
-            logger.warning("Error getting user from session: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\":\"Authentication error\"}");
-            return;
-        }
-
-        //If no action is found, assume this as view comments
-        //Get request parameter
-        String postIDRaw = request.getParameter("postID");
-        int postID;
-        try {
-            postID = Integer.parseInt(postIDRaw);
+            userID = Integer.parseInt(userIDRaw);
         } catch (NumberFormatException e) {
-            logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            out.println("{ \"error\": \"" + e.getMessage() + "\" }");
-            return;
+            userID = 1; // Temporary, remove after authentication
         }
 
-        //Prepare the comment form and template
-        String template = """
-                    <div class="comment-section" id="comment-section">
-                        <h2>Comments (<span id="comment-count">%d</span>)</h2>
-                        %s
-                        <div class="comment-list" id="comment-list">
-                            %s
-                        </div>
-                    </div>""";
-        String form = new String(this.getClass().getClassLoader()
-                .getResourceAsStream("templates/comment_form.html").readAllBytes());
+        // Get postId from request parameter
+        String postIdRaw = request.getParameter("post_id");
+        postIdRaw = postIdRaw == null ? "1" : postIdRaw.trim(); // Temporary, remove after authentication
+//        if (postIdRaw == null || postIdRaw.trim().isEmpty()) {
+//            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
 
-        //Fetch comments from database
-        CommentDAO commentDAO = new CommentDAO();
-        ArrayList<RespCommentDTO> comments = commentDAO.getAllComments(postID, account.getId());
-        if (comments.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.setContentType("text/html");
-            response.setCharacterEncoding("UTF-8");
-            out.println(String.format(template, comments.size(),  String.format(form, account.getAvatar()), ""));
-        } else {
-            //We return the HTML directly
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.setContentType("text/html");
-            response.setCharacterEncoding("UTF-8");
-
-            //Get the comment items
-            StringBuilder commentItems = new StringBuilder();
-            LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> hierarchyComments = commentDAO.filterComment(comments);
-            for (Map.Entry<RespCommentDTO, ArrayList<RespCommentDTO>> topLevelComment : hierarchyComments.entrySet()) {
-                commentItems.append(topLevelComment.getKey()).append("\n");
-                for (RespCommentDTO reply : topLevelComment.getValue()) {
-                    commentItems.append(reply).append("\n");
-                }
+        try {
+            int postId = Integer.parseInt(postIdRaw);
+            CommentDAO commentDAO = new CommentDAO();
+            ArrayList<RespCommentDTO> comments = commentDAO.viewAllComments(postId, userID);
+            request.setAttribute("postId", postId);
+            if (comments.isEmpty()) {
+                request.setAttribute("message", "No comments found");
+            } else {
+                request.setAttribute("comments", comments);
             }
-
-            //Print the HTML to the output stream
-            String output = String.format(template,
-                    comments.size(), //Get the total comment
-                    String.format(form, account.getAvatar()), //Get the comment-posting form (with custom user avatar)
-                    commentItems);
-            //logger.info(output); 
-
-            out.print(output);
+            request.getRequestDispatcher("/WEB-INF/views/comments.jsp").forward(request, response);
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid postID: " + postIdRaw);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        /*
-         * /comment?action=create
-         * /comment?action=edit&commentID=comment_id
-         * /comment?action=delete&commentID=comment_id
-         * /comment?action=like&commentID=comment_id
-         * /comment?action=unlike&commentID=comment_id
-         * /comment?action=report&commentID=comment_id
-         */
-
-        //Get session
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        // Fetch userID from session
         HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("users");
-        if (session.getAttribute("users") == null) {
-            response.sendRedirect("/auth");
-            return;
+        String userIDRaw = (String) session.getAttribute("userID");
+        int userID;
+        try {
+            userID = Integer.parseInt(userIDRaw);
+        } catch (NumberFormatException e) {
+            userID = 1; // Temporary, remove after authentication
         }
 
-        //Get request parameter
+        // Set response content type to JSON
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        // Get action parameter
         String action = request.getParameter("action");
-        if (action == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            out.println("{ \"error\": \"" + "Bad request" + "\" }");
-            return;
-        }
-        action = action.toLowerCase().trim();
-
+        action = action == null ? "" : action.toLowerCase().trim();
         CommentDAO commentDAO = new CommentDAO();
+
         switch (action) {
-            case "create" -> {
-                try {
-                    //Extract data
-                    ReqCommentDTO commentDTO = extractData(account.getId(), request.getParts());
-                    boolean success = commentDAO.createComment(commentDTO);
-                    if (success) {
-                        response.setStatus(HttpServletResponse.SC_CREATED);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+            case "create":
+                ReqCommentDTO createDTO = extractData(userID, request.getParts());
+//                if (createDTO == null) {
+//                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//                    out.write("{\"success\": false, \"message\": \"Invalid input\"}");
+//                    return;
+//                }
+                // Checking if either content or image is present
+                if (createDTO.getCommentContent() == null && createDTO.getCommentImage() == null) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.write("{\"success\": false, \"message\": \"Comment must contain text or an image\"}");
+                    return;
                 }
-            }
-            case "edit", "delete" -> {
-            }
-            case "like" -> {
-                try {
-                    //Extract commentID
-                    int commentID = Integer.parseInt(request.getParameter("commentID"));
-                    boolean success = commentDAO.likeComment(account.getId(), commentID);
-                    if (success) {
-                        response.setStatus(HttpServletResponse.SC_CREATED);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                boolean createSuccess = commentDAO.createComment(createDTO);
+                if (createSuccess) {
+                    RespCommentDTO createdComment = commentDAO.getCommentById(commentDAO.getLatestCommentId(userID)); // Assuming this method exists
+                    response.setStatus(HttpServletResponse.SC_CREATED);
+                    out.write("{\"success\": true, \"comment\": " + toJson(createdComment) + "}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.write("{\"success\": false, \"message\": \"Failed to create comment\"}");
                 }
-            }
-            case "unlike" -> {
-                try {
-                    int commentID = Integer.parseInt(request.getParameter("commentID"));
-                    boolean success = commentDAO.unlikeComment(account.getId(), commentID);
-                    if (success) {
-                        response.setStatus(HttpServletResponse.SC_CREATED);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                }
-            }
-            case "report" -> {
-                try {
-                    int commentID = Integer.parseInt(request.getParameter("commentID"));
-                    String content = request.getParameter("content");
+                break;
 
-                    ReportCommentDTO dto = new ReportCommentDTO();
-                    dto.setCommentID(commentID);
-                    dto.setContent(content);
-                    dto.setCreatedAt(LocalDateTime.now());
-                    dto.setStatus("sent");
-                    dto.setAccountID(account.getId());
-                    boolean success = commentDAO.report(dto);
-                    if (success) {
-                        response.setStatus(HttpServletResponse.SC_CREATED);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
+            case "edit":
+                // Get commentId
+                String commentIdRaw = request.getParameter("id");
+                if (commentIdRaw == null || commentIdRaw.trim().isEmpty()) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.write("{\"success\": false, \"message\": \"Comment ID required\"}");
+                    return;
                 }
-            }
+                try {
+                    int commentId = Integer.parseInt(commentIdRaw);
+                    ReqCommentDTO editDTO = extractData(userID, request.getParts());
+                    if (editDTO == null) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        out.write("{\"success\": false, \"message\": \"Invalid input\"}");
+                        return;
+                    }
+                    boolean editSuccess = commentDAO.editComment(commentId, editDTO);
+                    response.setStatus(editSuccess ? HttpServletResponse.SC_OK : HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    out.println("{\"success\": " + editSuccess + "}");
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid commentID: " + commentIdRaw);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.println("{\"success\": false, \"message\": \"Invalid comment ID\"}");
+                }
+                break;
+
+            case "delete":
+                // Get commentId
+                commentIdRaw = request.getParameter("id");
+                if (commentIdRaw == null || commentIdRaw.trim().isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.println("{\"success\": false, \"message\": \"Comment ID required\"}");
+                    return;
+                }
+                try {
+                    int commentId = Integer.parseInt(commentIdRaw);
+                    boolean deleteSuccess = commentDAO.deleteComment(commentId, userID);
+                    response.setStatus(deleteSuccess ? HttpServletResponse.SC_OK : HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    out.println("{\"success\": " + deleteSuccess + "}");
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid commentID: " + commentIdRaw);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.println("{\"success\": false, \"message\": \"Invalid comment ID\"}");
+                }
+                break;
+
+            default:
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"success\": false, \"message\": \"Invalid action\"}");
+                break;
         }
     }
 
-    private ReqCommentDTO extractData(int accountID, Collection<Part> parts) {
-        //Variable declarations
-        String content = "";
-        String image = "";
-        int postID = -1;
-        int replyID = -1;
+    /*
+     * Extract comment data from multipart form parts
+     * @param userID - The ID of the user creating or editing the comment
+     * @param parts - Collection of multipart form parts
+     * @return ReqCommentDTO - Data transfer object containing comment details
+     */
+    private ReqCommentDTO extractData(int userID, Collection<Part> parts) {
+        String commentContent = null;
+        String commentImage = null;
+        Integer replyCommentId = null;
+        int postId = -1;
+        LocalDateTime now = LocalDateTime.now();
 
-        try {
-            for (Part part : parts) {
-                String fieldName = part.getName();
-                if (fieldName == null) continue;
-
-                //Get comment content
-                switch (fieldName) {
-                    case "content" -> content = readPartAsString(part);
-                    case "image" -> image = handleImagePart(part);
-                    case "replyID" -> replyID = Integer.parseInt(readPartAsString(part));
-                    case "postID" -> postID = Integer.parseInt(readPartAsString(part));
-                }
+        // Create storage directory if not exists
+        File uploadDir = new File(fileService.getLocationPath() + File.separator + "images");
+        if (!uploadDir.exists()) {
+            if (!uploadDir.mkdir()) {
+                logger.severe("Failed to create upload directory: " + uploadDir.getPath());
+                return null;
             }
-        } catch (NumberFormatException e) {
-            logger.severe("Failed to parse content: " + e.getMessage());
         }
 
-        ReqCommentDTO commentDTO = new ReqCommentDTO();
-        commentDTO.setAccountID(accountID);
-        commentDTO.setPostID(postID);
-        commentDTO.setCreatedAt(LocalDateTime.now());
-        commentDTO.setUpdatedAt(LocalDateTime.now());
-        commentDTO.setContent(content);
-        commentDTO.setImage(image);
-        commentDTO.setReplyID(replyID);
-        return commentDTO;
-    }
+        for (Part part : parts) {
+            String fieldName = part.getName();
+            logger.info("Processing part: " + fieldName);
+            try {
+                if (fieldName.equals("commentContent")) {
+                    try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
+                        if (scanner.hasNext()) {
+                            commentContent = scanner.useDelimiter("\\A").next().trim();
+                        } else {
+                            logger.warning("No content found in commentContent part");
+                        }
+                    }
+                } else if (fieldName.equals("commentImage")) {
+                    String fileName = "";
+                    String contentDisposition = part.getHeader("content-disposition");
+                    if (contentDisposition != null) {
+                        for (String cd : contentDisposition.split(";")) {
+                            if (cd.trim().startsWith("filename")) {
+                                fileName = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+                                fileName = fileName.substring(fileName.lastIndexOf('/') + 1)
+                                        .substring(fileName.lastIndexOf('\\') + 1);
+                                fileName = fileName.replaceAll("[\\p{Cntrl}\\\\/:*?\"<>]", "_");
+                            }
+                        }
+                    }
+                    if (!fileName.isEmpty()) {
+                        String newFileName = UUID.randomUUID() + "_" + fileName;
+                        try {
+                            String fullPath = fileService.saveFile(newFileName, part.getInputStream());
+                            logger.info("Image saved at: " + fullPath);
+                            commentImage = newFileName;
+                        } catch (IOException e) {
+                            logger.severe("Failed to save comment image: " + e.getMessage());
+                        }
+                    }
+                } else if (fieldName.equals("replyCommentId")) {
+                    try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
+                        if (scanner.hasNext()) {
+                            String replyIdRaw = scanner.useDelimiter("\\A").next().trim();
+                            if (!replyIdRaw.isEmpty()) {
+                                replyCommentId = Integer.parseInt(replyIdRaw);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        logger.warning("Invalid replyCommentId: " + e.getMessage());
+                    }
+                } else if (fieldName.equals("postId")) {
+                    try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
+                        if (scanner.hasNext()) {
+                            String postIdRaw = scanner.useDelimiter("\\A").next().trim();
+                            postId = Integer.parseInt(postIdRaw);
+                        } else {
+                            logger.warning("No postId found");
+                        }
+                    } catch (NumberFormatException e) {
+                        logger.severe("Invalid postId: " + e.getMessage());
+                        return null;
+                    }
+                }
+            } catch (IOException e) {
+                logger.severe("Error reading part " + fieldName + ": " + e.getMessage());
+                return null;
+            }
+        }
 
-    private String readPartAsString(Part part) {
-        try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
-            scanner.useDelimiter("\\A");
-            return scanner.hasNext() ? scanner.next() : "";
-        } catch (Exception e) {
-            logger.severe("Failed to read part as string: " + e.getMessage());
+        // Validate required fields
+        if ((commentContent == null || commentContent.trim().isEmpty()) && commentImage == null) {
+            logger.severe("Comment content is required");
             return null;
         }
-    }
-
-    private String handleImagePart(Part part) {
-        try {
-            String fileName = "";
-            String contentDisposition = part.getHeader("content-disposition");
-            String uploadDir = (new FileService()).getLocationPath();
-
-            // Extract filename from content-disposition header
-            if (contentDisposition != null) {
-                for (String cd : contentDisposition.split(";")) {
-                    if (cd.trim().startsWith("filename")) {
-                        fileName = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
-                        // Extract just the filename without path
-                        fileName = fileName.substring(Math.max(fileName.lastIndexOf('/'),
-                                fileName.lastIndexOf('\\')) + 1);
-                        break;
-                    }
-                }
-            }
-
-            // Handle existing image reference (for edit when no new image is uploaded)
-            if (fileName.isEmpty()) {
-                String existingImage = readPartAsString(part);
-                if (existingImage != null && !existingImage.trim().isEmpty()) {
-                    return existingImage.trim();
-                }
-                return null; // No image provided
-            }
-
-            // Handle new image upload
-            if (part.getSize() > 0) {
-                String fileExtension = "";
-                int dotIndex = fileName.lastIndexOf('.');
-                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-                    fileExtension = fileName.substring(dotIndex);
-                }
-
-                String newFileName = UUID.randomUUID() + "_" + System.currentTimeMillis() + fileExtension;
-                String filePath = uploadDir + File.separator + "images" + File.separator + newFileName;
-
-                part.write(filePath);
-                logger.info("Successfully saved image: " + newFileName);
-                logger.info("Get image at: " + filePath);
-                return newFileName;
-            }
-
-            return null; // No valid image content
-        } catch (Exception e) {
-            logger.severe("Failed to handle image part: " + e.getMessage());
+        if (postId == -1) {
+            logger.severe("Post ID is required");
             return null;
         }
+
+        return new ReqCommentDTO(userID, postId, commentContent, commentImage, replyCommentId, now, now);
+    }
+
+    /*
+     * Convert a comment DTO to JSON string
+     * @param comment - The comment data transfer object
+     * @return String - JSON representation of the comment
+     */
+    private String toJson(RespCommentDTO comment) {
+        if (comment == null) return "{}";
+        logger.info("Serializing commentImage: " + comment.getCommentImage());
+        return "{"
+                + "\"commentId\":" + comment.getCommentId() + ","
+                + "\"username\":\"" + comment.getUsername() + "\","
+                + "\"commentContent\":\"" + comment.getCommentContent().replace("\"", "\\\"") + "\","
+                + "\"commentImage\":\"" + (comment.getCommentImage() != null ? comment.getCommentImage() : "") + "\","
+                + "\"likeCount\":" + comment.getLikeCount() + ","
+                + "\"postId\":" + comment.getPostId() + ","
+                + "\"replyCommentId\":" + (comment.getReplyCommentId() != null ? comment.getReplyCommentId() : "null")
+                + "}";
     }
 }

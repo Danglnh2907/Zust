@@ -1,441 +1,424 @@
 package dao;
 
-import dto.ReportCommentDTO;
-import dto.ReportPostDTO;
 import dto.ReqCommentDTO;
 import dto.RespCommentDTO;
 import util.database.DBContext;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Scanner;
 import java.util.logging.Logger;
 
+/*
+ * Data Access Object for comment-related database operations:
+ * - Create, edit, delete, and retrieve comments
+ * - Validate permissions and status before operations
+ */
 public class CommentDAO extends DBContext {
+    // Logger for debugging
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
+    /*
+     * Create a new comment in the database
+     * @param dto - Data transfer object containing comment details
+     * @return boolean - True if creation is successful, false otherwise
+     */
     public boolean createComment(ReqCommentDTO dto) {
-        Connection conn;
+        Connection conn = null;
         try {
-            //Get connection
             conn = getConnection();
             if (conn == null) {
                 return false;
             }
-            conn.setAutoCommit(false); //Start transaction
+            conn.setAutoCommit(false);
 
-            String sql = """
-                    INSERT INTO comment( \
-                       comment_content, comment_image, comment_create_date, comment_last_update, \
-                       account_id, post_id, reply_comment_id) \
-                    VALUES(?, ?, ?, ?, ?, ?, ?)""";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, dto.getContent());
-            stmt.setString(2, dto.getImage());
-            stmt.setTimestamp(3, dto.getCreatedAt() != null ? Timestamp.valueOf(dto.getCreatedAt()) : null);
-            stmt.setTimestamp(4, dto.getUpdatedAt() != null ? Timestamp.valueOf(dto.getUpdatedAt()) : null);
-            stmt.setInt(5, dto.getAccountID());
-            stmt.setInt(6, dto.getPostID());
-            if (dto.getReplyID() == -1) {
-                stmt.setNull(7, java.sql.Types.INTEGER);
-            } else {
-                stmt.setInt(7, dto.getReplyID());
+            // Check post permissions
+            String permissionSql = """
+                SELECT p.post_privacy, p.post_status
+                FROM post p
+                WHERE p.post_id = ? AND p.post_status = 'published'
+                AND (
+                    p.post_privacy = 'public'
+                    OR (p.post_privacy = 'friend' AND EXISTS (
+                        SELECT 1 FROM interact i
+                        WHERE i.actor_account_id = ? AND i.target_account_id = p.account_id
+                        AND i.interact_status = 'friend'
+                    ))
+                    OR (p.post_privacy = 'private' AND p.account_id = ?)
+                )""";
+            try (PreparedStatement permStmt = conn.prepareStatement(permissionSql)) {
+                permStmt.setInt(1, dto.getPostID());
+                permStmt.setInt(2, dto.getAccountID());
+                permStmt.setInt(3, dto.getAccountID());
+                ResultSet rs = permStmt.executeQuery();
+                if (!rs.next()) {
+                    conn.rollback();
+                    logger.warning("Post not found or user lacks permission");
+                    return false;
+                }
             }
 
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                System.out.println("No rows affected.");
-                conn.rollback();
-                return false;
+            // Validate reply comment if present
+            if (dto.getReplyCommentId() != null) {
+                String replySql = "SELECT comment_status FROM comment WHERE comment_id = ? AND comment_status = 0";
+                try (PreparedStatement replyStmt = conn.prepareStatement(replySql)) {
+                    replyStmt.setInt(1, dto.getReplyCommentId());
+                    ResultSet rs = replyStmt.executeQuery();
+                    if (!rs.next()) {
+                        conn.rollback();
+                        logger.warning("Reply comment not found or deleted");
+                        return false;
+                    }
+                }
             }
+
+            // Insert new comment
+            String commentSql = """
+                INSERT INTO comment (comment_content, comment_image, comment_status, comment_create_date, account_id, post_id, reply_comment_id)
+                VALUES (?, ?, 0, ?, ?, ?, ?)""";
+            try (PreparedStatement commentStmt = conn.prepareStatement(commentSql)) {
+                commentStmt.setString(1, dto.getCommentContent());
+                commentStmt.setString(2, dto.getCommentImage());
+                commentStmt.setTimestamp(3, Timestamp.valueOf(dto.getCreatedAt() != null ? dto.getCreatedAt() : LocalDateTime.now()));
+                commentStmt.setInt(4, dto.getAccountID());
+                commentStmt.setInt(5, dto.getPostID());
+                if (dto.getReplyCommentId() != null) {
+                    commentStmt.setInt(6, dto.getReplyCommentId());
+                } else {
+                    commentStmt.setNull(6, java.sql.Types.INTEGER);
+                }
+                int affectedRows = commentStmt.executeUpdate();
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
             conn.commit();
+            return true;
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            logger.warning(e.getMessage());
-            return false;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            logger.warning("Create comment error: " + e.getMessage());
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                logger.warning("Rollback error: " + ex.getMessage());
+            }
             return false;
         }
-        return true;
     }
 
-    public ArrayList<RespCommentDTO> getAllComments(int postID, int userID) {
-        Connection conn;
-        ArrayList<RespCommentDTO> comments = new ArrayList<>();
+    /*
+     * Edit an existing comment
+     * @param commentId - The ID of the comment to edit
+     * @param dto - Data transfer object containing updated comment details
+     * @return boolean - True if edit is successful, false otherwise
+     */
+    public boolean editComment(int commentId, ReqCommentDTO dto) {
+        Connection conn = null;
         try {
             conn = getConnection();
             if (conn == null) {
-                logger.warning("No connection found");
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            // Check comment and post status
+            String checkSql = """
+                SELECT c.comment_status, p.post_status
+                FROM comment c
+                JOIN post p ON c.post_id = p.post_id
+                WHERE c.comment_id = ? AND c.account_id = ? AND c.comment_status = 0 AND p.post_status = 'published'""";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, commentId);
+                checkStmt.setInt(2, dto.getAccountID());
+                ResultSet rs = checkStmt.executeQuery();
+                if (!rs.next()) {
+                    conn.rollback();
+                    logger.warning("Comment not found, deleted, or unauthorized");
+                    return false;
+                }
+            }
+
+            // Validate reply comment if present
+            if (dto.getReplyCommentId() != null) {
+                String replySql = "SELECT comment_status FROM comment WHERE comment_id = ? AND comment_status = 0";
+                try (PreparedStatement replyStmt = conn.prepareStatement(replySql)) {
+                    replyStmt.setInt(1, dto.getReplyCommentId());
+                    ResultSet rs = replyStmt.executeQuery();
+                    if (!rs.next()) {
+                        conn.rollback();
+                        logger.warning("Reply comment not found or deleted");
+                        return false;
+                    }
+                }
+            }
+
+            // Update comment
+            String commentSql = """
+                UPDATE comment
+                SET comment_content = ?, comment_image = ?, comment_last_update = ?, reply_comment_id = ?
+                WHERE comment_id = ? AND account_id = ? AND comment_status = 0""";
+            try (PreparedStatement commentStmt = conn.prepareStatement(commentSql)) {
+                commentStmt.setString(1, dto.getCommentContent());
+                commentStmt.setString(2, dto.getCommentImage());
+                commentStmt.setTimestamp(3, Timestamp.valueOf(dto.getLastModified() != null ? dto.getLastModified() : LocalDateTime.now()));
+                if (dto.getReplyCommentId() != null) {
+                    commentStmt.setInt(4, dto.getReplyCommentId());
+                } else {
+                    commentStmt.setNull(4, java.sql.Types.INTEGER);
+                }
+                commentStmt.setInt(5, commentId);
+                commentStmt.setInt(6, dto.getAccountID());
+                int affectedRows = commentStmt.executeUpdate();
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            logger.warning("Edit comment error: " + e.getMessage());
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                logger.warning("Rollback error: " + ex.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /*
+     * Retrieve all comments for a specific post
+     * @param postId - The ID of the post
+     * @param viewerAccountId - The ID of the user viewing the comments
+     * @return ArrayList<RespCommentDTO> - List of comment data transfer objects
+     */
+    public ArrayList<RespCommentDTO> viewAllComments(int postId, int viewerAccountId) {
+        ArrayList<RespCommentDTO> comments = new ArrayList<>();
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                return comments;
+            }
+
+            // Check post permissions
+            String permissionSql = """
+            SELECT p.post_privacy, p.post_status
+            FROM post p
+            WHERE p.post_id = ? AND p.post_status = 'published'
+            AND (
+                p.post_privacy = 'public'
+                OR (p.post_privacy = 'friend' AND EXISTS (
+                    SELECT 1 FROM interact i
+                    WHERE i.actor_account_id = ? AND i.target_account_id = p.account_id
+                    AND i.interact_status = 'friend'
+                ))
+                OR (p.post_privacy = 'private' AND p.account_id = ?)
+            )""";
+            try (PreparedStatement permStmt = conn.prepareStatement(permissionSql)) {
+                permStmt.setInt(1, postId);
+                permStmt.setInt(2, viewerAccountId);
+                permStmt.setInt(3, viewerAccountId);
+                ResultSet rs = permStmt.executeQuery();
+                if (!rs.next()) {
+                    logger.warning("Post not found or viewer lacks permission");
+                    return comments;
+                }
+            }
+
+            // Fetch comments
+            String commentSql = """
+            SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
+                   c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
+                   (SELECT COUNT(*) FROM like_comment lc WHERE lc.comment_id = c.comment_id) AS like_count,
+                   c.post_id
+            FROM comment c
+            JOIN account a ON c.account_id = a.account_id
+            WHERE c.post_id = ? AND c.comment_status = 0
+            ORDER BY c.comment_create_date DESC""";
+            try (PreparedStatement commentStmt = conn.prepareStatement(commentSql)) {
+                commentStmt.setInt(1, postId);
+                ResultSet rs = commentStmt.executeQuery();
+                while (rs.next()) {
+                    RespCommentDTO comment = new RespCommentDTO();
+                    comment.setCommentId(rs.getInt("comment_id"));
+                    comment.setCommentContent(rs.getString("comment_content"));
+                    comment.setCommentImage(rs.getString("comment_image"));
+                    comment.setUsername(rs.getString("username"));
+                    comment.setCreatedAt(rs.getTimestamp("comment_create_date") != null
+                            ? rs.getTimestamp("comment_create_date").toLocalDateTime() : null);
+                    comment.setLastModified(rs.getTimestamp("comment_last_update") != null
+                            ? rs.getTimestamp("comment_last_update").toLocalDateTime() : null);
+                    comment.setReplyCommentId(rs.getInt("reply_comment_id") != 0
+                            ? rs.getInt("reply_comment_id") : null);
+                    comment.setLikeCount(rs.getInt("like_count"));
+                    comment.setAccountId(rs.getInt("account_id"));
+                    comment.setPostId(rs.getInt("post_id")); // Set postId
+                    comments.add(comment);
+                }
+            }
+
+            return comments;
+        } catch (SQLException e) {
+            logger.warning("View comments error: " + e.getMessage());
+            return comments;
+        }
+    }
+
+    /*
+     * Delete a comment by marking it as deleted
+     * @param commentId - The ID of the comment to delete
+     * @param accountId - The ID of the user requesting deletion
+     * @return boolean - True if deletion is successful, false otherwise
+     */
+    public boolean deleteComment(int commentId, int accountId) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            // Check comment and post status
+            String checkSql = """
+                SELECT c.comment_status, p.post_status
+                FROM comment c
+                JOIN post p ON c.post_id = p.post_id
+                WHERE c.comment_id = ? AND c.account_id = ? AND c.comment_status = 0 AND p.post_status = 'published'""";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, commentId);
+                checkStmt.setInt(2, accountId);
+                ResultSet rs = checkStmt.executeQuery();
+                if (!rs.next()) {
+                    conn.rollback();
+                    logger.warning("Comment not found, deleted, or unauthorized");
+                    return false;
+                }
+            }
+
+            // Set comment as deleted
+            String deleteSql = """
+                UPDATE comment
+                SET comment_status = 1, comment_last_update = ?
+                WHERE comment_id = ? AND account_id = ? AND comment_status = 0""";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+                deleteStmt.setInt(2, commentId);
+                deleteStmt.setInt(3, accountId);
+                int affectedRows = deleteStmt.executeUpdate();
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            logger.warning("Delete comment error: " + e.getMessage());
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                logger.warning("Rollback error: " + ex.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /*
+     * Retrieve a comment by its ID
+     * @param commentId - The ID of the comment
+     * @return RespCommentDTO - Data transfer object for the comment, or null if not found
+     */
+    public RespCommentDTO getCommentById(int commentId) {
+        Connection conn = null;
+        RespCommentDTO comment = null;
+        try {
+            conn = getConnection();
+            if (conn == null) {
+                logger.warning("Failed to get database connection");
                 return null;
             }
 
+            // Fetch comment details
             String sql = """
-                    SELECT comment_id, comment_content, comment_image, comment_create_date, comment_last_update, \
-                    (SELECT COUNT(*) FROM like_comment WHERE comment_id = c.comment_id) AS total_likes, \
-                    c.account_id, a.username, a.avatar, post_id, reply_comment_id \
-                    FROM comment c \
-                    JOIN account a ON a.account_id = c.account_id \
-                    WHERE c.post_id = ? AND c.comment_status = 0 \
-                    ORDER BY c.comment_last_update DESC""";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, postID);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                RespCommentDTO dto = new RespCommentDTO();
-                dto.setId(rs.getInt("comment_id"));
-                dto.setContent(rs.getString("comment_content"));
-                dto.setImage(rs.getString("comment_image"));
-                dto.setCreatedAt(rs.getTimestamp("comment_create_date") == null ? null : rs.getTimestamp("comment_create_date").toLocalDateTime());
-                dto.setUpdatedAt(rs.getTimestamp("comment_last_update") == null ? null : rs.getTimestamp("comment_last_update").toLocalDateTime());
-                dto.setTotalLikes(rs.getInt("total_likes"));
-                dto.setAccountID(rs.getInt("account_id"));
-                dto.setUsername(rs.getString("username"));
-                dto.setAvatar(rs.getString("avatar"));
-                dto.setPostID(rs.getInt("post_id"));
-                //SQL Server treat NULL value as 0
-                dto.setReplyID(rs.getInt("reply_comment_id") == 0 ? -1 : rs.getInt("reply_comment_id"));
-
-                //Check if current requester has liked this comment
-                String likeSQL = "SELECT * FROM like_comment WHERE comment_id = ? AND account_id = ?";
-                PreparedStatement likeStmt = conn.prepareStatement(likeSQL);
-                likeStmt.setInt(1, dto.getId());
-                likeStmt.setInt(2, userID);
-                dto.setLiked(likeStmt.executeQuery().next());
-
-                comments.add(dto);
+            SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date,
+                   c.comment_last_update, c.reply_comment_id, a.username, a.account_id,
+                   (SELECT COUNT(*) FROM like_comment lc WHERE lc.comment_id = c.comment_id) AS like_count,
+                   c.post_id
+            FROM comment c
+            JOIN account a ON c.account_id = a.account_id
+            WHERE c.comment_id = ? AND c.comment_status = 0""";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, commentId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    comment = new RespCommentDTO();
+                    comment.setCommentId(rs.getInt("comment_id"));
+                    comment.setCommentContent(rs.getString("comment_content"));
+                    comment.setCommentImage(rs.getString("comment_image"));
+                    comment.setUsername(rs.getString("username"));
+                    comment.setCreatedAt(rs.getTimestamp("comment_create_date") != null
+                            ? rs.getTimestamp("comment_create_date").toLocalDateTime() : null);
+                    comment.setLastModified(rs.getTimestamp("comment_last_update") != null
+                            ? rs.getTimestamp("comment_last_update").toLocalDateTime() : null);
+                    comment.setReplyCommentId(rs.getInt("reply_comment_id") != 0
+                            ? rs.getInt("reply_comment_id") : null);
+                    comment.setLikeCount(rs.getInt("like_count"));
+                    comment.setAccountId(rs.getInt("account_id"));
+                    comment.setPostId(rs.getInt("post_id")); // Set postId
+                }
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            logger.warning(e.getMessage());
-            return null;
+            logger.warning("Error fetching comment by ID: " + e.getMessage());
         }
-
-        return comments;
+        return comment;
     }
 
-    public LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> filterComment(ArrayList<RespCommentDTO> comments) {
-        //Separate top-level comments and replies
-        ArrayList<RespCommentDTO> topLevelComments = new ArrayList<>();
-        ArrayList<RespCommentDTO> replyComments = new ArrayList<>();
-
-        for (RespCommentDTO comment : comments) {
-            if (comment.getReplyID() == -1) {
-                topLevelComments.add(comment);
-            } else {
-                replyComments.add(comment);
-            }
-        }
-
-        //Sort reply comments by last_update ascending
-        replyComments.sort((c1, c2) -> {
-            if (c1.getUpdatedAt() == null && c2.getUpdatedAt() == null) return 0;
-            if (c1.getUpdatedAt() == null) return 1;
-            if (c2.getUpdatedAt() == null) return -1;
-            return c1.getUpdatedAt().compareTo(c2.getUpdatedAt());
-        });
-
-        //Create the LinkedHashMap to maintain insertion order (top-level comments order)
-        LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> commentHierarchy = new LinkedHashMap<>();
-
-        //Initialize the map with top-level comments
-        for (RespCommentDTO topComment : topLevelComments) {
-            commentHierarchy.put(topComment, new ArrayList<>());
-        }
-
-        //Group replies under their top-level parent comments
-        for (RespCommentDTO reply : replyComments) {
-            RespCommentDTO topLevelParent = findTopLevelParent(reply, comments);
-            if (topLevelParent != null) {
-                commentHierarchy.get(topLevelParent).add(reply);
-            }
-        }
-
-        return commentHierarchy;
-    }
-
-    private RespCommentDTO findTopLevelParent(RespCommentDTO reply, ArrayList<RespCommentDTO> allComments) {
-        if (reply.getReplyID() == -1) {
-            // This is already a top-level comment
-            return reply;
-        }
-
-        // Find the immediate parent comment
-        RespCommentDTO parentComment = null;
-        for (RespCommentDTO comment : allComments) {
-            if (comment.getId() == reply.getReplyID()) {
-                parentComment = comment;
-                break;
-            }
-        }
-
-        if (parentComment == null) {
-            // Parent comment not found, this shouldn't happen in a well-formed dataset
-            return null;
-        }
-
-        // Recursively find the top-level parent
-        return findTopLevelParent(parentComment, allComments);
-    }
-
-    public boolean updateComment(int commentID, ReqCommentDTO dto) {
-        Connection conn;
+    /*
+     * Get the ID of the latest comment created by a user
+     * @param accountId - The ID of the user
+     * @return int - The latest comment ID, or -1 if none found
+     */
+    public int getLatestCommentId(int accountId) {
+        Connection conn = null;
+        int latestCommentId = -1;
         try {
             conn = getConnection();
             if (conn == null) {
-                logger.warning("No connection found");
-                return false;
+                logger.warning("Failed to get database connection");
+                return -1;
             }
-            conn.setAutoCommit(false);
 
-
+            // Fetch latest comment ID
             String sql = """
-                    UPDATE comment \
-                    SET comment_content = ?, comment_image = ?, comment_last_update = ? \
-                    WHERE comment_id = ? AND account_id = ?""";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, dto.getContent());
-            stmt.setString(2, dto.getImage());
-            stmt.setTimestamp(3, dto.getUpdatedAt() != null ? Timestamp.valueOf(dto.getUpdatedAt()) : null);
-            stmt.setInt(4, commentID);
-            stmt.setInt(5, dto.getAccountID());
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                System.out.println("No rows affected.");
-                logger.warning("No rows affected.");
-                conn.rollback();
+            SELECT MAX(comment_id) AS latest_comment_id
+            FROM comment
+            WHERE account_id = ? AND comment_status = 0""";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, accountId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    latestCommentId = rs.getInt("latest_comment_id");
+                }
             }
-            conn.commit();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            logger.warning(e.getMessage());
-            return false;
+            logger.warning("Error fetching latest comment ID: " + e.getMessage());
         }
-        return true;
-    }
-
-    public boolean deleteComment(int commentID, int accountID) {
-        Connection conn;
-        try {
-            conn = getConnection();
-            if (conn == null) {
-                logger.warning("No connection found");
-                return false;
-            }
-            conn.setAutoCommit(false);
-
-            String sql = """
-                    UPDATE comment \
-                    SET comment_status = 1 \
-                    WHERE comment_id = ? AND account_id = ?"""; //Soft delete
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, commentID);
-            stmt.setInt(2, accountID);
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                System.out.println("No rows affected.");
-                logger.warning("No rows affected.");
-            }
-            conn.commit();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            logger.warning(e.getMessage());
-            return false;
-        }
-        return true;
-    }
-
-    public boolean likeComment(int accountID, int commentID) {
-        Connection conn;
-        try {
-            conn = getConnection();
-            if (conn == null) {
-                return false;
-            }
-            conn.setAutoCommit(false);
-
-            String sql = "INSERT INTO like_comment (account_id, comment_id) VALUES (?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, accountID);
-            stmt.setInt(2, commentID);
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                logger.warning("No rows affected.");
-                conn.rollback();
-            }
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean unlikeComment(int accountID, int commentID) {
-        Connection conn;
-        try {
-            conn = getConnection();
-            if (conn == null) {
-                return false;
-            }
-            conn.setAutoCommit(false);
-
-            String sql = "DELETE FROM like_comment WHERE account_id = ? AND comment_id = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, accountID);
-            stmt.setInt(2, commentID);
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                logger.warning("No rows affected.");
-                conn.rollback();
-            }
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean report(ReportCommentDTO report) {
-        Connection conn;
-        try {
-            conn = getConnection();
-            if (conn == null) {
-                logger.warning("No connection available");
-                return false;
-            }
-            conn.setAutoCommit(false);
-
-            String sql = """
-                    INSERT INTO report_comment (report_content, account_id, comment_id, report_create_date, report_status) \
-                    VALUES (?, ?, ?, ?, ?)""";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, report.getContent());
-            stmt.setInt(2, report.getAccountID());
-            stmt.setInt(3, report.getCommentID());
-            stmt.setTimestamp(4, Timestamp.valueOf(report.getCreatedAt()));
-            stmt.setString(5, report.getStatus());
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                logger.warning("Failed to report comment.");
-                conn.rollback();
-            }
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            logger.warning(e.getMessage());
-            return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        CommentDAO dao = new CommentDAO();
-        Scanner sc = new Scanner(System.in);
-        if (args.length == 1) {
-            switch (args[0]) {
-                case "create": {
-                    //Get data
-                    ReqCommentDTO dto = new ReqCommentDTO();
-                    dto.setContent("This is a comment");
-                    dto.setImage("profile.jpg");
-                    dto.setCreatedAt(LocalDateTime.now());
-                    dto.setUpdatedAt(LocalDateTime.now());
-                    dto.setAccountID(1);
-                    dto.setPostID(1);
-                    dto.setReplyID(-1);
-
-                    boolean success = dao.createComment(dto);
-                    if (success) {
-                        System.out.println("Create comment successful");
-                    } else {
-                        System.out.println("Create comment failed");
-                    }
-                    break;
-                }
-                case "update": {
-                    ReqCommentDTO dto = new ReqCommentDTO();
-                    System.out.print("Enter comment ID: ");
-                    int id = sc.nextInt();
-                    sc.nextLine();
-
-                    System.out.print("Enter comment content: ");
-                    String content = sc.nextLine();
-
-                    System.out.print("Enter comment image: ");
-                    String image = sc.nextLine();
-
-                    System.out.print("Enter account ID: ");
-                    int accountID = sc.nextInt();
-
-                    dto.setContent(content);
-                    dto.setImage(image);
-                    dto.setUpdatedAt(LocalDateTime.now());
-                    dto.setAccountID(accountID);
-
-                    boolean success = dao.updateComment(id, dto);
-                    if (success) {
-                        System.out.println("Update comment successful");
-                    } else {
-                        System.out.println("Update comment failed");
-                    }
-                    break;
-                }
-                case "delete": {
-                    System.out.print("Enter comment ID: ");
-                    int commentID = sc.nextInt();
-                    System.out.print("Enter account ID: ");
-                    int accountID = sc.nextInt();
-                    boolean success = dao.deleteComment(commentID, accountID);
-                    if (success) {
-                        System.out.println("Delete comment successful");
-                    } else {
-                        System.out.println("Delete comment failed");
-                    }
-                    break;
-                }
-                case "gets": {
-                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1, 1);
-                    for (RespCommentDTO comment : comments) {
-                        System.out.println("Comment ID: " + comment.getId());
-                        System.out.println("Comment image: " + (comment.getImage() == null ? "This is null value not string" : comment.getImage()));
-                    }
-                    break;
-                }
-                case "filter": {
-                    ArrayList<RespCommentDTO> comments = dao.getAllComments(1, 1);
-                    LinkedHashMap<RespCommentDTO, ArrayList<RespCommentDTO>> commentMap = dao.filterComment(comments);
-                    System.out.println(commentMap.size());
-                    commentMap.forEach((key, value) -> {
-                        System.out.println(key);
-                        value.forEach(System.out::println);
-                    });
-                    break;
-                }
-                case "report": {
-                    System.out.print("Enter comment ID: ");
-                    int commentId = sc.nextInt();
-                    sc.nextLine();
-
-                    System.out.print("Enter report content: ");
-                    String content = sc.nextLine();
-
-                    ReportCommentDTO dto = new ReportCommentDTO();
-                    dto.setAccountID(1);
-                    dto.setCommentID(commentId);
-                    dto.setContent(content);
-                    dto.setCreatedAt(LocalDateTime.now());
-                    dto.setStatus("sent");
-                    boolean success = dao.report(dto);
-                    if (success) {
-                        System.out.println("Report successful");
-                    } else {
-                        System.out.println("Report failed");
-                    }
-                }
-            }
-        }
+        return latestCommentId;
     }
 }
