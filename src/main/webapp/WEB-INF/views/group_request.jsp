@@ -75,6 +75,8 @@
             background-color: #f8f9fa;
             color: #555;
             font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
         }
         .table-requests tr:last-child td {
             border-bottom: none;
@@ -172,24 +174,11 @@
 <aside class="sidebar">
     <div class="logo">Zust</div>
     <ul class="nav-menu">
-        <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
-            <a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a>
-        </li>
-        <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a>
-        </li>
-        <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-bell"></i></span><span>Notification</span></a>
-        </li>
-        <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
-            <a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a>
-        </li>
-        <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
-            <a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a>
-        </li>
-        <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
-            <a href="#"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a>
-        </li>
+        <li><a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a></li>
+        <li><a href="accountDashboard"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a></li>
+        <li class="active"><a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a></li>
+        <li><a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a></li>
+        <li><a href="reportPost"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a></li>
     </ul>
 </aside>
 

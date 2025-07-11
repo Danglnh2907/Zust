@@ -4,7 +4,6 @@ import dao.AuthDAO;
 import jakarta.servlet.http.*;
 import model.Account;
 import util.service.FileService;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,12 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/auth", "/verify"})
+@WebServlet(urlPatterns = {"/auth", "/verify", "/auth/google", "/auth/google/callback"})
 @MultipartConfig(
 		fileSizeThreshold = 1024 * 1024 * 2,
 		maxFileSize = 1024 * 1024 * 10,
@@ -39,10 +39,20 @@ public class AuthServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String path = request.getServletPath();
-		if ("/verify".equals(path)) {
-			handleEmailVerification(request, response);
-		} else {
-			showAuthPage(request, response);
+
+		switch (path) {
+			case "/verify":
+				handleEmailVerification(request, response);
+				break;
+			case "/auth/google":
+				handleGoogleAuth(request, response);
+				break;
+			case "/auth/google/callback":
+				handleGoogleCallback(request, response);
+				break;
+			default:
+				showAuthPage(request, response);
+				break;
 		}
 	}
 
@@ -63,17 +73,83 @@ public class AuthServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
+
 		String successMessage = request.getParameter("successMessage");
 		if (successMessage != null && !successMessage.trim().isEmpty()) {
 			request.setAttribute("successMessage", successMessage);
 		}
+
+		// Set Google OAuth URL
+		try {
+			String googleAuthUrl = authDAO.getGoogleAuthUrl();
+			request.setAttribute("googleAuthUrl", googleAuthUrl);
+		} catch (Exception e) {
+			LOGGER.error("Failed to generate Google OAuth URL: {}", e.getMessage(), e);
+		}
+
 		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
+	}
+
+	private void handleGoogleAuth(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		try {
+			String authUrl = authDAO.getGoogleAuthUrl();
+			response.sendRedirect(authUrl);
+		} catch (Exception e) {
+			LOGGER.error("Failed to redirect to Google OAuth: {}", e.getMessage(), e);
+			response.sendRedirect(request.getContextPath() + "/auth?error=" +
+					java.net.URLEncoder.encode("Failed to initialize Google login", StandardCharsets.UTF_8));
+		}
+	}
+
+	private void handleGoogleCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String code = request.getParameter("code");
+		String error = request.getParameter("error");
+		String state = request.getParameter("state");
+
+		if (error != null) {
+			LOGGER.warn("Google OAuth error: {}", error);
+			response.sendRedirect(request.getContextPath() + "/auth?error=" +
+					java.net.URLEncoder.encode("Google authentication was cancelled or failed", StandardCharsets.UTF_8));
+			return;
+		}
+
+		if (code == null || code.trim().isEmpty()) {
+			LOGGER.warn("Google OAuth callback received without authorization code");
+			response.sendRedirect(request.getContextPath() + "/auth?error=" +
+					java.net.URLEncoder.encode("Invalid Google authentication response", StandardCharsets.UTF_8));
+			return;
+		}
+
+		if (!"zust-auth".equals(state)) {
+			LOGGER.warn("Google OAuth state mismatch. Expected: zust-auth, Received: {}", state);
+			response.sendRedirect(request.getContextPath() + "/auth?error=" +
+					java.net.URLEncoder.encode("Invalid authentication state", StandardCharsets.UTF_8));
+			return;
+		}
+
+		try {
+			Account account = authDAO.registerOrLoginWithGoogle(code);
+			if (account != null) {
+				request.getSession().setAttribute("loggedInAccount", account);
+				request.getSession().setAttribute("users", account);
+				LOGGER.info("Google OAuth successful for user: {}", account.getEmail());
+				response.sendRedirect(request.getContextPath() + "/");
+			} else {
+				LOGGER.error("Google OAuth failed - no account returned");
+				response.sendRedirect(request.getContextPath() + "/auth?error=" +
+						java.net.URLEncoder.encode("Failed to authenticate with Google", StandardCharsets.UTF_8));
+			}
+		} catch (Exception e) {
+			LOGGER.error("Google OAuth error: {}", e.getMessage(), e);
+			response.sendRedirect(request.getContextPath() + "/auth?error=" +
+					java.net.URLEncoder.encode("Google authentication failed: " + e.getMessage(), StandardCharsets.UTF_8));
+		}
 	}
 
 	private void handleLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");
-		String errorMessage = null;
+		String errorMessage;
 
 		if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
 			errorMessage = "Username and password cannot be empty.";
@@ -87,16 +163,9 @@ public class AuthServlet extends HttpServlet {
 				if (authDAO.loginByForm(username, password)) {
 					Account loggedInAccount = authDAO.getAccountByUsername(username);
 					if (loggedInAccount != null) {
+						request.getSession().setAttribute("loggedInAccount", loggedInAccount);
 						request.getSession().setAttribute("users", loggedInAccount);
-						if (loggedInAccount.getAccountRole().equals("admin"))
-						{
-							request.getSession().setAttribute("isAdmin", true);
-							response.sendRedirect(request.getContextPath() + "/admin");
-							Cookie cookie = new Cookie("users", "true");
-							cookie.setMaxAge(60 * 60 * 24 * 3);
-							cookie.setAttribute("users_account", loggedInAccount.toString());
-						}
-						response.sendRedirect(request.getContextPath() + "/post");
+						response.sendRedirect(request.getContextPath() + "/");
 						return;
 					} else {
 						errorMessage = "Login successful but could not retrieve account details.";
@@ -113,17 +182,27 @@ public class AuthServlet extends HttpServlet {
 				errorMessage = "An unexpected error occurred.";
 			}
 		}
+
 		request.setAttribute("errorMessage", errorMessage);
 		request.setAttribute("username", username);
 		request.setAttribute("activeTab", "login");
+
+		// Set Google OAuth URL for the error page
+		try {
+			String googleAuthUrl = authDAO.getGoogleAuthUrl();
+			request.setAttribute("googleAuthUrl", googleAuthUrl);
+		} catch (Exception e) {
+			LOGGER.error("Failed to generate Google OAuth URL: {}", e.getMessage(), e);
+		}
+
 		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 	}
 
 	private void handleRegistration(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Account account = new Account();
 		String errorMessage = null;
-		String successMessage = null;
-		String avatarSavedPath = null;
+		String successMessage;
+		String avatarSavedPath;
 
 		try {
 			account.setUsername(request.getParameter("username"));
@@ -146,7 +225,7 @@ public class AuthServlet extends HttpServlet {
 					if (dotIndex > 0 && dotIndex < submittedFileName.length() - 1) {
 						fileExtension = submittedFileName.substring(dotIndex);
 					}
-					String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+					String uniqueFileName = UUID.randomUUID() + fileExtension;
 
 					try (InputStream fileContent = avatarPart.getInputStream()) {
 						avatarSavedPath = fileService.saveFile(uniqueFileName, fileContent);
@@ -163,13 +242,22 @@ public class AuthServlet extends HttpServlet {
 				request.setAttribute("errorMessage", errorMessage);
 				request.setAttribute("account", account);
 				request.setAttribute("activeTab", "register");
+
+				// Set Google OAuth URL for the error page
+				try {
+					String googleAuthUrl = authDAO.getGoogleAuthUrl();
+					request.setAttribute("googleAuthUrl", googleAuthUrl);
+				} catch (Exception e) {
+					LOGGER.error("Failed to generate Google OAuth URL: {}", e.getMessage(), e);
+				}
+
 				request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 				return;
 			}
 
 			authDAO.registerAccount(account);
 			successMessage = "Registration successful! A verification email has been sent to " + account.getEmail() + ". Please check your inbox.";
-			response.sendRedirect(request.getContextPath() + "/auth?successMessage=" + java.net.URLEncoder.encode(successMessage, "UTF-8"));
+			response.sendRedirect(request.getContextPath() + "/auth?successMessage=" + java.net.URLEncoder.encode(successMessage, StandardCharsets.UTF_8));
 			return;
 
 		} catch (IllegalArgumentException e) {
@@ -186,6 +274,15 @@ public class AuthServlet extends HttpServlet {
 		request.setAttribute("errorMessage", errorMessage);
 		request.setAttribute("account", account);
 		request.setAttribute("activeTab", "register");
+
+		// Set Google OAuth URL for the error page
+		try {
+			String googleAuthUrl = authDAO.getGoogleAuthUrl();
+			request.setAttribute("googleAuthUrl", googleAuthUrl);
+		} catch (Exception e) {
+			LOGGER.error("Failed to generate Google OAuth URL: {}", e.getMessage(), e);
+		}
+
 		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
 	}
 

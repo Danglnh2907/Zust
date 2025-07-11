@@ -22,6 +22,8 @@ public class RespPostDTO {
     private int commentCount;
     private int repostCount;
     private boolean liked;
+    private boolean ownPost;
+    private RespPostDTO repost;
 
     private final Logger logger = Logger.getLogger(RespPostDTO.class.getName());
     private final String[] templates;
@@ -135,6 +137,70 @@ public class RespPostDTO {
         this.liked = liked;
     }
 
+    public boolean isOwnPost() {
+        return ownPost;
+    }
+
+    public void setOwnPost(boolean ownPost) {
+        this.ownPost = ownPost;
+    }
+
+    public RespPostDTO getRepost() {
+        return repost;
+    }
+
+    public void setRepost(RespPostDTO repost) {
+        this.repost = repost;
+    }
+
+    private String getLastTimeUpdate(Duration timeDiff) {
+        if (timeDiff.toSeconds() < 60) return "Just now";
+        if (timeDiff.toMinutes() < 60) return timeDiff.toMinutes() + " minutes";
+        if (timeDiff.toHours() < 24) return timeDiff.toHours() + " hours";
+        return timeDiff.toDays() + " days";
+    }
+
+    private String getAction() {
+        /*
+         * If the requester is the owner of the post and this is a repost, then we only have delete
+         * If the requester is the owner of the post and this isn't a repost, then we have edit and delete
+         * Else, we only let the report option
+         */
+        String template = """
+                <div class="post-options">
+                    <button class="options-btn" aria-label="More options">...</button>
+                    <div class="options-menu">
+                        %s
+                    </div>
+                </div>""";
+        if (ownPost && repost != null) {
+            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>",postId);
+            return String.format(template, delete);
+        }
+
+        if (ownPost) {
+            String edit = String.format("<a href=\"#\" class=\"edit\" data-post-id=\"%s\">Edit</a>", postId);
+            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>",postId);
+            return String.format(template, edit + delete);
+        }
+
+        String report = String.format("<a href=\"/zust/report?type=post&id=%s\" class=\"report\">Report</a>", postId);
+        return String.format(template, report);
+    }
+
+    private String getImageCarousel(List<String> images) {
+        if (images.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String image : images) {
+            sb.append(String.format("<img class=\"carousel-slide\" src=\"%s\">",
+                    "static/images/" + image));
+        }
+        return String.format(templates[3], sb);
+    }
+
     @Override
     public String toString() {
         /*
@@ -147,35 +213,33 @@ public class RespPostDTO {
 
         //Get header
         Duration timeDiff = Duration.between(getLastModified(), LocalDateTime.now());
-        String lastTimeUpdate;
-        if (timeDiff.toSeconds() < 60) {
-            lastTimeUpdate = "Just now";
-        } else if (timeDiff.toMinutes() < 60) {
-            lastTimeUpdate = timeDiff.toMinutes() + " minutes";
-        } else if (timeDiff.toHours() < 24) {
-            lastTimeUpdate = timeDiff.toHours() + " hours";
-        } else {
-            lastTimeUpdate = timeDiff.toDays() + " days";
-        }
-        String header = String.format(templates[1], getAvatar(), getUsername(), lastTimeUpdate, getPostId(), getPostId(), getPostId());
+        //logger.info(templates[1]);
+        String header = String.format(templates[1],
+                getAvatar(), getUsername(), getLastTimeUpdate(timeDiff), getAction());
 
-        //Get post content
-        String content = String.format(templates[2], getPostContent());
+
 
         //Get image carousel
-        String carousel = "";
-        if (!getImages().isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            for (String image : getImages()) {
-                sb.append(String.format("<img class=\"carousel-slide\" src=\"%s\">",
-                        "static/images/" + image));
-            }
-            carousel = String.format(templates[3], sb);
+        String carousel = getImageCarousel(getImages());
+
+        //Get the repost (if exist)
+        String repostTemplate = "";
+        if (repost != null) {
+            //Repost only have header (without the 3-dot button), content, carousel
+            String repostHeader = String.format(templates[1], repost.getAvatar(), repost.getUsername(),
+                    getLastTimeUpdate(Duration.between(repost.getLastModified(), LocalDateTime.now())), "");
+            String repostContent = String.format(templates[2], repost.getPostContent());
+            String repostImage = getImageCarousel(repost.getImages());
+            repostTemplate = String.format(templates[0], repost.getPostId(), repostHeader, repostContent, repostImage, "");
         }
+
+        //Get post content
+        String content = String.format(templates[2], getPostContent() + repostTemplate);
 
         //Get likes, comment and repost count
         String action = String.format(templates[4], liked ? "liked" : "", getLikeCount(), getCommentCount(), getRepostCount());
 
         return String.format(templates[0], getPostId(), header, content, carousel, action);
     }
+
 }

@@ -27,6 +27,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zust - Social Media Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -167,45 +170,12 @@
 <!-- ======================= Sidebar ======================= -->
 <aside class="sidebar">
     <div class="logo">Zust</div>
-
     <ul class="nav-menu">
-        <%-- Use a JSP expression with a ternary operator to conditionally add the 'active' class --%>
-        <li class="<%= "statistic".equals(currentPage) ? "active" : "" %>">
-            <a href="#">
-                <span class="icon"><i class="fas fa-chart-pie"></i></span>
-                <span>Statistic</span>
-            </a>
-        </li>
-        <li class="<%= "user".equals(currentPage) ? "active" : "" %>">
-            <a href="#">
-                <span class="icon"><i class="fas fa-users"></i></span>
-                <span>User</span>
-            </a>
-        </li>
-        <li class="<%= "notification".equals(currentPage) ? "active" : "" %>">
-            <a href="#">
-                <span class="icon"><i class="fas fa-bell"></i></span>
-                <span>Notification</span>
-            </a>
-        </li>
-        <li class="<%= "creategroup".equals(currentPage) ? "active" : "" %>">
-            <a href="groupRequest">
-                <span class="icon"><i class="fas fa-plus-square"></i></span>
-                <span>Group Request</span>
-            </a>
-        </li>
-        <li class="<%= "group".equals(currentPage) ? "active" : "" %>">
-            <a href="groupDashboard">
-                <span class="icon"><i class="fas fa-user-friends"></i></span>
-                <span>Group</span>
-            </a>
-        </li>
-        <li class="<%= "report".equals(currentPage) ? "active" : "" %>">
-            <a href="#">
-                <span class="icon"><i class="fas fa-flag"></i></span>
-                <span>Report</span>
-            </a>
-        </li>
+        <li  class="active"><a href="dashboard"><span class="icon"><i class="fas fa-chart-pie"></i></span><span>Statistic</span></a></li>
+        <li><a href="accountDashboard"><span class="icon"><i class="fas fa-users"></i></span><span>User</span></a></li>
+        <li><a href="groupRequest"><span class="icon"><i class="fas fa-plus-square"></i></span><span>Group Request</span></a></li>
+        <li><a href="groupDashboard"><span class="icon"><i class="fas fa-user-friends"></i></span><span>Group</span></a></li>
+        <li><a href="reportPost"><span class="icon"><i class="fas fa-flag"></i></span><span>Report</span></a></li>
     </ul>
 </aside>
 
