@@ -76,6 +76,11 @@
                 flex-shrink: 0;
             }
 
+            a {
+                color: black;
+                text-decoration: none;
+            }
+
             .entity-info {
                 flex-grow: 1;
                 min-width: 0;
@@ -152,7 +157,7 @@
                 <div class="logo">Zust</div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="#" class="active">
+                        <li><a href="${pageContext.request.contextPath}/" class="active">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -161,7 +166,8 @@
                             </svg>
                             <span>Home</span>
                         </a></li>
-                        <li><a href="#">
+                        <%Account currentUser = (Account) request.getSession().getAttribute("users");%>
+                        <li><a href="${pageContext.request.contextPath}/profile?userId=<%=currentUser.getId()%>">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -283,12 +289,13 @@
                                      src="${pageContext.request.contextPath}/static/images/<%= acc.getAvatar() %>"
                                      alt="User Avatar">
                                 <div class="entity-info">
-                                    <div class="entity-name"><%= acc.getUsername() %>
+                                    <div class="entity-name">
+                                        <a href="${pageContext.request.contextPath}/profile?userId=<%= acc.getId() %>"><%= acc.getUsername() %></a>
                                     </div>
                                     <div class="entity-bio"><%= acc.getBio() != null ? acc.getBio() : "" %>
                                     </div>
                                 </div>
-                                <button class="entity-action-btn">Add Friend</button>
+                                <button class="entity-action-btn" onclick="sendFriendRequest(<%= acc.getId() %>)">Add Friend</button>
                             </div>
                             <%
                                 }
@@ -391,5 +398,29 @@
         <script src="${pageContext.request.contextPath}/js/post.js"></script>
         <script src="${pageContext.request.contextPath}/js/composer.js"></script>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
+        <script>
+            function sendFriendRequest(userId) {
+                fetch('${pageContext.request.contextPath}/friend_request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'action': 'send',
+                        'userId': userId,
+                        'content': ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Friend request sent!');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        </script>
     </body>
 </html>

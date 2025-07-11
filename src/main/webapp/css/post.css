@@ -32,6 +32,11 @@ body {
     color: #14171a;
 }
 
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* --- Main App Layout (Grid) --- */
 .app-layout {
     display: grid;

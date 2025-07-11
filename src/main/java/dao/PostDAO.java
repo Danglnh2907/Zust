@@ -210,6 +210,7 @@ public class PostDAO extends DBContext {
         int postId = rs.getInt("post_id");
         post.setPostId(postId);
         post.setPostContent(rs.getString("post_content"));
+        post.setAccountID(rs.getInt("account_id"));
         post.setUsername(rs.getString("username"));
         post.setAvatar(rs.getString("avatar"));
         post.setLastModified(rs.getTimestamp("post_last_update") != null

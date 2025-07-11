@@ -172,6 +172,7 @@ public class RespCommentDTO {
                 replyID == -1 ? "" : "is-reply",
                 id,
                 avatar,
+                accountID,
                 username,
                 username.toLowerCase().replaceAll(" ", ""),
                 content,
