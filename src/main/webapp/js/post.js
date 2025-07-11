@@ -494,17 +494,19 @@ function attachListener(postId) {
             if (!commentItem) return;
             const commentID = commentItem.dataset.commentId;
 
-            fetch(`/zust/comment?action=delete&commentID=${commentID}`, {
-                method: "POST"
-            })
-            .then(resp => {
-                if (resp.status === 200) {
-                    console.log("Delete comment successfully");
-                    window.location.reload();
-                }
-            })
-            .catch(error => console.log(error));
-            return;
+            if (confirm("Are you sure you want to delete this comment?")) {
+                fetch(`/zust/comment?action=delete&commentID=${commentID}`, {
+                    method: "POST"
+                })
+                    .then(resp => {
+                        if (resp.status === 200) {
+                            console.log("Delete comment successfully");
+                            window.location.reload();
+                        }
+                    })
+                    .catch(error => console.log(error));
+                return;
+            }
         }
 
         // Reply comment button
