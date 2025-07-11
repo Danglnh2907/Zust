@@ -27,6 +27,10 @@
             }
 
             String avatar = account.getAvatar();
+            Integer groupId = (Integer) request.getAttribute("groupId");
+            if (groupId == null) {
+                groupId = -1;
+            }
         %>
 <%--        <div class="composer-container">--%>
 <%--            <div class="composer-body">--%>
@@ -95,16 +99,23 @@
         <script src="${pageContext.request.contextPath}/js/composer.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", () => {
+                const groupIdFromGet = <%= groupId %>;
                 document.getElementById("body").innerHTML = generateComposerHTML("/zust/static/images/<%= avatar %>",
-                    "Create post");
+                    "Create post", groupIdFromGet);
                 // Initialize components
                 const quill = initializeQuill("", []); //Empty
-                const privacySelector = initializePrivacySelector('privacy-selector', "public"); //Set default
+
+                let disablePrivacySelector = false;
+                if (groupIdFromGet !== -1) {
+                    disablePrivacySelector = true;
+                }
+                const privacySelector = initializePrivacySelector('privacy-selector', "public", disablePrivacySelector); //Set default
                 setupSaveButton(quill, 'submit');
                 // Set up save button
                 const saveButton = document.getElementById('submit');
+                const currentGroupId = document.getElementById('groupIdHidden').value;
                 saveButton.addEventListener('click', () => {
-                    submitPost(quill, () => privacySelector.getPrivacy(), 'create', null);
+                    submitPost(quill, () => privacySelector.getPrivacy(), 'create', null, currentGroupId);
                 });
             })
         </script>
