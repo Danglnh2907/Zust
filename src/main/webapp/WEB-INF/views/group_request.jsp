@@ -190,7 +190,7 @@
         <%
             if(request.getAttribute("msg") != null){
         %>
-        <p>Message: <%= request.getAttribute("msg")%></p>
+        <p style="font-weight: bold; color: black"><%= request.getAttribute("msg")%></p>
         <%
             }
         %>
