@@ -28,6 +28,10 @@
 </head>
 
 <body>
+<% 
+    Account account = (Account) request.getSession().getAttribute("users");
+    String linkAvatar = account.getAvatar();
+%>
 <!-- Edit Post Modal -->
 <div class="modal fade" id="edit_post" data-bs-backdrop="static" data-bs-keyboard="false"
      tabindex="-1" aria-labelledby="edit_post_label" aria-hidden="true">
@@ -71,7 +75,7 @@
                     </svg>
                     <span>Home</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="${pageContext.request.contextPath}/profile?userId=<%=account.getId()%>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -98,7 +102,7 @@
             <h2>My Groups</h2>
             <span class="groups-count">19</span>
         </div>
-        <div class="group-list">
+        <div class_="group-list">
             <div class="group-item">
                 <img src="https://i.pravatar.cc/150?u=group1" alt="Group Avatar">
                 <div class="group-item-info">
@@ -152,14 +156,15 @@
                 </div>
             </div>
 
-            <%
-                Account account = (Account) request.getSession().getAttribute("users");
-                String linkAvatar = account.getAvatar();
-            %>
-            <a href="#" class="nav-profile">
-                <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>" alt="User Profile Picture">
-                <span><%=account.getFullname()%></span>
-            </a>
+            <div class="dropdown">
+                <a href="#" class="nav-profile dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>" alt="User Profile Picture">
+                    <span><%=account.getFullname()%></span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/change_password">Change Password</a></li>
+                </ul>
+            </div>
         </header>
 
         <!-- Feed of Posts -->
