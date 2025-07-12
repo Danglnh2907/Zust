@@ -3,32 +3,22 @@ package dto;
 import java.time.LocalDateTime;
 
 public class ReqCommentDTO {
+    private String content;
+    private String image;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private int accountID;
     private int postID;
-    private String commentContent;
-    private String commentImage;
-    private Integer replyCommentId;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastModified;
+    private int replyID;
 
     public ReqCommentDTO() {
+        this.content = "";
+        this.image = "";
+        this.createdAt = null;
+        this.updatedAt = null;
         this.accountID = -1;
         this.postID = -1;
-        this.commentContent = "";
-        this.commentImage = null;
-        this.replyCommentId = null;
-        this.createdAt = null;
-        this.lastModified = null;
-    }
-
-    public ReqCommentDTO(int accountID, int postID, String commentContent, String commentImage, Integer replyCommentId, LocalDateTime createdAt, LocalDateTime lastModified) {
-        this.accountID = accountID;
-        this.postID = postID;
-        this.setCommentContent(commentContent); // Use setter for validation
-        this.commentImage = commentImage;
-        this.replyCommentId = replyCommentId;
-        this.createdAt = createdAt;
-        this.lastModified = lastModified;
+        this.replyID = -1;
     }
 
     public int getAccountID() {
@@ -39,38 +29,6 @@ public class ReqCommentDTO {
         this.accountID = accountID;
     }
 
-    public int getPostID() {
-        return postID;
-    }
-
-    public void setPostID(int postID) {
-        this.postID = postID;
-    }
-
-    public String getCommentContent() {
-        return commentContent;
-    }
-
-    public void setCommentContent(String commentContent) {
-        this.commentContent = (commentContent == null || commentContent.trim().isEmpty()) ? "" : commentContent.trim();
-    }
-
-    public String getCommentImage() {
-        return commentImage;
-    }
-
-    public void setCommentImage(String commentImage) {
-        this.commentImage = commentImage;
-    }
-
-    public Integer getReplyCommentId() {
-        return replyCommentId;
-    }
-
-    public void setReplyCommentId(Integer replyCommentId) {
-        this.replyCommentId = replyCommentId;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -79,11 +37,43 @@ public class ReqCommentDTO {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getLastModified() {
-        return lastModified;
+    public String getContent() {
+        return content;
     }
 
-    public void setLastModified(LocalDateTime lastModified) {
-        this.lastModified = lastModified;
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public int getPostID() {
+        return postID;
+    }
+
+    public void setPostID(int postID) {
+        this.postID = postID;
+    }
+
+    public int getReplyID() {
+        return replyID;
+    }
+
+    public void setReplyID(int replyID) {
+        this.replyID = replyID;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

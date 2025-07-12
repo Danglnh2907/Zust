@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 public class RespPostDTO {
     private int postId;
     private String postContent;
+    private int accountID;
     private String username;
     private String avatar;
     private LocalDateTime lastModified;
@@ -63,6 +64,14 @@ public class RespPostDTO {
 
     public void setPostContent(String postContent) {
         this.postContent = postContent;
+    }
+
+    public int getAccountID() {
+        return accountID;
+    }
+
+    public void setAccountID(int accountID) {
+        this.accountID = accountID;
     }
 
     public String getUsername() {
@@ -174,13 +183,13 @@ public class RespPostDTO {
                     </div>
                 </div>""";
         if (ownPost && repost != null) {
-            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>",postId);
+            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>", postId);
             return String.format(template, delete);
         }
 
         if (ownPost) {
             String edit = String.format("<a href=\"#\" class=\"edit\" data-post-id=\"%s\">Edit</a>", postId);
-            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>",postId);
+            String delete = String.format("<a href=\"#\" class=\"delete\" data-post-id=\"%s\">Delete</a>", postId);
             return String.format(template, edit + delete);
         }
 
@@ -215,8 +224,7 @@ public class RespPostDTO {
         Duration timeDiff = Duration.between(getLastModified(), LocalDateTime.now());
         //logger.info(templates[1]);
         String header = String.format(templates[1],
-                getAvatar(), getUsername(), getLastTimeUpdate(timeDiff), getAction());
-
+                getAvatar(), getAccountID(), getUsername(), getLastTimeUpdate(timeDiff), getAction());
 
 
         //Get image carousel

@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/profile.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
 
 </head>
 
@@ -36,7 +37,7 @@
 <!-- Top Navigation Bar -->
 <header class="top-navbar">
     <!-- Logo -->
-    <a class="logo" href="http://localhost:8080/zust/post">Zust</a>
+    <a class="logo" href="${pageContext.request.contextPath}/">Zust</a>
     <!-- Live Search Container -->
     <div class="search-container">
         <div class="search-bar">
@@ -70,6 +71,25 @@
     </a>
 </header>
 
+<!-- Modal -->
+<div class="modal fade" id="modal" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title-label"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="app-layout">
 
     <main class="main-content">
@@ -83,7 +103,6 @@
                  src="${pageContext.request.contextPath}/static/images/<%=profileCoverImage%>"
                  alt="Profile cover image">
 
-            <!-- This section is now lowered and styled -->
             <div class="profile-header-details">
                 <div class="profile-avatar-bio">
                     <img class="profile-avatar"
@@ -259,8 +278,27 @@
     </main>
 </div>
 
+<!-- Lightbox HTML structure -->
+<div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close">×</button>
+    <img class="lightbox-image" src="" alt="Full-screen image view">
+</div>
+
+<!-- Live Search iframe for loading results -->
+<iframe id="liveSearchFrame"
+        style="display: none; position: absolute; left: -9999px; width: 1px; height: 1px;"
+        name="liveSearchFrame"
+        title="Search Results Loader">
+</iframe>
+
+<!-- Load JS files at the end -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/post.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
+<script src="${pageContext.request.contextPath}/js/composer.js"></script>
 <script>
     // JavaScript for Profile Tabs
     document.addEventListener('DOMContentLoaded', function () {
