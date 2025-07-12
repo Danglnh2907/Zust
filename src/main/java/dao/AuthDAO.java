@@ -198,8 +198,8 @@ public class AuthDAO extends DBContext{
 	}
 
 	private int saveAccount(Account account, Connection conn) throws SQLException {
-		String sql = "INSERT INTO account (username, password, fullname, email, phone, gender, dob, avatar, bio, account_status) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'inactive')";
+		String sql = "INSERT INTO account (username, password, fullname, email, phone, gender, dob, avatar, cover_image, bio, account_status) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'inactive')";
 
 		try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			String hashedPassword = BCrypt.hashpw(account.getPassword(), BCrypt.gensalt());
@@ -211,8 +211,9 @@ public class AuthDAO extends DBContext{
 			stmt.setString(5, account.getPhone());
 			stmt.setObject(6, account.getGender());
 			stmt.setDate(7, account.getDob() != null ? Date.valueOf(account.getDob()) : null);
-			stmt.setString(8, account.getAvatar());
-			stmt.setString(9, account.getBio());
+			stmt.setString(8, account.getAvatar() != null ? account.getAvatar() : "user.png");
+			stmt.setString(9, account.getCoverImage() != null ? account.getCoverImage() : "cover.jpg");
+			stmt.setString(10, account.getBio());
 
 			int rows = stmt.executeUpdate();
 			if (rows == 0) throw new SQLException("Failed to insert account");
@@ -519,8 +520,8 @@ public class AuthDAO extends DBContext{
 	}
 
 	private int saveGoogleAccount(Account account, Connection conn) throws SQLException {
-		String sql = "INSERT INTO account (username, email, fullname, google_id, avatar, account_status, " +
-				"password, credit, account_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO account (username, email, fullname, google_id, avatar,cover_image, account_status, " +
+				"password, credit, account_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 		try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setString(1, account.getUsername());
@@ -528,10 +529,11 @@ public class AuthDAO extends DBContext{
 			stmt.setString(3, account.getFullname());
 			stmt.setString(4, account.getGoogleId());
 			stmt.setString(5, account.getAvatar());
-			stmt.setString(6, account.getAccountStatus());
-			stmt.setString(7, account.getPassword()); // Will be empty string
-			stmt.setInt(8, account.getCredit());      // Will be 100
-			stmt.setString(9, account.getAccountRole()); // Will be "user"
+			stmt.setString(6, account.getCoverImage() != null ? account.getCoverImage() : "cover.jpg");
+			stmt.setString(7, account.getAccountStatus());
+			stmt.setString(8, account.getPassword()); // Will be empty string
+			stmt.setInt(9, account.getCredit());      // Will be 100
+			stmt.setString(10, account.getAccountRole()); // Will be "user"
 
 			int rows = stmt.executeUpdate();
 			if (rows == 0) throw new SQLException("Failed to insert Google account");

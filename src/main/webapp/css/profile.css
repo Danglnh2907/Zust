@@ -210,14 +210,13 @@ body {
 
 .profile-cover-image {
     width: 100%;
-    height: 250px;
+    height: 500px;
     background-color: #C4C4C4;
     object-fit: cover;
 }
 
 .about-section {
-    padding: 1.5rem;
-    padding-top: 25px;
+    padding: 25px 1.5rem 1.5rem;
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 2rem;

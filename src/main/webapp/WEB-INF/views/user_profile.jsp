@@ -65,10 +65,16 @@
         Account account = (Account) request.getSession().getAttribute("users");
         String linkAvatar = account.getAvatar();
     %>
-    <a href="#" class="nav-profile">
-        <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>" alt="User Profile Picture">
-        <span><%=account.getFullname()%></span>
-    </a>
+    <div class="nav-profile-container">
+        <a href="#" class="nav-profile">
+            <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
+                 alt="User Profile Picture">
+            <span><%=account.getFullname()%></span>
+        </a>
+        <div class="dropdown-menu">
+            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+        </div>
+    </div>
 </header>
 
 <!-- Modal -->
@@ -110,18 +116,18 @@
                     <div class="profile-bio">
                         <h2 class="profile-name"><%=profile.getFullname()%>
                         </h2>
-                        <p class="profile-short-bio"><%=profile.getBio()%>
+                        <p class="profile-short-bio"><%=profile.getBio() == null ? "" : profile.getBio()%>
                         </p>
                     </div>
                 </div>
                 <div class="profile-actions">
                     <%-- Add Friend Button --%>
                     <% Account currentUser = (Account) request.getSession().getAttribute("users");
-                        if (currentUser != null && currentUser.getId() == profile.getId()) { %>
+                        if (currentUser != null && currentUser.getId().equals(profile.getId())) { %>
                     <button class="edit-profile-btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                         <i class="fa-solid fa-user-edit"></i> Edit Profile
                     </button>
-                    <% } else if (currentUser != null && currentUser.getId() != profile.getId()) {
+                    <% } else if (currentUser != null && !currentUser.getId().equals(profile.getId())) {
                             Boolean areFriends = (Boolean) request.getAttribute("areFriends");
                             Boolean friendRequestPending = (Boolean) request.getAttribute("friendRequestPending");
 
@@ -174,13 +180,13 @@
                 <div class="about-info">
                     <h3>About</h3>
                     <ul class="info-list">
-                        <li><i class="fa-solid fa-user"></i> <%=profile.getGender() ? "Male" : "Female"%>
+                        <li><i class="fa-solid fa-user"></i> <%=profile.getGender() == null ? "Not set" : (profile.getGender() ? "Male" : "Female")%>
                         </li>
-                        <li><i class="fa-solid fa-calendar-days"></i> Born <%=profile.getDob()%>
+                        <li><i class="fa-solid fa-calendar-days"></i> Born <%=profile.getDob() == null ? "Not set" : profile.getDob()%>
                         </li>
                         <li><i class="fa-solid fa-envelope"></i> <%=profile.getEmail()%>
                         </li>
-                        <li><i class="fa-solid fa-phone"></i> <%=profile.getPhone()%>
+                        <li><i class="fa-solid fa-phone"></i> <%=profile.getPhone() != null ? profile.getPhone() : "Not set"%>
                         </li>
                         <li>
                             <button class="social-credit-btn">Social Credit: <%=profile.getCredit()%>

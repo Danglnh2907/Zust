@@ -96,7 +96,7 @@ public class AccountDAO extends DBContext {
             stmt.setString(3, account.getFullname());
             stmt.setString(4, account.getPhone());
             stmt.setBoolean(5, account.getGender());
-            stmt.setDate(6, Date.valueOf(account.getDob()));
+            stmt.setDate(6, account.getDob() != null ? Date.valueOf(account.getDob()) : null);
             stmt.setString(7, account.getAvatar());
             stmt.setString(8, account.getCoverImage());
             stmt.setString(9, account.getBio());
