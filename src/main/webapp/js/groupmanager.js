@@ -103,4 +103,23 @@ document.addEventListener('DOMContentLoaded', () => {
             prevButton.classList.add('hidden');
         }
     });
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuButton = document.querySelector('.more-options-btn');
+        const optionsMenu = document.querySelector('.options-menu-tab');
+
+        menuButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            optionsMenu.classList.toggle('show');
+        });
+
+        optionsMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', function() {
+            optionsMenu.classList.remove('show');
+        });
+    });
+
+
 });

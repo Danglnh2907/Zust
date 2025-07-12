@@ -25,12 +25,15 @@ public class DiscussionPostDAO {
         List<DiscussionPostDTO> posts = new ArrayList<>();
         String sql = """
             SELECT p.post_id, p.post_content, a.username, a.avatar, p.post_last_update,
-                   (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count,
-                   (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count
+                  (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count,
+                      (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count
             FROM post p
             JOIN account a ON p.account_id = a.account_id
-            WHERE p.group_id = ? AND p.post_status = 'published'
-            ORDER BY p.post_create_date DESC
+            JOIN [group] g ON p.group_id = g.group_id
+            WHERE p.group_id = ?
+              AND p.post_status = 'published'
+              AND g.group_status = 'active'
+            ORDER BY p.post_create_date DESC;
         """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, groupId);

@@ -86,26 +86,26 @@
                     <textarea id="description" name="description" rows="4"><%= group != null ? group.getDescription() : "" %></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>Status</label>
-                    <div class="radio-group">
-                        <label for="active">
-                            <input type="radio" id="active" name="status" value="active" <% if (group != null && "active".equals(group.getStatus())) { %>checked<% } %>>
-                            <span class="radio-custom"></span>
-                            Active
-                        </label>
-                        <label for="banned">
-                            <input type="radio" id="banned" name="status" value="banned" <% if (group != null && "banned".equals(group.getStatus())) { %>checked<% } %>>
-                            <span class="radio-custom"></span>
-                            Banned
-                        </label>
-                        <label for="deleted">
-                            <input type="radio" id="deleted" name="status" value="deleted" <% if (group != null && "deleted".equals(group.getStatus())) { %>checked<% } %>>
-                            <span class="radio-custom"></span>
-                            Deleted
-                        </label>
-                    </div>
-                </div>
+<%--                <div class="form-group">--%>
+<%--                    <label>Status</label>--%>
+<%--                    <div class="radio-group">--%>
+<%--                        <label for="active">--%>
+<%--                            <input type="radio" id="active" name="status" value="active" <% if (group != null && "active".equals(group.getStatus())) { %>checked<% } %>>--%>
+<%--                            <span class="radio-custom"></span>--%>
+<%--                            Active--%>
+<%--                        </label>--%>
+<%--                        <label for="banned">--%>
+<%--                            <input type="radio" id="banned" name="status" value="banned" <% if (group != null && "banned".equals(group.getStatus())) { %>checked<% } %>>--%>
+<%--                            <span class="radio-custom"></span>--%>
+<%--                            Banned--%>
+<%--                        </label>--%>
+<%--                        <label for="deleted">--%>
+<%--                            <input type="radio" id="deleted" name="status" value="deleted" <% if (group != null && "deleted".equals(group.getStatus())) { %>checked<% } %>>--%>
+<%--                            <span class="radio-custom"></span>--%>
+<%--                            Deleted--%>
+<%--                        </label>--%>
+<%--                    </div>--%>
+<%--                </div>--%>
 
                 <div class="form-group">
                     <label for="avatar">Change Avatar</label>

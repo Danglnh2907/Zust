@@ -29,11 +29,12 @@ import java.util.UUID;
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024)
 public class GroupProfileServlet extends HttpServlet {
     // Khởi tạo DAO để thao tác với database
-    private final GroupProfileDAO groupDAO = new GroupProfileDAO();
+//    private final GroupProfileDAO groupDAO = new GroupProfileDAO();
 
     // Xử lý GET request
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        GroupProfileDAO groupDAO = new GroupProfileDAO();
         // Lấy accountId từ session, nếu chưa có thì set tạm để test
 //        Integer accountId = (Integer) req.getSession().getAttribute("accountId");
 //        if (accountId == null) {
@@ -74,7 +75,7 @@ public class GroupProfileServlet extends HttpServlet {
 //            System.out.println("Temporary group created for groupId: " + groupId + " with accountId: " );
             System.out.println("Fail " );
             req.setAttribute("error", "Group with ID " + groupId + " not found.");
-            req.getRequestDispatcher("/WEB-INF/views/feed.jsp").forward(req, resp); // Hoặc trang lỗi tùy chỉnh
+            req.getRequestDispatcher("/WEB-INF/views/").forward(req, resp); // Hoặc trang lỗi tùy chỉnh
             return;
 
 
@@ -90,6 +91,7 @@ public class GroupProfileServlet extends HttpServlet {
     // Xử lý POST request (khi người dùng cập nhật group)
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        GroupProfileDAO groupDAO = new GroupProfileDAO();
         // Kiểm tra user đã đăng nhập chưa
 //        Integer accountId = (Integer) req.getSession().getAttribute("accountId");
 //        if (accountId == null) {

@@ -44,7 +44,7 @@ public class PostApprovalServlet extends HttpServlet {
             req.setAttribute("groupInfo", groupInfo);
         }
 
-        int managerId = 1; // Hardcode để test
+        int managerId = 4; // Hardcode để test
         List<PostApprovalDTO> pendingPosts = postApprovalDAO.getPendingPosts(managerId);
         req.setAttribute("posts", pendingPosts);
         req.setAttribute("groupId", groupId);

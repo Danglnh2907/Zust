@@ -6,27 +6,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-public class GroupProfileDAO {
-    private final Connection connection;
+public class GroupProfileDAO extends DBContext{
 
-    // Constructor: tạo kết nối đến database khi khởi tạo GroupDAO
     public GroupProfileDAO() {
-        this.connection = new DBContext().getConnection(); // Lấy connection từ DBContext (class tự định nghĩa để quản lý kết nối)
-
-        if (connection == null) {
-            throw new IllegalStateException("Database connection is null");
-        }
-
-        // Kiểm tra kết nối có hợp lệ không (dùng để debug)
-        try {
-            if (!connection.isValid(1)) {
-                System.out.println("Debug: Database connection is not valid");
-            } else {
-                System.out.println("Debug: Database connection is valid");
-            }
-        } catch (SQLException e) {
-            System.out.println("Debug: Failed to validate connection: " + e.getMessage());
-        }
+        super(); // Gọi constructor của DBContext để khởi tạo kết nối
     }
 
     // Hàm lấy thông tin group profile dựa theo groupId và accountId = Group manager hoặc admin

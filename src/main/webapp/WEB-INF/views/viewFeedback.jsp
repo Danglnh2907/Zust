@@ -67,13 +67,14 @@
             </div>
             <nav class="group-tabs">
               <a href="${pageContext.request.contextPath}/groupManager?groupId=${groupId}">Discussion</a>
-              <a href="#">Members</a>
+              <a href="${pageContext.request.contextPath}/viewMembers?groupId=${groupId}" >Members</a>
               <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
               <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}">Pending Posts</a>
+              <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=${groupId}" >Reported Content</a>
               <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" class="active">View Feedbacks</a>
-              <div class="tab-actions">
-                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>
-              </div>
+<%--              <div class="tab-actions">--%>
+<%--                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+<%--              </div>--%>
             </nav>
           </div>
         </section>
@@ -103,26 +104,7 @@
 
                         </div>
                       </div>
-<%--                      <div class="post-actions-icon">--%>
-<%--                        <form action="${pageContext.request.contextPath}/viewFeedback" method="post" style="display:inline;">--%>
-<%--                          <input type="hidden" name="feedbackId" value="${dto.feedback.id}">--%>
-<%--                          <input type="hidden" name="action" value="approve">--%>
-<%--                          <input type="hidden" name="groupId" value="${groupId}">--%>
-<%--                          <input type="hidden" name="csrfToken" value="${csrfToken}">--%>
-<%--                          <button type="submit" class="icon-button approve-icon" title="Approve">--%>
-<%--                            <i class="fas fa-check"></i>--%>
-<%--                          </button>--%>
-<%--                        </form>--%>
-<%--                        <form action="${pageContext.request.contextPath}/viewFeedback" method="post" style="display:inline;">--%>
-<%--                          <input type="hidden" name="feedbackId" value="${dto.feedback.id}">--%>
-<%--                          <input type="hidden" name="action" value="disapprove">--%>
-<%--                          <input type="hidden" name="groupId" value="${groupId}">--%>
-<%--                          <input type="hidden" name="csrfToken" value="${csrfToken}">--%>
-<%--                          <button type="submit" class="icon-button disapprove-icon" title="Reject">--%>
-<%--                            <i class="fas fa-times"></i>--%>
-<%--                          </button>--%>
-<%--                        </form>--%>
-<%--                      </div>--%>
+<%--
                     </div>
                     <div class="post-content">
                       <p>${dto.feedback.feedbackGroupContent}</p>

@@ -88,25 +88,23 @@
 <%--                    </div>--%>
 <%--                </nav>--%>
 
-                <nav class= " group-heafer" >
                     <nav class="group-tabs">
                         <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="active">Discussion</a>
-                        <a href="#">Members</a>
+                        <a href="${pageContext.request.contextPath}/viewMembers?groupId=<%= groupInfo.getId() %>" >Members</a>
                         <a href="${pageContext.request.contextPath}/joinRequest?groupId=<%= groupInfo.getId() %>">Joining Request</a>
                         <a href="${pageContext.request.contextPath}/approvePost?groupId=<%= groupInfo.getId() %>">Pending Posts</a>
+                        <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=${groupId}" >Reported Content</a>
                         <a href="${pageContext.request.contextPath}/viewFeedback?groupId=<%= groupInfo.getId() %>">View Feedbacks</a>
-    <%--                    <div class="tab-actions">--%>
-    <%--                        <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
-    <%--&lt;%&ndash;                        <a href="#" class="Disband group"> Disban group</a>&ndash;%&gt;--%>
-    <%--&lt;%&ndash;                        <a href="#" class="Disband group"> Disban group</a>&ndash;%&gt;--%>
-    <%--                    </div>--%>
                     </nav>
-                    <div class="options-menu-tab">
-                        <a href="#" class="Disband group"> Disban group</a>
-                        <a href="#" class="Disband group"> Assign managers to group</a>
-                    </div>
-                </nav>
-            </div>
+<%--                <div class="tab-actions" style="position: relative;">--%>
+<%--                    <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+<%--                    <div class="options-menu-tab" style="display: none; position: absolute; top: 100%; right: 0; background-color: white; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000;">--%>
+<%--                        <a href="#" class="dropdown-item">Disband Group</a>--%>
+<%--                        <a href="#" class="dropdown-item">Assign Managers to Group</a>--%>
+<%--                        <a href="#">Report Content</a>--%>
+<%--                    </div>--%>
+<%--                </div>--%>
+                </div>
         </section>
 
         <!-- Discussion Section -->
@@ -133,6 +131,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="post-content">
                         <p>${post.postContent}</p>
                         <c:if test="${not empty post.images}">
