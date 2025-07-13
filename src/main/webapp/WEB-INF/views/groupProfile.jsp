@@ -9,6 +9,7 @@
 <%@ page import="dto.GroupProfileDTO" %>
 <%@ page import="dto.ResGroupDTO" %>
 <%@ page import="model.Account" %>
+<%@ page import="model.Group" %>
 <%
     // Get the group object from the request. It might be null.
     GroupProfileDTO group = (GroupProfileDTO) request.getAttribute("group");
@@ -26,13 +27,12 @@
 </head>
 <body>
 <div class="container">
-
     <header class="page-header">
         <a href="#" class="logo">Zust</a>
     </header>
 
     <div class="back-link-container">
-        <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="back-link">
+        <a href="${pageContext.request.contextPath}/group?id=<%= group.getGroupId() %>" class="back-link">
             <i class="fas fa-arrow-left"></i>
             <span>Back</span>
         </a>
