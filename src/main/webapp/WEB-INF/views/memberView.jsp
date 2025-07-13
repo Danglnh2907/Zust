@@ -66,9 +66,7 @@
                     <div class="background_img">
                         <img src="${pageContext.request.contextPath}/static/images/${groupInfo.image != null ? groupInfo.image : 'default-group.png'}"
                              alt="Group cover image" class="cover-img"/>
-                        <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'">
-                            <i class="fas fa-pencil-alt"></i> Edit
-                        </button>
+
                     </div>
                     <div class="group-info-body">
                         <div class="group-header">
@@ -77,20 +75,20 @@
                                 <p>${groupInfo.description}</p>
                             </div>
                             <div class="group-buttons">
-                                <button class="invite-button"><i class="fas fa-user-plus"></i> Invite</button>
-                                <button class="share-button"><i class="fas fa-share"></i> Share</button>
+                                <button class="invite-button" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'"><i class="fas fa-pen"></i> Edit</button>
+                                <button class="Disban-group" onclick="disbandGroup(${groupId})"><i class="fas fa-ban"></i> Disband Group</button>
                             </div>
                         </div>
                         <nav class="group-tabs">
                             <a href="${pageContext.request.contextPath}/groupManager?groupId=${groupId}">Discussion</a>
                             <a href="${pageContext.request.contextPath}/viewMembers?groupId=${groupId}" class="active">Members</a>
-                            <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Join Requests</a>
+                            <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
                             <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}">Pending Posts</a>
                             <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=${groupId}">Reported Content</a>
                             <a href="${pageContext.request.contextPath}/viewFeedback?groupId=${groupId}">View Feedback</a>
-<%--                            <div class="tab-actions">--%>
-<%--                                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
-<%--                            </div>--%>
+                                <%--                            <div class="tab-actions">--%>
+                                <%--                                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+                                <%--                            </div>--%>
                         </nav>
                     </div>
                 </section>
@@ -110,56 +108,56 @@
                         </c:when>
                         <c:otherwise>
 
-                                <div class="search-container">
-                                    <i class="fas fa-search search-icon"></i>
-                                    <input type="text" placeholder="Search for members..." />
-                                    <button type="button" class="search-button">Search</button>
-                                </div>
+                            <div class="search-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" placeholder="Search for members..." />
+                                <button type="button" class="search-button">Search</button>
+                            </div>
 
-                                <!-- Single card containing all members -->
-                                <div class="member-card">
-                                    <c:forEach var="dto" items="${members}">
-                                        <div class="member-item">
-                                            <div class="post-author">
-                                                <img src="${pageContext.request.contextPath}/static/images/${dto.account.avatar != null ? dto.account.avatar : 'default-avatar.png'}"
-                                                     alt="Avatar của ${dto.account.username}" class="post-avatar" onerror="this.src='${pageContext.request.contextPath}/static/images/default-avatar.png';">
-                                                <div class="post-user-info">
-                                                    <span class="post-user-name">${dto.account.username}</span>
-                                                    <span class="post-user-fullname">${dto.account.fullname}</span>
-                                                </div>
-                                            </div>
-                                            <div class="post-actions-icon">
-                                                <!-- Dropdown menu with three dots -->
-                                                <div class="dropdown">
-                                                    <button class="btn icon-button" type="button" id="memberMenu${dto.participate.id.accountId}"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="fas fa-ellipsis-h"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberMenu${dto.participate.id.accountId}">
-                                                        <li>
-                                                            <form action="${pageContext.request.contextPath}/viewMembers" method="post" style="margin: 0;">
-                                                                <input type="hidden" name="accountId" value="${dto.participate.id.accountId}">
-                                                                <input type="hidden" name="groupId" value="${groupId}">
-                                                                <input type="hidden" name="csrfToken" value="${csrfToken}">
-                                                                <input type="hidden" name="action" value="remove">
-                                                                <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to remove this member from the group?')">Kick member</button>
-                                                            </form>
-                                                        </li>
-                                                        <li>
-                                                            <form action="${pageContext.request.contextPath}/viewMembers" method="post" style="margin: 0;">
-                                                                <input type="hidden" name="accountId" value="${dto.participate.id.accountId}">
-                                                                <input type="hidden" name="groupId" value="${groupId}">
-                                                                <input type="hidden" name="csrfToken" value="${csrfToken}">
-                                                                <input type="hidden" name="action" value="promote">
-                                                                <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to invite this member as a manager?')">Invite as manager</button>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                            <!-- Single card containing all members -->
+                            <div class="member-card">
+                                <c:forEach var="dto" items="${members}">
+                                    <div class="member-item">
+                                        <div class="post-author">
+                                            <img src="${pageContext.request.contextPath}/static/images/${dto.account.avatar != null ? dto.account.avatar : 'default-avatar.png'}"
+                                                 alt="Avatar của ${dto.account.username}" class="post-avatar" onerror="this.src='${pageContext.request.contextPath}/static/images/default-avatar.png';">
+                                            <div class="post-user-info">
+                                                <span class="post-user-name">${dto.account.username}</span>
+                                                <span class="post-user-fullname">${dto.account.fullname}</span>
                                             </div>
                                         </div>
-                                    </c:forEach>
-                                </div>
+                                        <div class="post-actions-icon">
+                                            <!-- Dropdown menu with three dots -->
+                                            <div class="dropdown">
+                                                <button class="btn icon-button" type="button" id="memberMenu${dto.participate.id.accountId}"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-h"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberMenu${dto.participate.id.accountId}">
+                                                    <li>
+                                                        <form action="${pageContext.request.contextPath}/viewMembers" method="post" style="margin: 0;">
+                                                            <input type="hidden" name="accountId" value="${dto.participate.id.accountId}">
+                                                            <input type="hidden" name="groupId" value="${groupId}">
+                                                            <input type="hidden" name="csrfToken" value="${csrfToken}">
+                                                            <input type="hidden" name="action" value="remove">
+                                                            <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to remove this member from the group?')">Kick member</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="${pageContext.request.contextPath}/viewMembers" method="post" style="margin: 0;">
+                                                            <input type="hidden" name="accountId" value="${dto.participate.id.accountId}">
+                                                            <input type="hidden" name="groupId" value="${groupId}">
+                                                            <input type="hidden" name="csrfToken" value="${csrfToken}">
+                                                            <input type="hidden" name="action" value="promote">
+                                                            <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to invite this member as a manager?')">Invite as manager</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </div>
 
                         </c:otherwise>
                     </c:choose>
@@ -173,6 +171,37 @@
 </div>
 
 <!-- Script -->
+<script>
+    function disbandGroup(groupId) {
+        if (confirm("Are you sure you want to disband this group?")) {
+            var csrfToken = '${csrfToken}';
+            var contextPath = '${pageContext.request.contextPath}';
+            fetch(contextPath + '/disbandGroup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'groupId=' + groupId + '&csrfToken=' + csrfToken
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Group disbanded successfully.');
+                        window.location.href = contextPath + '/post';
+                    } else {
+                        alert('Failed to disband group: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error occurred during disband: ' + error.message);
+                });
+        }
+    }
+</script>
 <script src="${pageContext.request.contextPath}/js/groupmanager.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
 </body>

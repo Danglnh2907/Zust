@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" contentType="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zust - Post Approval</title>
     <!-- Font Imports -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,9 +45,7 @@
                 <section class="group-card">
                     <div class="background_img">
                         <img src="${pageContext.request.contextPath}/static/images/${groupInfo.image}" alt="Group Cover" class="cover-img"/>
-                        <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'">
-                            <i class="fas fa-pencil-alt"></i> Edit
-                        </button>
+
                     </div>
                     <div class="group-info-body">
                         <div class="group-header">
@@ -56,20 +54,20 @@
                                 <p>${groupInfo.description}</p>
                             </div>
                             <div class="group-buttons">
-                                <button class="invite-button"><i class="fas fa-user-plus"></i> Invite</button>
-                                <button class="share-button"><i class="fas fa-share"></i> Share</button>
+                                <button class="invite-button" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'"><i class="fas fa-pen"></i> Edit</button>
+                                <button class="Disban-group" onclick="disbandGroup(${groupId})"><i class="fas fa-ban"></i> Disband Group</button>
                             </div>
                         </div>
                         <nav class="group-tabs">
                             <a href="${pageContext.request.contextPath}/groupManager?groupId=${groupId}">Discussion</a>
                             <a href="${pageContext.request.contextPath}/viewMembers?groupId=${groupId}" >Members</a>
-                          <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
+                            <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>
                             <a href="${pageContext.request.contextPath}/approvePost?groupId=${groupId}" class="active">Pending Posts</a>
                             <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=${groupId}" >Reported Content</a>
-                            <a href="${pageContext.request.contextPath}/viewFeedback?groupId=1" onclick="event.stopPropagation();">View Feedbacks</a>
-<%--                            <div class="tab-actions">--%>
-<%--                                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
-<%--                            </div>--%>
+                            <a href="${pageContext.request.contextPath}/viewFeedback?groupId=${groupId}">View Feedbacks</a>
+                                <%--                            <div class="tab-actions">--%>
+                                <%--                                <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
+                                <%--                            </div>--%>
                         </nav>
                     </div>
                 </section>
@@ -154,6 +152,37 @@
 </div>
 
 <!-- Scripts -->
+<script>
+    function disbandGroup(groupId) {
+        if (confirm("Are you sure you want to disband this group?")) {
+            var csrfToken = '${csrfToken}';
+            var contextPath = '${pageContext.request.contextPath}';
+            fetch(contextPath + '/disbandGroup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'groupId=' + groupId + '&csrfToken=' + csrfToken
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Group disbanded successfully.');
+                        window.location.href = contextPath + '/post';
+                    } else {
+                        alert('Failed to disband group: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error occurred during disband: ' + error.message);
+                });
+        }
+    }
+</script>
 <script src="${pageContext.request.contextPath}/js/groupmanager.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
 </body>

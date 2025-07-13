@@ -11,7 +11,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" contentType="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zust - Reported Content</title>
   <!-- Font Imports -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,9 +52,6 @@
         <section class="group-card">
           <div class="background_img">
             <img src="${pageContext.request.contextPath}/static/images/${groupInfo.image}" alt="Group Cover" class="cover-img"/>
-            <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'">
-              <i class="fas fa-pencil-alt"></i> Edit
-            </button>
           </div>
           <div class="group-info-body">
             <div class="group-header">
@@ -63,8 +60,8 @@
                 <p>${groupInfo.description}</p>
               </div>
               <div class="group-buttons">
-                <button class="invite-button"><i class="fas fa-user-plus"></i> Invite</button>
-                <button class="share-button"><i class="fas fa-share"></i> Share</button>
+                <button class="invite-button" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=${groupId}'"><i class="fas fa-pen"></i> Edit</button>
+                <button class="Disban-group" onclick="disbandGroup(${groupId})"><i class="fas fa-ban"></i> Disband Group</button>
               </div>
             </div>
             <nav class="group-tabs">
@@ -80,31 +77,30 @@
 
         <!-- Reported Content Section -->
         <section class="post-card" id="reported-content">
-          <h2>Reported Contents</h2>
+          <h2 class="mb-4">Reported Contents</h2>
           <c:if test="${not empty message}">
-            <div class="message success">${message}</div>
+            <div class="alert alert-success" role="alert">${message}</div>
           </c:if>
           <c:if test="${not empty error}">
-            <div class="message error">${error}</div>
+            <div class="alert alert-danger" role="alert">${error}</div>
           </c:if>
           <c:choose>
             <c:when test="${empty reportPostList}">
-              <p>No reported contents available.</p>
+              <p class="text-muted">No reported contents available.</p>
             </c:when>
             <c:otherwise>
-              <div class="pending-posts-container"> <!-- Reuse class for similar styling -->
+              <div class="pending-posts-container">
                 <c:forEach var="dto" items="${reportPostList}">
-                  <div class="pending-post-card"> <!-- Reuse class for report card -->
-                    <div class="post-header">
-                      <div class="post-author">
-                        <img src="${pageContext.request.contextPath}/static/images/${dto.account.avatar}" alt="${dto.account.username} Avatar" class="post-avatar">
+                  <article class="card mb-4 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                      <div class="d-flex align-items-center">
+                        <img src="${pageContext.request.contextPath}/static/images/${dto.account.avatar}" alt="${dto.account.username} Avatar" class="post-avatar rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
                         <div class="post-user-info">
-                          <span class="post-user-name">${dto.account.username} (Reporter)</span>
-                          <span class="report-date">${dto.reportCreateDate}</span>
+                          <span class="post-user-name fw-bold">${dto.account.username} (Reporter)</span>
+                          <time class="report-date text-muted small d-block" datetime="${dto.reportCreateDate}">${dto.reportCreateDate}</time>
                         </div>
                       </div>
-                      <!-- Action buttons for accept/dismiss -->
-                      <div class="post-actions-icon">
+                      <div class="post-actions-icon btn-group" role="group" aria-label="Report Actions">
                         <!-- Accept form (delete post and send notification) -->
                         <form action="${pageContext.request.contextPath}/reportGroupPost" method="post" style="display:inline;">
                           <input type="hidden" name="action" value="accept">
@@ -114,9 +110,9 @@
                           <input type="hidden" name="groupId" value="${groupId}">
                           <input type="hidden" name="csrfToken" value="${csrfToken}">
                           <!-- Optional: Field for suspension message -->
-                          <input type="text" name="suspensionMessage" placeholder="Notification message" style="display:none;"> <!-- Có thể hiển thị nếu cần input -->
-                          <button type="submit" class="icon-button approve-icon" title="Accept Report">
-                            <i class="fas fa-check"></i>
+                          <input type="text" name="suspensionMessage" placeholder="Notification message" class="form-control d-none">
+                          <button type="submit" class="btn btn-sm btn-success approve-icon" title="Accept Report" aria-label="Accept Report">
+                            <i class="fas fa-check"></i> Accept
                           </button>
                         </form>
                         <!-- Dismiss form (reject report) -->
@@ -125,43 +121,50 @@
                           <input type="hidden" name="reportId" value="${dto.reportId}">
                           <input type="hidden" name="groupId" value="${groupId}">
                           <input type="hidden" name="csrfToken" value="${csrfToken}">
-                          <button type="submit" class="icon-button disapprove-icon" title="Dismiss Report">
-                            <i class="fas fa-times"></i>
+                          <button type="submit" class="btn btn-sm btn-danger disapprove-icon" title="Dismiss Report" aria-label="Dismiss Report">
+                            <i class="fas fa-times"></i> Dismiss
                           </button>
                         </form>
                       </div>
                     </div>
-
-                    <div class="post-content">
-                      <h4>Report Content:</h4>
-                      <p>${dto.reportContent}</p>
-                      <h4>Reported Post:</h4>
-                      <p>${dto.post.postContent}</p>
+                    <div class="card-body">
+                      <h5 class="card-title">Report Content:</h5>
+                      <p class="card-text">${dto.reportContent}</p>
+                      <h5 class="card-title mt-3">Reported Post:</h5>
+                      <p class="card-text">${dto.post.postContent}</p>
                       <c:if test="${not empty dto.post.images}">
-                        <div class="post-media">
-                          <div class="carousel-track">
-                            <c:forEach var="image" items="${dto.post.images}">
-                              <img src="${pageContext.request.contextPath}/static/images/${image}" alt="Post Image" class="carousel-slide">
+                        <div id="carousel-${dto.reportId}" class="carousel slide mb-3" data-bs-ride="carousel">
+                          <div class="carousel-inner">
+                            <c:forEach var="image" items="${dto.post.images}" varStatus="status">
+                              <div class="carousel-item ${status.first ? 'active' : ''}">
+                                <img src="${pageContext.request.contextPath}/static/images/${image}" class="d-block w-100" alt="Post Image" style="max-height: 400px; object-fit: contain;">
+                              </div>
                             </c:forEach>
                           </div>
-                          <button class="carousel-btn prev"><</button>
-                          <button class="carousel-btn next">></button>
+                          <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${dto.reportId}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                          </button>
+                          <button class="carousel-control-next" type="button" data-bs-target="#carousel-${dto.reportId}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                          </button>
                         </div>
                       </c:if>
                       <c:if test="${not empty dto.post.hashtags}">
-                        <div class="hashtags">
+                        <div class="hashtags mb-2">
                           <c:forEach var="hashtag" items="${dto.post.hashtags}">
-                            <span>#${hashtag}</span>
+                            <span class="badge bg-primary me-1">#${hashtag}</span>
                           </c:forEach>
                         </div>
                       </c:if>
-                      <div class="post-stats">
-                        <span><i class="fas fa-heart"></i> ${dto.post.likeCount}</span>
-                        <span><i class="fas fa-comment"></i> ${dto.post.commentCount}</span>
-                        <span><i class="fas fa-retweet"></i> ${dto.post.repostCount}</span>
+                      <div class="post-stats d-flex justify-content-start text-muted small">
+                        <span class="me-3"><i class="fas fa-heart me-1"></i> ${dto.post.likeCount}</span>
+                        <span class="me-3"><i class="fas fa-comment me-1"></i> ${dto.post.commentCount}</span>
+                        <span><i class="fas fa-retweet me-1"></i> ${dto.post.repostCount}</span>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 </c:forEach>
               </div>
             </c:otherwise>
@@ -176,6 +179,37 @@
 </div>
 
 <!-- Scripts -->
+<script>
+  function disbandGroup(groupId) {
+    if (confirm("Are you sure you want to disband this group?")) {
+      var csrfToken = '${csrfToken}';
+      var contextPath = '${pageContext.request.contextPath}';
+      fetch(contextPath + '/disbandGroup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'groupId=' + groupId + '&csrfToken=' + csrfToken
+      })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+              })
+              .then(data => {
+                if (data.success) {
+                  alert('Group disbanded successfully.');
+                  window.location.href = contextPath + '/post';
+                } else {
+                  alert('Failed to disband group: ' + (data.error || 'Unknown error'));
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert('Error occurred during disband: ' + error.message);
+              });
+    }
+  }
+</script>
 <script src="${pageContext.request.contextPath}/js/groupmanager.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
 </body>

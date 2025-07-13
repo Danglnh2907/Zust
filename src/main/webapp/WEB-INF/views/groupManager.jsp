@@ -53,61 +53,44 @@
     %>
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Group Info Section -->
-        <section class="group-card">
-            <div class="background_img">
-                <img src="${pageContext.request.contextPath}/static/images/<%= groupInfo.getImage() %>" alt="Group Cover"
-                     class="cover-img" />
-                <button class="edit-banner" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=1'">
-                    <i class="fas fa-pencil-alt"></i> Edit
-                </button>
-            </div>
-            <div class="group-info-body">
-                <div class="group-header">
-                    <div class="group-title">
-                        <h1><%= groupInfo.getName() %></h1>
-                        <p><%= groupInfo.getDescription() %></p>
-                    </div>
-                    <div class="group-buttons">
-<%--                        <button class="edit-button"><i class="fas fa-pencil-alt"></i> Edit</button>--%>
-<%--                        <button class="joined-button">Joined</button>--%>
-<%--    trạng thái tham nha nhosm--%>
-                        <button class="invite-button"><i class="fas fa-user-plus"></i> Invite</button>
-                        <button class="share-button"><i class="fas fa-share"></i> Share</button>
-                    </div>
+        <c:if test="${groupInfo == null}">
+            <p>Group không tồn tại hoặc nhóm đã giải tán</p>
+        </c:if>
+        <c:if test="${groupInfo != null}">
+            <!-- Group Info Section -->
+            <section class="group-card">
+                <div class="background_img">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= groupInfo.getImage() %>" alt="Group Cover"
+                         class="cover-img" />
                 </div>
-<%--                <nav class="group-tabs">--%>
-<%--                    <a href="${pageContext.request.contextPath}/groupManager?groupId=2" class="active">Discussion</a>--%>
-<%--                    <a href="#">Members</a>--%>
-<%--                    <a href="${pageContext.request.contextPath}/joinRequest?groupId=${groupId}">Joining Request</a>--%>
-<%--                    <a href="${pageContext.request.contextPath}/approvePost?groupId=2" onclick="event.stopPropagation();">Pending Posts</a>--%>
-<%--                    <a href="${pageContext.request.contextPath}/viewFeedback?groupId=2" onclick="event.stopPropagation();">View Feedbacks</a>--%>
-<%--                    <div class="tab-actions">--%>
-
-<%--                        <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
-<%--                    </div>--%>
-<%--                </nav>--%>
-
+                href="${pageContext.request.contextPath}/post?action=create"
+                <div class="group-info-body">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <h1><%= groupInfo.getName() %></h1>
+                            <p><%= groupInfo.getDescription() %></p>
+                        </div>
+                        <div class="group-buttons">
+                            <button class="invite-button" onclick="window.location.href='${pageContext.request.contextPath}/groupProfile?groupId=1'">
+                                <i class="fas fa-pen"></i> Edit
+                            </button>
+                            <button class="Disban-group" onclick="disbandGroup(<%= groupInfo.getId() %>)"><i class="fas fa-ban"></i> Disband Group</button>
+                        </div>
+                    </div>
                     <nav class="group-tabs">
                         <a href="${pageContext.request.contextPath}/groupManager?groupId=1" class="active">Discussion</a>
                         <a href="${pageContext.request.contextPath}/viewMembers?groupId=<%= groupInfo.getId() %>" >Members</a>
                         <a href="${pageContext.request.contextPath}/joinRequest?groupId=<%= groupInfo.getId() %>">Joining Request</a>
                         <a href="${pageContext.request.contextPath}/approvePost?groupId=<%= groupInfo.getId() %>">Pending Posts</a>
-                        <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=${groupId}" >Reported Content</a>
+                        <a href="${pageContext.request.contextPath}/reportGroupPost?groupId=<%= groupInfo.getId() %>">Reported Content</a>
                         <a href="${pageContext.request.contextPath}/viewFeedback?groupId=<%= groupInfo.getId() %>">View Feedbacks</a>
                     </nav>
-<%--                <div class="tab-actions" style="position: relative;">--%>
-<%--                    <button class="more-options-btn"><i class="fas fa-ellipsis-h"></i></button>--%>
-<%--                    <div class="options-menu-tab" style="display: none; position: absolute; top: 100%; right: 0; background-color: white; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000;">--%>
-<%--                        <a href="#" class="dropdown-item">Disband Group</a>--%>
-<%--                        <a href="#" class="dropdown-item">Assign Managers to Group</a>--%>
-<%--                        <a href="#">Report Content</a>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
                 </div>
-        </section>
+            </section>
+        </c:if>
 
         <!-- Discussion Section -->
+        <c:if test="${not empty groupInfo}">
         <section class="post-card" id="discussion">
             <div class="create-post">
                 <img src="https://i.imgur.com/g3v1Y1B.jpg" alt="User Avatar" class="user-avatar">
@@ -169,11 +152,11 @@
                     </div>
                 </div>
             </c:forEach>
-            <c:if test="${empty posts}">
+            <c:if test="${empty posts   }">
                 <p>Chưa có bài post nào trong nhóm.</p>
             </c:if>
         </section>
-
+        </c:if>
 
 
         <!-- Placeholder Sections -->
@@ -194,7 +177,37 @@
         </section>
     </main>
 </div>
-
+<script>
+    function disbandGroup(groupId) {
+        if (confirm("Are you sure you want to disband this group?")) {
+            var csrfToken = '<%= session.getAttribute("csrfToken") != null ? session.getAttribute("csrfToken") : "" %>';
+            var contextPath = '${pageContext.request.contextPath}';
+            fetch(contextPath + '/disbandGroup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'groupId=' + groupId + '&csrfToken=' + csrfToken
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Group disbanded successfully.');
+                        // Redirect or update UI, e.g. window.location.href = '/';
+                    } else {
+                        alert('Failed to disband group: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error occurred during disband: ' + error.message);
+                });
+        }
+    }
+</script>
 <script src="${pageContext.request.contextPath}/js/groupmanager.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
 </body>

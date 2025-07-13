@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @WebServlet("/groupManager")
 public class DiscussionController extends HttpServlet {
@@ -32,6 +33,10 @@ public class DiscussionController extends HttpServlet {
         GroupDAO groupDAO = new GroupDAO();
         ResGroupDTO groupInfo = groupDAO.getGroup(groupId);
         req.setAttribute("groupInfo", groupInfo);
+
+        String csrfToken = UUID.randomUUID().toString();
+        req.setAttribute("csrfToken", csrfToken);
+        req.getSession().setAttribute("csrfToken", csrfToken);
 
         // Chuyển hướng đến groupManager.jsp
         req.getRequestDispatcher("/WEB-INF/views/groupManager.jsp").forward(req, resp);
