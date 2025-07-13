@@ -29,6 +29,9 @@ public class Account {
 	@Lob
 	@Column(name = "avatar")
 	private String avatar;
+	@Lob
+	@Column(name = "cover_image")
+	private String coverImage;
 	@Column(name = "bio", length = 250)
 	private String bio;
 	@ColumnDefault("100")
@@ -123,6 +126,14 @@ public class Account {
 		this.avatar = avatar;
 	}
 
+	public String getCoverImage() {
+		return coverImage;
+	}
+
+	public void setCoverImage(String coverImage) {
+		this.coverImage = coverImage;
+	}
+
 	public String getBio() {
 		return bio;
 	}
@@ -155,4 +166,11 @@ public class Account {
 		this.accountRole = accountRole;
 	}
 
+	@Override
+	public String toString() {
+		return "Account [id=" + id + ", username=" + username + ", password=" + password + ", fullname=" + fullname
+				+ ", email=" + email + ", phone=" + phone + ", gender=" + gender + ", dob=" + dob + ", avatar=" + avatar
+				+ ", coverImage=" + coverImage + ", bio=" + bio + ", credit=" + credit + ", accountStatus="
+				+ accountStatus + ", accountRole=" + accountRole + "]";
+	}
 }

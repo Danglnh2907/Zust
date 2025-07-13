@@ -79,7 +79,7 @@ public class ReportPostServlet extends HttpServlet {
                 acceptReportDTO.setReportId(reportId);
                 acceptReportDTO.setReportAccountId(reporterId);
                 acceptReportDTO.setReportedAccountId(reportedAccountId);
-                acceptReportDTO.setReportedPostId(reportedPostId);
+                acceptReportDTO.setReportedId(reportedPostId);
                 acceptReportDTO.setNotificationContent(suspensionMessage);
 
                 // Process the accept report

@@ -1,5 +1,8 @@
 package controller;
 
+import dao.ReportCommentDAO;
+import dto.AcceptReportDTO;
+import dto.ResReportCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 @WebServlet(
@@ -15,15 +19,103 @@ import java.util.logging.Logger;
 )
 public class ReportCommentServlet extends HttpServlet {
 
-    private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ReportCommentDAO reportCommentDAO = new ReportCommentDAO();
+        List<ResReportCommentDTO> reports = reportCommentDAO.getAll();
+        request.setAttribute("reports", reports);
+        logger.info("Retrieved " + reports.size() + " comment reports");
         request.getRequestDispatcher("/WEB-INF/views/report_comment.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ReportCommentDAO reportCommentDAO = new ReportCommentDAO();
+        String action = request.getParameter("action");
+        String reportIdParam = request.getParameter("reportId");
 
+        // Validate action
+        if (action == null) {
+            logger.warning("No action provided for POST request");
+            doGet(request, response);
+            return;
+        }
+
+        // Validate reportId
+        int reportId;
+        try {
+            reportId = Integer.parseInt(reportIdParam);
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid report ID format: " + reportIdParam);
+            request.setAttribute("msg", "Invalid report ID");
+            doGet(request, response);
+            return;
+        }
+
+        logger.info("Processing POST action: " + action + " for report ID: " + reportId);
+        switch (action) {
+            case "accept":
+                // Get additional parameters for accept action
+                String reportAccountIdParam = request.getParameter("reportAccountId");
+                String reportedAccountIdParam = request.getParameter("reportedAccountId");
+                String reportedIdParam = request.getParameter("reportedId");
+                String notificationContent = request.getParameter("notificationContent");
+
+                int reportAccountId, reportedAccountId, reportedId;
+                try {
+                    reportAccountId = Integer.parseInt(reportAccountIdParam);
+                    reportedAccountId = Integer.parseInt(reportedAccountIdParam);
+                    reportedId = Integer.parseInt(reportedIdParam);
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid parameters for accept action: reportAccountId=" + reportAccountIdParam +
+                            ", reportedAccountId=" + reportedAccountIdParam + ", reportedId=" + reportedIdParam);
+                    request.setAttribute("msg", "Fail to accept report: Invalid ID");
+                    doGet(request, response);
+                    return;
+                }
+
+                // Create AcceptReportDTO
+                AcceptReportDTO acceptDTO = new AcceptReportDTO();
+                acceptDTO.setReportId(reportId);
+                acceptDTO.setReportAccountId(reportAccountId);
+                acceptDTO.setReportedAccountId(reportedAccountId);
+                acceptDTO.setReportedId(reportedId);
+                acceptDTO.setNotificationContent("Your comment get deleted because of: " +  notificationContent);
+
+                // Process accept action
+                boolean acceptSuccess = reportCommentDAO.acceptReport(acceptDTO);
+                if (acceptSuccess) {
+                    logger.info("Successfully accepted report ID: " + reportId);
+//                    request.setAttribute("msg", "Report accepted successfully");
+                    doGet(request, response);
+                } else {
+                    logger.warning("Failed to accept report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to accept report ID: " + reportId);
+                    doGet(request, response);
+                }
+                break;
+
+            case "dismiss":
+                // Process dismiss action
+                boolean dismissSuccess = reportCommentDAO.dismissReport(reportId);
+                if (dismissSuccess) {
+                    logger.info("Successfully dismissed report ID: " + reportId);
+//                    request.setAttribute("msg", "Report dismissed successfully");
+                    doGet(request, response);
+                } else {
+                    logger.warning("Failed to dismiss report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to dismiss report ID: " + reportId);
+                    doGet(request, response);
+                }
+                break;
+
+            default:
+                logger.warning("Invalid action: " + action + " for report ID: " + reportId);
+                request.setAttribute("msg", "Invalid action: " + action + " for report ID: " + reportId);
+                doGet(request, response);
+                break;
+        }
     }
 }

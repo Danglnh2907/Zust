@@ -32,6 +32,11 @@ body {
     color: #14171a;
 }
 
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* --- Main App Layout (Grid) --- */
 .app-layout {
     display: grid;
@@ -226,6 +231,7 @@ body {
     align-items: center;
     gap: 12px;
     margin-left: 24px;
+    text-decoration: none;
 }
 
 .nav-profile img {
@@ -234,6 +240,20 @@ body {
     border-radius: 50%;
 }
 
+.dropdown-menu {
+    padding: 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1rem;
+    border-radius: 8px;
+}
 
 /* --- Feed Container --- */
 .feed {
@@ -558,4 +578,53 @@ body {
 
 body.lightbox-open {
     overflow: hidden;
+}
+
+/*=== Drop down menu (for logout) ===*/
+.nav-profile-container {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-profile {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+.nav-profile img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.nav-profile-container .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1050; /* To be on top of other elements */
+    right: 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.nav-profile-container .dropdown-menu a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+}
+
+.nav-profile-container .dropdown-menu a:hover {
+    background-color: #f1f1f1;
+}
+
+.nav-profile-container:hover .dropdown-menu {
+    display: block;
 }

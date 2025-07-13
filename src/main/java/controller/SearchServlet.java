@@ -6,10 +6,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.Account;
+import model.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet(name = "SearchServlet", urlPatterns = {"/search"})
@@ -72,11 +76,23 @@ public class SearchServlet extends HttpServlet {
 		doGet(request, response);
 	}
 
+	private Account getAccount(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+        return (Account) session.getAttribute("users");
+	}
+
 	/**
 	 * Handle main search functionality
 	 */
 	private void handleFullSearch(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		//Get session
+		Account account = getAccount(request);
+		if (account == null) {
+			request.getRequestDispatcher("/auth").forward(request, response);
+			return;
+		}
+		request.setAttribute("account", account);
 
 		String keyword = request.getParameter("keyword");
 
@@ -97,7 +113,7 @@ public class SearchServlet extends HttpServlet {
 
 		try {
 			// Perform search across all categories with limited results for overview
-			Map<String, java.util.List<?>> searchResults = searchDAO.searchAllLimited(keyword, 5);
+			Map<String, java.util.List<?>> searchResults = searchDAO.searchAllLimited(keyword, 10);
 
 			LOGGER.info("Full search completed for keyword: {} - Users: {}, Posts: {}, Hashtag Posts: {}, Groups: {}",
 					keyword,
@@ -166,57 +182,102 @@ public class SearchServlet extends HttpServlet {
 	 */
 	private void handleViewMoreSearch(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		//Get session
+		Account account = getAccount(request);
+		if (account == null) {
+			request.getRequestDispatcher("/auth").forward(request, response);
+			return;
+		}
+		request.setAttribute("account", account);
 
 		String keyword = request.getParameter("keyword");
 		String category = request.getParameter("category");
-		int page = 1;
-
-		try {
-			String pageParam = request.getParameter("page");
-			if (pageParam != null && !pageParam.isEmpty()) {
-				page = Integer.parseInt(pageParam);
-			}
-		} catch (NumberFormatException e) {
-			LOGGER.warn("Invalid page parameter: {}, using default page 1", request.getParameter("page"));
-			page = 1;
-		}
-
-		LOGGER.info("ViewMore search request - keyword: {}, category: {}, page: {}", keyword, category, page);
 
 		if (keyword == null || keyword.trim().isEmpty()) {
-			LOGGER.warn("ViewMore search with empty keyword, redirecting to post page");
-			response.sendRedirect(request.getContextPath() + "/post");
-			return;
-		}
-
-		if (category == null || category.trim().isEmpty()) {
-			LOGGER.warn("ViewMore search with empty category, redirecting to post page");
-			response.sendRedirect(request.getContextPath() + "/post");
+			LOGGER.warn("Full search (view more search) with empty keyword, showing empty results");
+			request.setAttribute("keyword", "");
+			request.setAttribute("searchResults", Map.of(
+					"users", java.util.Collections.emptyList(),
+					"posts_content", java.util.Collections.emptyList(),
+					"posts_hashtag", java.util.Collections.emptyList(),
+					"groups", java.util.Collections.emptyList()
+			));
+			request.getRequestDispatcher("/WEB-INF/views/search_view_more.jsp").forward(request, response);
 			return;
 		}
 
 		try {
-			int offset = (page - 1) * RESULTS_PER_PAGE;
-			LOGGER.info("Calculating offset: page={}, resultsPerPage={}, offset={}", page, RESULTS_PER_PAGE, offset);
-
-			Map<String, Object> pagedResults = searchDAO.searchCategoryPaged(keyword, category, RESULTS_PER_PAGE, offset);
-
-			LOGGER.info("Paged search results: totalCount={}, hasMore={}, resultSize={}",
-					pagedResults.get("totalCount"),
-					pagedResults.get("hasMore"),
-					pagedResults.get("results") != null ? ((java.util.List<?>)pagedResults.get("results")).size() : 0);
-
+			//Only fetch users or groups based on category
+			switch (category) {
+				case "users" -> {
+					List<Account> users = searchDAO.searchUsers(keyword);
+					request.setAttribute("users", users);
+				}
+				case "groups" -> {
+					List<Group> groups = searchDAO.searchGroups(keyword);
+					request.setAttribute("groups", groups);
+				}
+				default -> {
+					request.setAttribute("message", "Invalid category: " + category);
+				}
+			}
 			request.setAttribute("keyword", keyword);
 			request.setAttribute("category", category);
-			request.setAttribute("pagedResults", pagedResults);
-			request.setAttribute("currentPage", page);
-			request.setAttribute("resultsPerPage", RESULTS_PER_PAGE);
-
 			request.getRequestDispatcher("/WEB-INF/views/search_view_more.jsp").forward(request, response);
 		} catch (Exception e) {
-			LOGGER.error("View more search failed for keyword: {} category: {} page: {}", keyword, category, page, e);
-			response.sendRedirect(request.getContextPath() + "/post?error=" + java.net.URLEncoder.encode("Search failed", "UTF-8"));
+			LOGGER.error("Full search (view more results) failed for keyword: {}", keyword, e);
+			request.setAttribute("keyword", keyword);
+			request.setAttribute("errorMessage", "Search failed. Please try again.");
+			request.getRequestDispatcher("/WEB-INF/views/search_view_more.jsp").forward(request, response);
 		}
+//		int page = 1;
+
+//		try {
+//			String pageParam = request.getParameter("page");
+//			if (pageParam != null && !pageParam.isEmpty()) {
+//				page = Integer.parseInt(pageParam);
+//			}
+//		} catch (NumberFormatException e) {
+//			LOGGER.warn("Invalid page parameter: {}, using default page 1", request.getParameter("page"));
+//			page = 1;
+//		}
+//
+//		LOGGER.info("ViewMore search request - keyword: {}, category: {}, page: {}", keyword, category, page);
+//
+//		if (keyword == null || keyword.trim().isEmpty()) {
+//			LOGGER.warn("ViewMore search with empty keyword, redirecting to post page");
+//			response.sendRedirect(request.getContextPath() + "/post");
+//			return;
+//		}
+//
+//		if (category == null || category.trim().isEmpty()) {
+//			LOGGER.warn("ViewMore search with empty category, redirecting to post page");
+//			response.sendRedirect(request.getContextPath() + "/post");
+//			return;
+//		}
+//
+//		try {
+//			int offset = (page - 1) * RESULTS_PER_PAGE;
+//			LOGGER.info("Calculating offset: page={}, resultsPerPage={}, offset={}", page, RESULTS_PER_PAGE, offset);
+//
+//			Map<String, Object> pagedResults = searchDAO.searchCategoryPaged(keyword, category, RESULTS_PER_PAGE, offset);
+//
+//			LOGGER.info("Paged search results: totalCount={}, hasMore={}, resultSize={}",
+//					pagedResults.get("totalCount"),
+//					pagedResults.get("hasMore"),
+//					pagedResults.get("results") != null ? ((java.util.List<?>)pagedResults.get("results")).size() : 0);
+//
+//			request.setAttribute("keyword", keyword);
+//			request.setAttribute("category", category);
+//			request.setAttribute("pagedResults", pagedResults);
+//			request.setAttribute("currentPage", page);
+//			request.setAttribute("resultsPerPage", RESULTS_PER_PAGE);
+//
+//			request.getRequestDispatcher("/WEB-INF/views/search_view_more.jsp").forward(request, response);
+//		} catch (Exception e) {
+//			LOGGER.error("View more search failed for keyword: {} category: {} page: {}", keyword, category, page, e);
+//			response.sendRedirect(request.getContextPath() + "/post?error=" + java.net.URLEncoder.encode("Search failed", "UTF-8"));
+//		}
 	}
 
 	/**

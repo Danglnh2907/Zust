@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A custom Servlet for handling HTTP requests.
@@ -29,7 +30,7 @@ public class LogoutServlet extends HttpServlet {
 		if (session != null) {
 			session.invalidate(); // Invalidate the session
 		}
-		response.sendRedirect(request.getContextPath() + "/login?message=" + java.net.URLEncoder.encode("You have been logged out.", "UTF-8"));
+		response.sendRedirect(request.getContextPath() + "/login?message=" + java.net.URLEncoder.encode("You have been logged out.", StandardCharsets.UTF_8));
 	}
 
 	/**

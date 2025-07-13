@@ -134,19 +134,19 @@ public class ReportPostDAO extends DBContext {
             // Update post_status to 'deleted' in post
             String updatePostSql = "UPDATE post SET post_status = 'deleted' WHERE post_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(updatePostSql)) {
-                stmt.setInt(1, acceptReportDTO.getReportedPostId());
+                stmt.setInt(1, acceptReportDTO.getReportedId());
                 stmt.executeUpdate();
             }
 
             // Subtract 20 credits from the reported account
-            String subtractCreditSql = "UPDATE account SET credit = credit - 20 WHERE account_id = ?";
+            String subtractCreditSql = "UPDATE account SET credit = credit - 5 WHERE account_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(subtractCreditSql)) {
                 stmt.setInt(1, acceptReportDTO.getReportedAccountId());
                 stmt.executeUpdate();
             }
 
             // Add 3 credits to the reporter account
-            String addCreditSql = "UPDATE account SET credit = credit + 3 WHERE account_id = ?";
+            String addCreditSql = "UPDATE account SET credit = credit + 1 WHERE account_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(addCreditSql)) {
                 stmt.setInt(1, acceptReportDTO.getReportAccountId());
                 stmt.executeUpdate();
@@ -154,7 +154,7 @@ public class ReportPostDAO extends DBContext {
 
             // Insert notification into notification table
             String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
-                    "VALUES ('Post get Deleted', ?, GETDATE(), 'sent', ?)";
+                    "VALUES ('Warning: Post get Deleted', ?, GETDATE(), 'sent', ?)";
             try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
                 stmt.setString(1, acceptReportDTO.getNotificationContent());
                 stmt.setInt(2, acceptReportDTO.getReportedAccountId());
@@ -184,6 +184,6 @@ public class ReportPostDAO extends DBContext {
 
     public static void main(String[] args) {
         ReportPostDAO reportPostDAO = new ReportPostDAO();
-        System.out.println(reportPostDAO.getAll().get(1).getPost());
+//        System.out.println(reportPostDAO.getAll().get(0).getPost());
     }
 }

@@ -94,6 +94,7 @@
         .modal-content { max-width: 80%; max-height: 80%; border-radius: 5px; animation: zoomIn 0.3s ease; }
         /*.modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }*/
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
+        .clickable-image:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -139,7 +140,7 @@
                 <% Account reporter = report.getAccount();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src=${pageContext.request.contextPath}/static/images/"<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
                     <div>
                         <div class="user-name"><%= reporter.getFullname() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>
@@ -175,7 +176,7 @@
                             data-reporter-id="<%= reporter != null ? reporter.getId() : "0" %>"
                             data-reported-id="<%= report.getPost().getUsername() != null ? report.getPost().getUsername() : "0" %>"
                             data-reported-post-id="<%= report.getPost().getPostId()%>">
-                        Suspend User
+                        Takedown Post
                     </button>
                     <form action="reportPost" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
@@ -186,15 +187,17 @@
             </div>
 
             <!-- Column 3: Reported Post -->
-            <div class="report-section reported-post feed">
-<%--                <h3><i class="fas fa-file-alt"></i> Reported Content</h3>--%>
-                <% RespPostDTO post = report.getPost();
-                    if (post != null) {
-                        out.println(post);
-                        %>
-                <% } else { %>
-                <p>Reported post data is unavailable.</p>
-                <% } %>
+            <div class="report-section reported-post">
+                <h3><i class="fas fa-file-alt"></i> Reported Content</h3>
+                <div class="feed">
+                    <% RespPostDTO post = report.getPost();
+                        if (post != null) {
+                            out.println(post);
+                    %>
+                    <% } else { %>
+                    <p>Reported post data is unavailable.</p>
+                    <% } %>
+                </div>
             </div>
         </div>
         <% } %>
@@ -229,7 +232,7 @@
                 <input type="hidden" id="hiddenReportedPostId" name="reportedPostId">
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn-submit">Confirm Suspension</button>
+                <button type="submit" class="btn-submit">Confirm</button>
             </div>
         </form>
     </div>

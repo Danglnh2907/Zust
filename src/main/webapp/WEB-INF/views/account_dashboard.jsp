@@ -54,6 +54,7 @@
         .user-info .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
         .user-info .user-name { font-weight: 600; }
         .user-info .user-username { font-size: 0.9em; color: #777; }
+        .clickable-avatar:hover { transform: scale(1.1); }
 
         .bio-cell { white-space: normal; max-width: 250px;}
         .bio-cell .bio-content { white-space: normal; max-width: 250px;}
@@ -145,7 +146,7 @@
                     <div style="color: #666;"><%= user.getPhone() != null ? user.getPhone() : "N/A" %></div>
                 </td>
                 <td>
-                    <div><strong>Gender:</strong> <%= user.getGender() != null ? user.getGender() : "N/A" %></div>
+                    <div><strong>Gender:</strong> <%= user.getGender() != null ? (user.getGender() ? "Male" : "Female") : "N/A" %></div>
                     <div><strong>DOB:</strong> <%= user.getDob() != null ? user.getDob() : "N/A" %></div>
                 </td>
                 <td class="bio-cell">
