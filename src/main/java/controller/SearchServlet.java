@@ -94,8 +94,8 @@ public class SearchServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("account", account);
-//		GroupDAO groupDAO = new GroupDAO();
-//		request.setAttribute("joinedGroup", groupDAO.getJoinedGroups(account.getId()));
+		GroupDAO groupDAO = new GroupDAO();
+		request.setAttribute("joinedGroups", groupDAO.getJoinedGroups(account.getId()));
 
 		String keyword = request.getParameter("keyword");
 
@@ -192,8 +192,8 @@ public class SearchServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("account", account);
-//		GroupDAO groupDAO = new GroupDAO();
-//		request.setAttribute("joinedGroup", groupDAO.getJoinedGroups(account.getId()));
+		GroupDAO groupDAO = new GroupDAO();
+		request.setAttribute("joinedGroups", groupDAO.getJoinedGroups(account.getId()));
 
 		String keyword = request.getParameter("keyword");
 		String category = request.getParameter("category");

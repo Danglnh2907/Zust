@@ -282,18 +282,18 @@
                     </ul>
                 </nav>
                 <div class="sidebar-divider"></div>
-                <% List<InteractGroupDTO> groups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
+                <% List<InteractGroupDTO> joinedGroups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
                 <div class="groups-header">
                     <h2>My Groups</h2>
-                    <span class="groups-count"><%= groups != null ? groups.size() : 0 %></span>
+                    <span class="groups-count"><%= joinedGroups != null ? joinedGroups.size() : 0 %></span>
                 </div>
                 <div class="scrollable-group-list">
                     <%
-                        if (groups != null && !groups.isEmpty()) {
+                        if (joinedGroups != null && !joinedGroups.isEmpty()) {
                     %>
                     <div class="group-list">
                         <%
-                            for (InteractGroupDTO group : groups) {
+                            for (InteractGroupDTO group : joinedGroups) {
                                 String status = group.getStatus() != null ? group.getStatus().toLowerCase() : "unknown";
                         %>
                         <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>" class="group-link">
@@ -427,7 +427,7 @@
                         </div>
                         <div class="entity-list">
                             <%
-                                //Display groups (max to 5)
+                                //Display joinedGroups (max to 5)
                                 for (int i = 0; i < 5 && i < groups.size(); i++) {
                                     Group grp = groups.get(i);
                             %>
@@ -448,7 +448,7 @@
                             %>
                         </div>
                         <%
-                            //Display the show more button if more than 5 groups found
+                            //Display the show more button if more than 5 joinedGroups found
                             if (groups.size() > 5) {
                         %>
                         <div class="show-more-footer">
