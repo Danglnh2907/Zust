@@ -337,7 +337,9 @@ function submitPost(quill, getPrivacy, action, postId = null, groupId = null) {
         }).then(response => {
             if (response.ok) {
                 if (action === "create") {
-                    window.location.href = "/zust/post";
+                    console.log("Create post success");
+                    sessionStorage.setItem('shouldReload', 'true');
+                    window.history.back();
                 } else {
                     window.location.reload();
                 }

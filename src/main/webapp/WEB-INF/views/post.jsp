@@ -312,5 +312,16 @@
 <script src="${pageContext.request.contextPath}/js/post.js"></script>
 <script src="${pageContext.request.contextPath}/js/composer.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
+
+<script>
+    window.addEventListener('pageshow', function (event) {
+        if (sessionStorage.getItem('shouldReload') === 'true') {
+            sessionStorage.removeItem('shouldReload');
+            // Force reload even if browser loads from cache
+            window.location.reload(true);
+        }
+    });
+</script>
+
 </body>
 </html>

@@ -43,7 +43,7 @@
 <div class="search-result-item" onclick="goToProfile(<%= user.getId() %>)">
   <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
     <% if (avatar != null && !avatar.trim().isEmpty()) { %>
-    <img src="<%= avatar %>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="<%= fullname.replaceAll("\"", "&quot;") %>">
+    <img src="${pageContext.request.contextPath}/static/images/<%=avatar%>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="<%= fullname.replaceAll("\"", "&quot;") %>">
     <% } else { %>
     <i class="fas fa-user"></i>
     <% } %>
