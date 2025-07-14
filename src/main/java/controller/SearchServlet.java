@@ -1,5 +1,6 @@
 package controller;
 
+import dao.GroupDAO;
 import dao.SearchDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -93,6 +94,8 @@ public class SearchServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("account", account);
+//		GroupDAO groupDAO = new GroupDAO();
+//		request.setAttribute("joinedGroup", groupDAO.getJoinedGroups(account.getId()));
 
 		String keyword = request.getParameter("keyword");
 
@@ -189,6 +192,8 @@ public class SearchServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("account", account);
+//		GroupDAO groupDAO = new GroupDAO();
+//		request.setAttribute("joinedGroup", groupDAO.getJoinedGroups(account.getId()));
 
 		String keyword = request.getParameter("keyword");
 		String category = request.getParameter("category");

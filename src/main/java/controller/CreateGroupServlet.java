@@ -26,7 +26,7 @@ import java.util.UUID;
         name = "CreateGroupServlet",
         value = "/createGroup"
 )
-@MultipartConfig(maxFileSize = 5 * 1024 * 1024)
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class CreateGroupServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateGroupServlet.class);
     @Override
