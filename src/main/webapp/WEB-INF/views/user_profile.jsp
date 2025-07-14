@@ -34,6 +34,25 @@
 </head>
 
 <body>
+<!-- Modal -->
+<div class="modal fade" id="modal" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title-label"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Top Navigation Bar -->
 <header class="top-navbar">
     <!-- Logo -->
@@ -77,27 +96,7 @@
     </div>
 </header>
 
-<!-- Modal -->
-<div class="modal fade" id="modal" data-bs-keyboard="false"
-     tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal-title-label"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modal-body">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="app-layout">
-
     <main class="main-content">
         <div class="profile-cover">
             <%
@@ -124,23 +123,26 @@
                     <%-- Add Friend Button --%>
                     <% Account currentUser = (Account) request.getSession().getAttribute("users");
                         if (currentUser != null && currentUser.getId().equals(profile.getId())) { %>
-                    <button class="edit-profile-btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <button class="btn edit-profile-btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                         <i class="fa-solid fa-user-edit"></i> Edit Profile
                     </button>
+                    <a class="btn change-password-btn" href="${pageContext.request.contextPath}/change_password">
+                        <i class="fa-solid fa-change-password"></i> Change Password
+                    </a>
                     <% } else if (currentUser != null && !currentUser.getId().equals(profile.getId())) {
-                            Boolean areFriends = (Boolean) request.getAttribute("areFriends");
-                            Boolean friendRequestPending = (Boolean) request.getAttribute("friendRequestPending");
+                        Boolean areFriends = (Boolean) request.getAttribute("areFriends");
+                        Boolean friendRequestPending = (Boolean) request.getAttribute("friendRequestPending");
 
-                            if (areFriends != null && areFriends) { %>
-                    <button class="add-friend-btn unfriend-btn" data-user-id="<%= profile.getId() %>">
+                        if (areFriends != null && areFriends) { %>
+                    <button class="btn add-friend-btn unfriend-btn" data-user-id="<%= profile.getId() %>">
                         <i class="fa-solid fa-user-minus"></i> Unfriend
                     </button>
                     <% } else if (friendRequestPending != null && friendRequestPending) { %>
-                    <button class="add-friend-btn pending-btn" disabled>
+                    <button class="btn add-friend-btn pending-btn" disabled>
                         <i class="fa-solid fa-clock"></i> Request Sent
                     </button>
                     <% } else { %>
-                    <button class="add-friend-btn" data-bs-toggle="modal" data-bs-target="#friendRequestModal">
+                    <button class="btn add-friend-btn" data-bs-toggle="modal" data-bs-target="#friendRequestModal">
                         <i class="fa-solid fa-user-plus"></i> Add Friend
                     </button>
                     <% }
@@ -180,13 +182,16 @@
                 <div class="about-info">
                     <h3>About</h3>
                     <ul class="info-list">
-                        <li><i class="fa-solid fa-user"></i> <%=profile.getGender() == null ? "Not set" : (profile.getGender() ? "Male" : "Female")%>
+                        <li>
+                            <i class="fa-solid fa-user"></i> <%=profile.getGender() == null ? "Not set" : (profile.getGender() ? "Male" : "Female")%>
                         </li>
-                        <li><i class="fa-solid fa-calendar-days"></i> Born <%=profile.getDob() == null ? "Not set" : profile.getDob()%>
+                        <li><i class="fa-solid fa-calendar-days"></i>
+                            Born <%=profile.getDob() == null ? "Not set" : profile.getDob()%>
                         </li>
                         <li><i class="fa-solid fa-envelope"></i> <%=profile.getEmail()%>
                         </li>
-                        <li><i class="fa-solid fa-phone"></i> <%=profile.getPhone() != null ? profile.getPhone() : "Not set"%>
+                        <li>
+                            <i class="fa-solid fa-phone"></i> <%=profile.getPhone() != null ? profile.getPhone() : "Not set"%>
                         </li>
                         <li>
                             <button class="social-credit-btn">Social Credit: <%=profile.getCredit()%>
