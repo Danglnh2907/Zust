@@ -89,6 +89,14 @@ body {
     margin: 4px 0 0 0;
 }
 
+.profile-actions {
+    display: flex;
+}
+
+.profile-actions .btn{
+    margin-left: 10px;
+}
+
 .add-friend-btn {
     background-color: var(--primary-color);
     color: white;
@@ -125,6 +133,26 @@ body {
 
 .edit-profile-btn:hover {
     background-color: var(--accent-orange);
+}
+
+.change-password-btn {
+    background-color: gray;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.change-password-btn:hover {
+    background-color: var(--accent-orange);
+    color: white;
 }
 
 /* Transition animation for the active tab indicator */
