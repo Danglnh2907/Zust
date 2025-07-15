@@ -17,7 +17,7 @@ public class JoinGroupRequestDAO extends DBContext {
         String sql = "INSERT INTO join_group_request (account_id, group_id, join_group_request_content, join_group_request_status) " +
                 "VALUES (?, ?, ?, 'sent')";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountId);
             stmt.setInt(2, groupId);

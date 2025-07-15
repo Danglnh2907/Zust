@@ -80,7 +80,7 @@ public class ReportCommentDAO extends DBContext {
 
         Connection conn = null;
         try {
-            conn = getConnection();
+            conn = new DBContext().getConnection();
             conn.setAutoCommit(false); // Start transaction
 
             // Update report status

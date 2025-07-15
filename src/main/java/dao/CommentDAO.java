@@ -23,7 +23,7 @@ public class CommentDAO extends DBContext {
                    comment_content, comment_image, comment_create_date, comment_last_update, \
                    account_id, post_id, reply_comment_id) \
                 VALUES(?, ?, ?, ?, ?, ?, ?)""";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dto.getContent());
             stmt.setString(2, dto.getImage());
@@ -56,7 +56,7 @@ public class CommentDAO extends DBContext {
                 WHERE c.post_id = ? AND c.comment_status = 0 \
                 ORDER BY c.comment_last_update DESC""";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userID);
@@ -152,7 +152,7 @@ public class CommentDAO extends DBContext {
                 UPDATE comment \
                 SET comment_content = ?, comment_image = ?, comment_last_update = ? \
                 WHERE comment_id = ? AND account_id = ?""";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dto.getContent());
             stmt.setString(2, dto.getImage());
@@ -168,7 +168,7 @@ public class CommentDAO extends DBContext {
 
     public boolean deleteComment(int commentID, int accountID) {
         String sql = "UPDATE comment SET comment_status = 1 WHERE comment_id = ? AND account_id = ?"; //Soft delete
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, commentID);
             stmt.setInt(2, accountID);
@@ -181,7 +181,7 @@ public class CommentDAO extends DBContext {
 
     public boolean likeComment(int accountID, int commentID) {
         String sql = "INSERT INTO like_comment (account_id, comment_id) VALUES (?, ?)";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountID);
             stmt.setInt(2, commentID);
@@ -194,7 +194,7 @@ public class CommentDAO extends DBContext {
 
     public boolean unlikeComment(int accountID, int commentID) {
         String sql = "DELETE FROM like_comment WHERE account_id = ? AND comment_id = ?";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountID);
             stmt.setInt(2, commentID);
@@ -209,7 +209,7 @@ public class CommentDAO extends DBContext {
         String sql = """
                 INSERT INTO report_comment (report_content, account_id, comment_id, report_create_date, report_status) \
                 VALUES (?, ?, ?, ?, ?)""";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, report.getContent());
             stmt.setInt(2, report.getAccountID());

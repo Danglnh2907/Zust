@@ -37,7 +37,7 @@ public class ReportPostDAO extends DBContext {
                 "LEFT JOIN hashtag h ON th.hashtag_id = h.hashtag_id" +
                 " WHERE rp.report_status = 'sent' AND p.post_status = 'published'";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -121,7 +121,7 @@ public class ReportPostDAO extends DBContext {
     }
 
     public void acceptReport(AcceptReportDTO acceptReportDTO) throws SQLException {
-        Connection conn = getConnection();
+        Connection conn = new DBContext().getConnection();
         conn.setAutoCommit(false);
         try {
             // Update report_status to 'accepted' in report_post
@@ -172,7 +172,7 @@ public class ReportPostDAO extends DBContext {
 
     public void dismissReport(int id) throws SQLException {
         String sql = "UPDATE report_post SET report_status = 'rejected' WHERE report_id = ?";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             int rowsAffected = stmt.executeUpdate();

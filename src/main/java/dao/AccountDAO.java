@@ -52,7 +52,7 @@ public class AccountDAO extends DBContext {
         Account account = null;
         try {
             String sql = "SELECT * FROM account WHERE account_id = ?";
-            PreparedStatement stmt = getConnection().prepareStatement(sql);
+            PreparedStatement stmt = new DBContext().getConnection().prepareStatement(sql);
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -90,7 +90,7 @@ public class AccountDAO extends DBContext {
                     UPDATE account
                     SET username = ?, password = ?, fullname = ?, phone = ?, gender = ?, dob = ?, avatar = ?, cover_image = ?, bio = ?, credit = ?, account_status = ?, account_role = ?
                     WHERE account_id = ?""";
-            PreparedStatement stmt = getConnection().prepareStatement(sql);
+            PreparedStatement stmt = new DBContext().getConnection().prepareStatement(sql);
             stmt.setString(1, account.getUsername());
             stmt.setString(2, account.getPassword());
             stmt.setString(3, account.getFullname());

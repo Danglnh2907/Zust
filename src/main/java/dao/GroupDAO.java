@@ -23,7 +23,7 @@ public class GroupDAO extends DBContext {
     public boolean createGroup(ReqGroupDTO group) {
         Connection conn;
         try {
-            conn = getConnection();
+            conn = new DBContext().getConnection();
             if (conn == null) {
                 return false;
             }
@@ -589,7 +589,7 @@ public class GroupDAO extends DBContext {
         logger.info("Attempting to remove account ID: " + accountId + " from group ID: " + groupId);
         boolean success = false;
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = new DBContext().getConnection()) {
             // Delete from participate table
             String participateSql = "DELETE FROM participate WHERE account_id = ? AND group_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(participateSql)) {
@@ -631,7 +631,7 @@ public class GroupDAO extends DBContext {
         String sql = "INSERT INTO feedback_group (account_id, group_id, feedback_group_content) " +
                 "VALUES (?, ?, ?)";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountId);
             stmt.setInt(2, groupId);
@@ -653,7 +653,7 @@ public class GroupDAO extends DBContext {
         logger.info("Checking if account ID: " + accountId + " is a manager for group ID: " + groupId);
         String sql = "SELECT 1 FROM manage WHERE account_id = ? AND group_id = ?";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountId);
             stmt.setInt(2, groupId);
@@ -676,7 +676,7 @@ public class GroupDAO extends DBContext {
         logger.info("Checking if account ID: " + accountId + " is the leader for group ID: " + groupId);
         String sql = "SELECT 1 FROM [group] WHERE account_id = ? AND group_id = ?";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountId);
             stmt.setInt(2, groupId);

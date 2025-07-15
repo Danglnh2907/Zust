@@ -32,7 +32,7 @@ public class PostDAO extends DBContext {
         Connection conn = null;
         try {
             //Get connection
-            conn = getConnection();
+            conn = new DBContext().getConnection();;
             if (conn == null) {
                 logger.warning("No connection available");
                 return false;
@@ -263,7 +263,7 @@ public class PostDAO extends DBContext {
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return posts; // Return empty list
@@ -292,7 +292,7 @@ public class PostDAO extends DBContext {
      * @return RespPostDTO object corresponding to the post
      */
     public RespPostDTO getPost(int postId, int userID) {
-        try (Connection conn = getConnection()) {
+        try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return null;
@@ -336,7 +336,7 @@ public class PostDAO extends DBContext {
                       )\
                 ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return posts;
@@ -377,7 +377,7 @@ public class PostDAO extends DBContext {
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.group_id = ? ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
                 logger.warning("No connection available!");
                 return posts;
@@ -400,7 +400,7 @@ public class PostDAO extends DBContext {
     public boolean editPost(int postId, ReqPostDTO postDTO) {
         Connection conn = null;
         try {
-            conn = getConnection();
+            conn = new DBContext().getConnection();;
             if (conn == null) {
                 logger.warning("No connection available");
                 return false;
@@ -473,7 +473,7 @@ public class PostDAO extends DBContext {
         String postSql = """
                 UPDATE post SET post_status = 'deleted', post_last_update = ? \
                 WHERE post_id = ? AND account_id = ? AND post_status = 'published'""";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(postSql)) {
             stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
             stmt.setInt(2, postId);
@@ -488,7 +488,7 @@ public class PostDAO extends DBContext {
 
     public boolean likePost(int postId, int accountId) {
         String sql = "INSERT INTO like_post (post_id, account_id) VALUES (?, ?)";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, postId);
             stmt.setInt(2, accountId);
@@ -502,7 +502,7 @@ public class PostDAO extends DBContext {
 
     public boolean unlikePost(int postId, int accountId) {
         String sql = "DELETE FROM like_post WHERE post_id = ? AND account_id = ?";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, postId);
             stmt.setInt(2, accountId);
@@ -516,7 +516,7 @@ public class PostDAO extends DBContext {
 
     public boolean repost(int postId, int accountId) {
         String sql = "INSERT INTO post (post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, repost_post_id) VALUES ('', ?, ?, ?, 'public', 'published', ?)";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, accountId);
             stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
@@ -534,7 +534,7 @@ public class PostDAO extends DBContext {
         String sql = """
                 INSERT INTO report_post (report_content, account_id, post_id, report_create_date, report_status) \
                 VALUES (?, ?, ?, ?, ?)""";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, report.getContent());
             stmt.setInt(2, report.getAccountID());
@@ -551,7 +551,7 @@ public class PostDAO extends DBContext {
 
     public int getAccountIdByPostId(int postId) throws SQLException {
         String sql = "SELECT account_id FROM post WHERE post_id = ?";
-        try (Connection conn = getConnection();
+        try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, postId);
             try (ResultSet rs = stmt.executeQuery()) {
