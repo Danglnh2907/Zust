@@ -234,7 +234,7 @@ public class RespPostDTO {
         String repostTemplate = "";
         if (repost != null) {
             //Repost only have header (without the 3-dot button), content, carousel
-            String repostHeader = String.format(templates[1], repost.getAvatar(), repost.getUsername(),
+            String repostHeader = String.format(templates[1], repost.getAvatar(), repost.getAccountID(), repost.getUsername(),
                     getLastTimeUpdate(Duration.between(repost.getLastModified(), LocalDateTime.now())), "");
             String repostContent = String.format(templates[2], repost.getPostContent());
             String repostImage = getImageCarousel(repost.getImages());
