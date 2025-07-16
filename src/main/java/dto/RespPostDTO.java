@@ -221,7 +221,7 @@ public class RespPostDTO {
          */
 
         //Get header
-        Duration timeDiff = Duratsion.between(getLastModified(), LocalDateTime.now());
+        Duration timeDiff = Duration.between(getLastModified(), LocalDateTime.now());
         String header = String.format(templates[1],
                 getAvatar(), getAccountID(), getUsername(), getLastTimeUpdate(timeDiff), getAction());
 

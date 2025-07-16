@@ -175,16 +175,28 @@ public class PostDAO extends DBContext {
      */
     private RespPostDTO getPost(int postId, int userID, Connection conn) {
         String sql = """
-                SELECT p.post_id, p.post_content, p.account_id, p.repost_post_id, a.username, a.avatar, p.post_last_update,\
+                SELECT p.post_id, p.post_content, p.account_id, p.repost_post_id, a.username, a.avatar, p.post_last_update, \
                 (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
-                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count,\
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                 (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count,\
                 CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
                 FROM post p JOIN account a ON p.account_id = a.account_id \
-                WHERE p.post_status = 'published' AND p.post_id = ?""";
+                WHERE p.post_status = 'published' AND p.post_id = ? \
+                AND ( \
+                    p.post_privacy = 'public' \
+                    OR p.account_id = ? \
+                    OR (p.post_privacy = 'friend' AND EXISTS ( \
+                        SELECT 1 FROM interact \
+                        WHERE ((actor_account_id = ? AND target_account_id = p.account_id) OR (actor_account_id = p.account_id AND target_account_id = ?)) \
+                        AND interact_status = 'friend' \
+                    )) \
+                )""";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userID);
             stmt.setInt(2, postId);
+            stmt.setInt(3, userID);
+            stmt.setInt(4, userID);
+            stmt.setInt(5, userID);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -261,7 +273,17 @@ public class PostDAO extends DBContext {
                 (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
                 CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
                 FROM post p JOIN account a ON p.account_id = a.account_id \
-                WHERE p.post_status = 'published' AND p.account_id = ? ORDER BY p.post_create_date DESC""";
+                WHERE p.post_status = 'published' AND p.account_id = ? \
+                AND ( \
+                    p.post_privacy = 'public' \
+                    OR p.account_id = ? \
+                    OR (p.post_privacy = 'friend' AND EXISTS ( \
+                        SELECT 1 FROM interact \
+                        WHERE ((actor_account_id = ? AND target_account_id = p.account_id) OR (actor_account_id = p.account_id AND target_account_id = ?)) \
+                        AND interact_status = 'friend' \
+                    )) \
+                ) \
+                ORDER BY p.post_create_date DESC""";
 
         try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
@@ -271,6 +293,9 @@ public class PostDAO extends DBContext {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, userID);
                 stmt.setInt(2, accountID);
+                stmt.setInt(3, userID);
+                stmt.setInt(4, userID);
+                stmt.setInt(5, userID);
                 ResultSet rs = stmt.executeQuery();
 
                 while (rs.next()) {
@@ -314,27 +339,27 @@ public class PostDAO extends DBContext {
     public ArrayList<RespPostDTO> getNewsfeedPosts(int userID) {
         ArrayList<RespPostDTO> posts = new ArrayList<>();
         String sql = """
-                SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
-                       (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
-                       (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
-                       (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
-                       CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
-                FROM post p JOIN account a ON p.account_id = a.account_id \
-                WHERE p.post_status = 'published' AND \
-                      (\
-                          /* User's own posts */ \
-                          p.account_id = ? \
-                          /* Posts from friends (public or friend-only) */ \
-                          OR (p.account_id IN (SELECT target_account_id FROM interact WHERE actor_account_id = ? AND interact_status = 'friend' \
-                                               UNION \
-                                               SELECT actor_account_id FROM interact WHERE target_account_id = ? AND interact_status = 'friend') \
-                              AND p.post_privacy IN ('public', 'friend') AND p.group_id IS NULL) \
-                          /* Posts from joined groups */ \
-                          OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
-                          /* All public posts from anyone */ \
-                          OR (p.post_privacy = 'public' AND p.group_id IS NULL) \
-                      )\
-                ORDER BY p.post_create_date DESC""";
+            SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, \
+                   (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                   (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                   (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+            FROM post p JOIN account a ON p.account_id = a.account_id \
+            WHERE p.post_status = 'published' AND \
+                  (\
+                      /* User's own posts */ \
+                      p.account_id = ? \
+                      /* Posts from friends (public or friend-only) */ \
+                      OR (p.account_id IN (SELECT target_account_id FROM interact WHERE actor_account_id = ? AND interact_status = 'friend' \
+                                           UNION \
+                                           SELECT actor_account_id FROM interact WHERE target_account_id = ? AND interact_status = 'friend') \
+                          AND p.post_privacy IN ('public', 'friend') AND p.group_id IS NULL) \
+                      /* Posts from joined groups */ \
+                      OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
+                      /* All public posts from anyone */ \
+                      OR (p.post_privacy = 'public' AND p.group_id IS NULL) \
+                  )\
+            ORDER BY p.post_create_date DESC""";
 
         try (Connection conn = new DBContext().getConnection();) {
             if (conn == null) {
