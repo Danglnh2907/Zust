@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
 <%@ page import="model.*" %>
+<%@ page import="dto.RespPostDTO" %>
 
 <%
   Map<String, List<?>> searchResults = (Map<String, List<?>>) request.getAttribute("searchResults");
@@ -64,16 +65,16 @@
 </div>
 <%
   for (int i = 0; i < Math.min(postsContent.size(), 2); i++) {
-    Post post = (Post) postsContent.get(i);
+    RespPostDTO post = (RespPostDTO) postsContent.get(i);
     String content = post.getPostContent() != null ? post.getPostContent() : "[No content available]";
     // Strip HTML tags
     content = content.replaceAll("<[^>]*>", "").trim();
     if (content.length() > 100) {
       content = content.substring(0, 100) + "...";
     }
-    String authorName = post.getAccount() != null ? post.getAccount().getFullname() : "Unknown Author";
+    String authorName = post.getUsername() != null ? post.getUsername() : "Unknown Author";
 %>
-<div class="search-result-item" onclick="goToPost(<%= post.getId() %>)">
+<div class="search-result-item" onclick="goToPost(<%= post.getPostId() %>)">
   <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
     <i class="fas fa-file-alt"></i>
   </div>
@@ -93,15 +94,15 @@
 </div>
 <%
   for (int i = 0; i < Math.min(postsHashtag.size(), 2); i++) {
-    Post post = (Post) postsHashtag.get(i);
+    RespPostDTO post = (RespPostDTO) postsHashtag.get(i);
     String content = post.getPostContent() != null ? post.getPostContent() : "[No content available]";
     content = content.replaceAll("<[^>]*>", "").trim();
     if (content.length() > 100) {
       content = content.substring(0, 100) + "...";
     }
-    String authorName = post.getAccount() != null ? post.getAccount().getFullname() : "Unknown Author";
+    String authorName = post.getUsername() != null ? post.getUsername() : "Unknown Author";
 %>
-<div class="search-result-item" onclick="goToPost(<%= post.getId() %>)">
+<div class="search-result-item" onclick="goToPost(<%= post.getPostId() %>)">
   <div style="width: 40px; height: 40px; border-radius: 50%; background: #e4e6ea; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #65676b;">
     <i class="fas fa-hashtag"></i>
   </div>

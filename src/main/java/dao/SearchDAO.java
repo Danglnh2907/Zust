@@ -1,5 +1,6 @@
 package dao;
 
+import dto.RespPostDTO;
 import model.Account;
 import model.Post;
 import model.Group;
@@ -488,43 +489,45 @@ public class SearchDAO implements AutoCloseable {
 		return null;
 	}
 
-	private Post getPostById(int postId) throws SQLException {
-		String sql = "SELECT post_id, post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id FROM post WHERE post_id = ?";
-		try (Connection conn = new DBContext().getConnection();
-			 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setInt(1, postId);
-			try (ResultSet rs = pstmt.executeQuery()) {
-				if (rs.next()) {
-					Post post = new Post();
-					post.setId(rs.getInt("post_id"));
-
-					String htmlContent = rs.getString("post_content");
-					post.setPostContent(htmlContent);
-
-					int accountId = rs.getInt("account_id");
-					Account associatedAccount = getAccountById(accountId);
-					post.setAccount(associatedAccount);
-
-					java.sql.Timestamp createTimestamp = rs.getTimestamp("post_create_date");
-					post.setPostCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null);
-					java.sql.Timestamp updateTimestamp = rs.getTimestamp("post_last_update");
-					post.setPostLastUpdate(updateTimestamp != null ? updateTimestamp.toInstant() : null);
-
-					post.setPostPrivacy(rs.getString("post_privacy"));
-					post.setPostStatus(rs.getString("post_status"));
-
-					Integer groupId = rs.getObject("group_id", Integer.class);
-					if (groupId != null) {
-						Group associatedGroup = getGroupById(groupId);
-						post.setGroup(associatedGroup);
-					} else {
-						post.setGroup(null);
-					}
-					return post;
-				}
-			}
-		}
-		return null;
+	private RespPostDTO getPostById(int postID, int userID) throws SQLException {
+//		String sql = "SELECT post_id, post_content, account_id, post_create_date, post_last_update, post_privacy, post_status, group_id FROM post WHERE post_id = ?";
+//		try (Connection conn = new DBContext().getConnection();
+//			 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+//			pstmt.setInt(1, postId);
+//			try (ResultSet rs = pstmt.executeQuery()) {
+//				if (rs.next()) {
+//					Post post = new Post();
+//					post.setId(rs.getInt("post_id"));
+//
+//					String htmlContent = rs.getString("post_content");
+//					post.setPostContent(htmlContent);
+//
+//					int accountId = rs.getInt("account_id");
+//					Account associatedAccount = getAccountById(accountId);
+//					post.setAccount(associatedAccount);
+//
+//					java.sql.Timestamp createTimestamp = rs.getTimestamp("post_create_date");
+//					post.setPostCreateDate(createTimestamp != null ? createTimestamp.toInstant() : null);
+//					java.sql.Timestamp updateTimestamp = rs.getTimestamp("post_last_update");
+//					post.setPostLastUpdate(updateTimestamp != null ? updateTimestamp.toInstant() : null);
+//
+//					post.setPostPrivacy(rs.getString("post_privacy"));
+//					post.setPostStatus(rs.getString("post_status"));
+//
+//					Integer groupId = rs.getObject("group_id", Integer.class);
+//					if (groupId != null) {
+//						Group associatedGroup = getGroupById(groupId);
+//						post.setGroup(associatedGroup);
+//					} else {
+//						post.setGroup(null);
+//					}
+//					return post;
+//				}
+//			}
+//		}
+//		return null;
+		PostDAO dao = new PostDAO();
+		return dao.getPost(postID, userID);
 	}
 
 	private Group getGroupById(int groupId) throws SQLException {
@@ -582,12 +585,12 @@ public class SearchDAO implements AutoCloseable {
 		return accounts;
 	}
 
-	public List<Post> searchPostsByContent(String keyword) {
-		return searchPostsByContentLimited(keyword, 10);
+	public List<RespPostDTO> searchPostsByContent(String keyword, int userID) {
+		return searchPostsByContentLimited(keyword, 10, userID);
 	}
 
-	private List<Post> searchPostsByContentLimited(String keyword, int limit) {
-		List<Post> posts = new ArrayList<>();
+	private List<RespPostDTO> searchPostsByContentLimited(String keyword, int limit, int userID) {
+		List<RespPostDTO> posts = new ArrayList<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return posts;
 		}
@@ -602,7 +605,7 @@ public class SearchDAO implements AutoCloseable {
 			for (ScoreDoc scoreDoc : hits.scoreDocs) {
 				Document doc = searcher.doc(scoreDoc.doc);
 				int postId = Integer.parseInt(doc.get("id"));
-				Post post = getPostById(postId);
+				RespPostDTO post = getPostById(postId, userID);
 				if (post != null) {
 					posts.add(post);
 				}
@@ -613,12 +616,12 @@ public class SearchDAO implements AutoCloseable {
 		return posts;
 	}
 
-	public List<Post> searchPostsByHashtag(String keyword) {
-		return searchPostsByHashtagLimited(keyword, 10);
+	public List<RespPostDTO> searchPostsByHashtag(String keyword, int userID) {
+		return searchPostsByHashtagLimited(keyword, 10, userID);
 	}
 
-	private List<Post> searchPostsByHashtagLimited(String keyword, int limit) {
-		List<Post> posts = new ArrayList<>();
+	private List<RespPostDTO> searchPostsByHashtagLimited(String keyword, int limit, int userID) {
+		List<RespPostDTO> posts = new ArrayList<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return posts;
 		}
@@ -633,7 +636,7 @@ public class SearchDAO implements AutoCloseable {
 			for (ScoreDoc scoreDoc : hits.scoreDocs) {
 				Document doc = searcher.doc(scoreDoc.doc);
 				int postId = Integer.parseInt(doc.get("id"));
-				Post post = getPostById(postId);
+				RespPostDTO post = getPostById(postId, userID);
 				if (post != null) {
 					posts.add(post);
 				}
@@ -675,35 +678,35 @@ public class SearchDAO implements AutoCloseable {
 		return groups;
 	}
 
-	public Map<String, List<?>> searchAll(String keyword) {
+	public Map<String, List<?>> searchAll(String keyword, int userID) {
 		Map<String, List<?>> allResults = new HashMap<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return allResults;
 		}
 
 		allResults.put("users", searchUsers(keyword));
-		allResults.put("posts_content", searchPostsByContent(keyword));
-		allResults.put("posts_hashtag", searchPostsByHashtag(keyword));
+		allResults.put("posts_content", searchPostsByContent(keyword, userID));
+		allResults.put("posts_hashtag", searchPostsByHashtag(keyword, userID));
 		allResults.put("groups", searchGroups(keyword));
 
 		return allResults;
 	}
 
-	public Map<String, List<?>> searchAllLimited(String keyword, int limit) {
+	public Map<String, List<?>> searchAllLimited(String keyword, int limit, int userID) {
 		Map<String, List<?>> allResults = new HashMap<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return allResults;
 		}
 
 		allResults.put("users", searchUsersLimited(keyword, limit));
-		allResults.put("posts_content", searchPostsByContentLimited(keyword, limit));
-		allResults.put("posts_hashtag", searchPostsByHashtagLimited(keyword, limit));
+		allResults.put("posts_content", searchPostsByContentLimited(keyword, limit, userID));
+		allResults.put("posts_hashtag", searchPostsByHashtagLimited(keyword, limit, userID));
 		allResults.put("groups", searchGroupsLimited(keyword, limit));
 
 		return allResults;
 	}
 
-	public Map<String, Object> searchCategoryPaged(String keyword, String category, int limit, int offset) {
+	public Map<String, Object> searchCategoryPaged(String keyword, String category, int limit, int offset, int userID) {
 		Map<String, Object> result = new HashMap<>();
 		List<?> results = new ArrayList<>();
 		int totalCount = 0;
@@ -723,11 +726,11 @@ public class SearchDAO implements AutoCloseable {
 					totalCount = getTotalUsersCount(keyword);
 					break;
 				case "posts_content":
-					results = searchPostsByContentPaged(keyword, limit, offset);
+					results = searchPostsByContentPaged(keyword, limit, offset, userID);
 					totalCount = getTotalPostsContentCount(keyword);
 					break;
 				case "posts_hashtag":
-					results = searchPostsByHashtagPaged(keyword, limit, offset);
+					results = searchPostsByHashtagPaged(keyword, limit, offset, userID);
 					totalCount = getTotalPostsHashtagCount(keyword);
 					break;
 				case "groups":
@@ -777,8 +780,8 @@ public class SearchDAO implements AutoCloseable {
 		return accounts;
 	}
 
-	private List<Post> searchPostsByContentPaged(String keyword, int limit, int offset) {
-		List<Post> posts = new ArrayList<>();
+	private List<RespPostDTO> searchPostsByContentPaged(String keyword, int limit, int offset, int userID) {
+		List<RespPostDTO> posts = new ArrayList<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return posts;
 		}
@@ -794,7 +797,7 @@ public class SearchDAO implements AutoCloseable {
 				ScoreDoc scoreDoc = hits.scoreDocs[i];
 				Document doc = searcher.doc(scoreDoc.doc);
 				int postId = Integer.parseInt(doc.get("id"));
-				Post post = getPostById(postId);
+				RespPostDTO post = getPostById(postId, userID);
 				if (post != null) {
 					posts.add(post);
 				}
@@ -805,8 +808,8 @@ public class SearchDAO implements AutoCloseable {
 		return posts;
 	}
 
-	private List<Post> searchPostsByHashtagPaged(String keyword, int limit, int offset) {
-		List<Post> posts = new ArrayList<>();
+	private List<RespPostDTO> searchPostsByHashtagPaged(String keyword, int limit, int offset, int userID) {
+		List<RespPostDTO> posts = new ArrayList<>();
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return posts;
 		}
@@ -822,7 +825,7 @@ public class SearchDAO implements AutoCloseable {
 				ScoreDoc scoreDoc = hits.scoreDocs[i];
 				Document doc = searcher.doc(scoreDoc.doc);
 				int postId = Integer.parseInt(doc.get("id"));
-				Post post = getPostById(postId);
+				RespPostDTO post = getPostById(postId, userID);
 				if (post != null) {
 					posts.add(post);
 				}

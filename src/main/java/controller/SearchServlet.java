@@ -116,7 +116,7 @@ public class SearchServlet extends HttpServlet {
 
 		try {
 			// Perform search across all categories with limited results for overview
-			Map<String, java.util.List<?>> searchResults = searchDAO.searchAllLimited(keyword, 10);
+			Map<String, java.util.List<?>> searchResults = searchDAO.searchAllLimited(keyword, 10, account.getId());
 
 			LOGGER.info("Full search completed for keyword: {} - Users: {}, Posts: {}, Hashtag Posts: {}, Groups: {}",
 					keyword,
@@ -142,6 +142,13 @@ public class SearchServlet extends HttpServlet {
 	 */
 	private void handleLiveSearch(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		//Get session
+		Account account = getAccount(request);
+		if (account == null) {
+			request.getRequestDispatcher("/auth").forward(request, response);
+			return;
+		}
+		request.setAttribute("account", account);
 
 		String keyword = request.getParameter("keyword");
 		int limit = 3; // Fewer results for live search
@@ -157,7 +164,7 @@ public class SearchServlet extends HttpServlet {
 		}
 
 		try {
-			Map<String, java.util.List<?>> liveResults = searchDAO.searchAllLimited(keyword, limit);
+			Map<String, java.util.List<?>> liveResults = searchDAO.searchAllLimited(keyword, limit, account.getId());
 
 			LOGGER.debug("Live search completed for keyword: {} - Users: {}, Posts: {}, Hashtag Posts: {}, Groups: {}",
 					keyword,

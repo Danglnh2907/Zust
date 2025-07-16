@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/profile.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
-
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
 </head>
 
 <body>
@@ -310,6 +310,7 @@
 <script src="${pageContext.request.contextPath}/js/post.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
 <script src="${pageContext.request.contextPath}/js/composer.js"></script>
+<script src="${pageContext.request.contextPath}/js/comments.js"></script>
 <script>
     // JavaScript for Profile Tabs
     document.addEventListener('DOMContentLoaded', function () {

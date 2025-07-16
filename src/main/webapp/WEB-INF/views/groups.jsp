@@ -172,7 +172,6 @@
                 <input type="text" id="groupSearchInput" placeholder=" Search for groups..." style="font-family: 'Inter', FontAwesome;">
             </div>
         </header>
-
         <div class="all-groups-container" id="allGroupsContainer">
             <% if (allGroups == null || allGroups.isEmpty()) { %>
             <div class="no-data-message">
@@ -249,7 +248,7 @@
             <h2>Send Join Request</h2>
             <button class="modal-close">×</button>
         </div>
-        <form id="joinForm" method="POST">
+        <form id="joinForm" action="${pageContext.request.contextPath}/group" method="POST">
             <div class="modal-body">
                 <p>You can include an optional message to the group manager(s).</p>
                 <textarea name="joinMessage" placeholder="E.g., Hi, I'm interested in joining because..."></textarea>

@@ -4,7 +4,8 @@
 <%@ page import="model.Group" %>
 <%@ page import="dao.PostDAO" %>
 <%@ page import="model.Post" %>
-<%@ page import="dto.InteractGroupDTO" %><%--
+<%@ page import="dto.InteractGroupDTO" %>
+<%@ page import="dto.RespPostDTO" %><%--
   Created by IntelliJ IDEA.
   User: Asus
   Date: 7/5/2025
@@ -441,7 +442,7 @@
                                     <div class="entity-bio"><%= grp.getGroupDescription() != null ? grp.getGroupDescription() : "" %>
                                     </div>
                                 </div>
-                                <button class="entity-action-btn">Join group</button>
+                                <a href="${pageContext.request.contextPath}/group?action=join?groupId=<%=grp.getId()%>"  class="entity-action-btn">Join group</a>
                             </div>
                             <%
                                 }
@@ -470,11 +471,13 @@
                         } else {
                             PostDAO dao = new PostDAO();
                             for (Object post : searchRes.get("posts_content")) {
-                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
+//                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
+                                out.println((RespPostDTO)post);
                             }
 
                             for (Object post : searchRes.get("posts_hashtag")) {
-                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
+//                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
+                                out.println((RespPostDTO)post);
                             }
                         }
                     %>
