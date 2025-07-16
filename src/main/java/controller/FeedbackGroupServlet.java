@@ -53,50 +53,5 @@ public class FeedbackGroupServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/viewFeedback.jsp").forward(req, resp);
     }
 
-//    @Override
-//    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        int managerId = 1; // Hardcode để test
-//
-//        String sessionCsrfToken = (String) req.getSession().getAttribute("csrfToken");
-//        String requestCsrfToken = req.getParameter("csrfToken");
-//        if (sessionCsrfToken == null || !sessionCsrfToken.equals(requestCsrfToken)) {
-//            req.setAttribute("error", "Invalid CSRF token");
-//            doGet(req, resp);
-//            return;
-//        }
-//
-//        String feedbackIdParam = req.getParameter("feedbackId");
-//        String action = req.getParameter("action");
-//        String groupIdParam = req.getParameter("groupId");
-//
-//        if (feedbackIdParam == null || action == null || groupIdParam == null) {
-//            req.setAttribute("error", "Feedback ID, action, and groupId are required");
-//            doGet(req, resp);
-//            return;
-//        }
-//
-//        int feedbackId;
-//        try {
-//            feedbackId = Integer.parseInt(feedbackIdParam);
-//        } catch (NumberFormatException e) {
-//            req.setAttribute("error", "Invalid feedback ID");
-//            doGet(req, resp);
-//            return;
-//        }
-//
-//        if (!"approve".equalsIgnoreCase(action) && !"disapprove".equalsIgnoreCase(action)) {
-//            req.setAttribute("error", "Invalid action");
-//            doGet(req, resp);
-//            return;
-//        }
-//
-//        boolean success = feedbackDAO.processFeedback(feedbackId, action);
-//        if (success) {
-//            req.setAttribute("message", "Feedback " + action + "d successfully");
-//        } else {
-//            req.setAttribute("error", "Failed to process feedback");
-//        }
-//
-//        doGet(req, resp);
-//    }
+
 }

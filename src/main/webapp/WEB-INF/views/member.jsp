@@ -76,6 +76,32 @@
         /*.modal-body textarea { width: 100%; height: 90px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }*/
         /*.modal-footer { text-align: right; margin-top: 20px; }*/
         /*.modal-footer .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }*/
+        .member-card-action { position: relative; display: flex; align-items: center; gap: 10px; }
+        .menu { cursor: pointer; position: relative; }
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 30px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .menu-dropdown button {
+            display: block;
+            width: 150px;
+            padding: 8px 15px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+        }
+        .menu-dropdown button:hover { background: #f0f0f0; }
+        .menu.active .menu-dropdown { display: block; }
+        .kick-btn { color: #dc3545; } /* Màu đỏ cho kick */
+        .promote-btn { color: #28a745; } /* Màu xanh cho promote */
     </style>
 </head>
 
@@ -233,7 +259,7 @@
             <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=feedback" class="tab-item">View Feedback</a>
             <% }
             if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-            <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=assign" class="tab-item">Assign Manager</a>
+            <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=report" class="tab-item">Report Content</a>
             <% } %>
         </div>
 
@@ -254,6 +280,17 @@
                     for (MemberDTO member : managerList) {
                         if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
                 <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
+
+                    <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
+                    <div class="menu" data-member-id="<%= member.getId() %>">
+                        <i class="fas fa-ellipsis-v"></i>
+                        <div class="menu-dropdown">
+                            <button class="kick-btn">Kick member</button>
+                            <button class="promote-btn">Invite as manager</button>
+                        </div>
+                    </div>
+                    <% } %>
+
                     <a href="${pageContext.request.contextPath}/profile?id=<%= member.getId() %>" class="member-card-link">
                         <div class="member-card">
                             <div class="member-card-avatar"><img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar"></div>
@@ -267,6 +304,15 @@
                                 <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>
                                 <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>
                                 <% } %>
+<%--                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
+<%--                                <div class="menu" data-member-id="<%= member.getId() %>">--%>
+<%--                                    <i class="fas fa-ellipsis-v"></i>--%>
+<%--                                    <div class="menu-dropdown">--%>
+<%--                                        <button class="kick-btn">Kick member</button>--%>
+<%--                                        <!-- Promote không áp dụng cho managers (đã là manager rồi), nên ẩn hoặc disable nếu cần -->--%>
+<%--                                    </div>--%>
+<%--                                </div>--%>
+<%--                                <% } %>--%>
                             </div>
                         </div>
                     </a>
@@ -287,6 +333,16 @@
                     for (MemberDTO member : memberList) {
                         if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
                 <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
+
+                    <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
+                    <div class="menu" data-member-id="<%= member.getId() %>">
+                        <i class="fas fa-ellipsis-v"></i>
+                        <div class="menu-dropdown">
+                            <button class="kick-btn">Kick member</button>
+                            <button class="promote-btn">Invite as manager</button>
+                        </div>
+                    </div>
+                    <% } %>
                     <%-- The entire card structure is repeated here --%>
                     <a href="${pageContext.request.contextPath}/profile?id=<%= member.getId() %>" class="member-card-link">
                         <div class="member-card">
@@ -301,6 +357,17 @@
                                 <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>
                                 <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>
                                 <% } %>
+
+<%--                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
+<%--                                <div class="menu" data-member-id="<%= member.getId() %>">--%>
+<%--                                    <i class="fas fa-ellipsis-v"></i>--%>
+<%--                                    <div class="menu-dropdown">--%>
+<%--                                        <button class="kick-btn">Kick member</button>--%>
+<%--                                        <button class="promote-btn">Invite as manager</button>--%>
+<%--                                    </div>--%>
+<%--                                </div>--%>
+<%--                                <% } %>--%>
+
                             </div>
                         </div>
                     </a>
@@ -490,6 +557,61 @@
                 imageModal.style.display = 'flex';
             });
         }
+
+        document.querySelectorAll('.menu').forEach(menu => {
+            const icon = menu.querySelector('i');
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('active');
+            });
+        });
+
+        // Xử lý click ngoài để đóng menu
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu')) {
+                document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        // Xử lý Kick member
+        document.querySelectorAll('.kick-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const memberId = btn.closest('.menu').dataset.memberId;
+                if (confirm('Are you sure you want to kick this member?')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '${pageContext.request.contextPath}/group';
+                    form.innerHTML = `
+                    <input type="hidden" name="action" value="kick_member">
+                    <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                    <input type="hidden" name="memberId" value="${memberId}">
+                `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // Xử lý Promote to manager
+        document.querySelectorAll('.promote-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const memberId = btn.closest('.menu').dataset.memberId;
+                if (confirm('Are you sure you want to invite this member as manager?')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '${pageContext.request.contextPath}/group';
+                    form.innerHTML = `
+                    <input type="hidden" name="action" value="promote_manager">
+                    <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                    <input type="hidden" name="memberId" value="${memberId}">
+                `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
     });
 </script>
 </body>

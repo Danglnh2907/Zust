@@ -30,50 +30,50 @@ public class MemberViewDAO {
     }
 
     // SQL query to retrieve members from the participate table
-    private static final String SELECT_MEMBERS_BY_GROUP_ID =
-            "SELECT p.account_id AS p_account_id, p.group_id, p.participate_start_date, " +
-                    "       a.account_id AS a_account_id, a.username, a.avatar, a.fullname " +
-                    "FROM participate p " +
-                    "JOIN account a ON p.account_id = a.account_id " +
-                    "WHERE p.group_id = ? " +
-                    "ORDER BY p.participate_start_date DESC";
-
-    /**
-     * Retrieves the list of members for a given group.
-     */
-    public List<MemberViewDTO> getMembersByGroupId(int groupId) {
-        List<MemberViewDTO> members = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(SELECT_MEMBERS_BY_GROUP_ID)) {
-            stmt.setInt(1, groupId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Participate participate = new Participate();
-
-                    // Create and set composite key
-                    ParticipateId id = new ParticipateId();
-                    id.setAccountId(rs.getInt("p_account_id"));
-                    id.setGroupId(rs.getInt("group_id"));
-                    participate.setId(id);
-
-                    participate.setParticipateStartDate(rs.getTimestamp("participate_start_date").toInstant());
-
-                    Account account = new Account();
-                    account.setId(rs.getInt("a_account_id"));
-                    account.setUsername(rs.getString("username"));
-                    account.setAvatar(rs.getString("avatar"));
-                    account.setFullname(rs.getString("fullname"));
-
-                    participate.setAccount(account);
-
-                    MemberViewDTO dto = new MemberViewDTO(participate, account);
-                    members.add(dto);
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.severe("Error retrieving member list: " + e.getMessage());
-        }
-        return members;
-    }
+//    private static final String SELECT_MEMBERS_BY_GROUP_ID =
+//            "SELECT p.account_id AS p_account_id, p.group_id, p.participate_start_date, " +
+//                    "       a.account_id AS a_account_id, a.username, a.avatar, a.fullname " +
+//                    "FROM participate p " +
+//                    "JOIN account a ON p.account_id = a.account_id " +
+//                    "WHERE p.group_id = ? " +
+//                    "ORDER BY p.participate_start_date DESC";
+//
+//    /**
+//     * Retrieves the list of members for a given group.
+//     */
+//    public List<MemberViewDTO> getMembersByGroupId(int groupId) {
+//        List<MemberViewDTO> members = new ArrayList<>();
+//        try (PreparedStatement stmt = connection.prepareStatement(SELECT_MEMBERS_BY_GROUP_ID)) {
+//            stmt.setInt(1, groupId);
+//            try (ResultSet rs = stmt.executeQuery()) {
+//                while (rs.next()) {
+//                    Participate participate = new Participate();
+//
+//                    // Create and set composite key
+//                    ParticipateId id = new ParticipateId();
+//                    id.setAccountId(rs.getInt("p_account_id"));
+//                    id.setGroupId(rs.getInt("group_id"));
+//                    participate.setId(id);
+//
+//                    participate.setParticipateStartDate(rs.getTimestamp("participate_start_date").toInstant());
+//
+//                    Account account = new Account();
+//                    account.setId(rs.getInt("a_account_id"));
+//                    account.setUsername(rs.getString("username"));
+//                    account.setAvatar(rs.getString("avatar"));
+//                    account.setFullname(rs.getString("fullname"));
+//
+//                    participate.setAccount(account);
+//
+//                    MemberViewDTO dto = new MemberViewDTO(participate, account);
+//                    members.add(dto);
+//                }
+//            }
+//        } catch (SQLException e) {
+//            LOGGER.severe("Error retrieving member list: " + e.getMessage());
+//        }
+//        return members;
+//    }
 
     // SQL query to remove a member from the participate table
     private static final String DELETE_MEMBER =

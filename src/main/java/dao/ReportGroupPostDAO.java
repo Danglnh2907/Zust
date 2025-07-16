@@ -1,3 +1,4 @@
+// File: ReportGroupPostDAO.java
 package dao;
 
 import dto.AcceptGroupReportDTO;
@@ -12,7 +13,7 @@ import java.util.logging.Logger;
 
 public class ReportGroupPostDAO {
 
-    private final Logger LOGGER = Logger.getLogger(RespPostDTO.class.getName());
+    private final Logger LOGGER = Logger.getLogger(ReportGroupPostDAO.class.getName());
 
     public List<ResGroupReportPostDTO> getAllReportsForGroupManager(int groupId, int managerAccountId) throws SQLException {
         boolean isManager = checkIfManager(groupId, managerAccountId);
@@ -166,13 +167,13 @@ public class ReportGroupPostDAO {
                     stmt.executeUpdate();
                 }
 
-                String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
-                        "VALUES ('Post get Deleted', ?, GETDATE(), 'sent', ?)";
-                try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
-                    stmt.setString(1, acceptReportDTO.getNotificationContent());
-                    stmt.setInt(2, acceptReportDTO.getReportedAccountId());
-                    stmt.executeUpdate();
-                }
+//                String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
+//                        "VALUES ('Post get Deleted', ?, GETDATE(), 'sent', ?)";
+//                try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
+//                    stmt.setString(1, acceptReportDTO.getNotificationContent());
+//                    stmt.setInt(2, acceptReportDTO.getReportedAccountId());
+//                    stmt.executeUpdate();
+//                }
 
                 conn.commit();
             } catch (SQLException e) {

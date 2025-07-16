@@ -220,7 +220,7 @@
       <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=feedback" class="tab-item">View Feedback</a>
       <% }
         if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=assign" class="tab-item">Assign Manager</a>
+      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=report" class="tab-item">Report Content</a>
       <% } %>
     </div>
 
