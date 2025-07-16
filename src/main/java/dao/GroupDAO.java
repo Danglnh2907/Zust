@@ -33,7 +33,7 @@ public class GroupDAO extends DBContext {
             PreparedStatement groupSt = conn.prepareStatement(groupSql, PreparedStatement.RETURN_GENERATED_KEYS);
             groupSt.setString(1, group.getGroupName());
             groupSt.setString(2, group.getGroupDescription());
-            groupSt.setString(3, group.getCoverImage());
+            groupSt.setString(3, group.getCoverImage() != null ? group.getCoverImage() : "cover.jpg");
             groupSt.setInt(4, group.getManagerId());
             int affectedRow = groupSt.executeUpdate();
             if (affectedRow == 0) {
