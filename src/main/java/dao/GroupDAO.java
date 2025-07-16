@@ -303,21 +303,21 @@ public class GroupDAO extends DBContext {
 
     public boolean assignManager(int groupId, int managerId[]) {
 
-            String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
-            try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
-                connection.setAutoCommit(false);
+        String manageSql = "INSERT INTO manage(group_id, account_id) VALUES(?, ?)";
+        try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
+            connection.setAutoCommit(false);
             for (int manager : managerId) {
                 manageSt.setInt(1, groupId);
                 manageSt.setInt(2, manager);
                 manageSt.addBatch();
             }
             int[] listAffectedRows = manageSt.executeBatch();
-                for (int listAffectedRow : listAffectedRows) {
-                    if (listAffectedRow == 0) {
-                        connection.rollback();
-                        return false;
-                    }
+            for (int listAffectedRow : listAffectedRows) {
+                if (listAffectedRow == 0) {
+                    connection.rollback();
+                    return false;
                 }
+            }
             connection.commit();
             return true;
         } catch (SQLException e) {
@@ -359,12 +359,12 @@ public class GroupDAO extends DBContext {
         String manageSql = "DELETE FROM manage\n" +
                 "WHERE group_id = ? AND account_id = ?";
         try(PreparedStatement manageSt = connection.prepareStatement(manageSql)){
-                manageSt.setInt(1, groupId);
-                manageSt.setInt(2, managerId);
+            manageSt.setInt(1, groupId);
+            manageSt.setInt(2, managerId);
 
-                if(manageSt.executeUpdate() > 0){
-                    return true;
-                }
+            if(manageSt.executeUpdate() > 0){
+                return true;
+            }
         } catch (SQLException e) {
             logger.warning(e.getMessage());
         }

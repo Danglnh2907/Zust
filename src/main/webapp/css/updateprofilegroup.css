@@ -1,0 +1,349 @@
+
+:root {
+    --primary-color: #FF852F;
+    --primary-hover-color: #E6782A;
+    --black-color: #212529;
+    --white-color: #FFFFFF;
+    --light-gray-bg: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-color: #495057;
+    --text-muted: #6c757d;
+    --success-bg: #d1e7dd;
+    --success-color: #0a3622;
+    --error-bg: #f8d7da;
+    --error-color: #58151c;
+}
+
+/* --- Global Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.back-link-container {
+    /* Adds space below the button, before the main content starts */
+    margin-bottom: 20px;
+}
+
+.back-link {
+    display: inline-flex; /* Allows alignment of icon and text while keeping it compact */
+    align-items: center;  /* Vertically aligns the icon and text */
+    gap: 8px;             /* Creates a nice space between the icon and the text */
+
+    text-decoration: none; /* Removes the default blue underline from the link */
+    font-weight: 600;      /* Makes the text slightly bold and important */
+    font-size: 0.95rem;    /* A good, readable font size */
+
+    color: #6c757d;        /* A muted gray color for a secondary action */
+    background-color: transparent; /* Starts with no background */
+
+    padding: 8px 15px;     /* Comfortable padding around the content */
+    border-radius: 8px;    /* Rounded corners to match the theme */
+
+    /* Smooth transition for the hover effect */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.back-link:hover {
+    background-color: #e9ecef; /* A light gray background on hover */
+    color: #212529;            /* Darkens the text color on hover for better visibility */
+}
+
+.back-link i {
+    /* The icon size is controlled by the font-size of the parent .back-link */
+    /* No extra styles needed thanks to flexbox alignment! */
+}
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light-gray-bg);
+    color: var(--text-color);
+    padding: 40px 20px;
+}
+/* --- Back Button (Kiểu mới: Rõ ràng, có viền) --- */
+.back-link-container {
+    margin-bottom: 25px; /* Thêm chút không gian bên dưới */
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px; /* Tăng khoảng cách giữa icon và chữ */
+
+    /* --- Yêu cầu: Viền, Chữ đậm, To hơn --- */
+    border: 2px solid #dee2e6; /* Thêm viền dày hơn và rõ ràng */
+    font-weight: 700;          /* Chữ in đậm (bold) */
+    font-size: 1.1rem;         /* Chữ to hơn */
+    padding: 12px 24px;        /* Tăng padding để nút to hơn */
+
+    text-decoration: none;
+    color: #495057;            /* Màu chữ tối hơn để dễ đọc */
+    background-color: #FFFFFF; /* Nền trắng để nổi bật viền */
+    border-radius: 10px;       /* Bo góc lớn hơn một chút cho hợp với kích thước mới */
+
+    /* Hiệu ứng chuyển động mượt mà cho tất cả các thuộc tính */
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hiệu ứng khi di chuột vào nút */
+.back-link:hover {
+    border-color: #FF852F;  /* Viền chuyển sang màu cam chính */
+    color: #FF852F;         /* Chữ cũng chuyển sang màu cam */
+    background-color: #fff8f2; /* Thêm một màu nền cam rất nhạt để tạo cảm giác nhấn */
+    transform: translateY(-2px); /* Nhấc nút lên một chút để tạo hiệu ứng 3D */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05); /* Thêm bóng đổ nhẹ */
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* --- Header / Logo --- */
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* --- Alert Messages --- */
+.alert {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-weight: 500;
+}
+
+.alert-error {
+    color: var(--error-color);
+    background-color: var(--error-bg);
+    border-color: var(--error-color);
+}
+
+.alert-message {
+    color: var(--success-color);
+    background-color: var(--success-bg);
+    border-color: var(--success-color);
+}
+
+/* --- Main Layout --- */
+.profile-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* 1/3 for display, 2/3 for form */
+    gap: 30px;
+}
+
+.card {
+    background: var(--white-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+.card h2 {
+    font-size: 1.5rem;
+    color: var(--black-color);
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* --- Left Card: Profile Display --- */
+.profile-display .avatar-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile-display img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--border-color);
+}
+
+.profile-display .no-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: var(--light-gray-bg);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border: 4px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.profile-info p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.profile-info strong {
+    color: var(--black-color);
+    display: block;
+    margin-bottom: 3px;
+}
+
+/* --- Right Card: Update Form --- */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-of-type {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--black-color);
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 133, 47, 0.2);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Custom Radio Buttons */
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+.radio-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+.radio-group input[type="radio"] {
+    display: none;
+}
+.radio-group .radio-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    margin-right: 10px;
+    display: inline-block;
+    position: relative;
+    transition: border-color 0.2s;
+}
+.radio-group input[type="radio"]:checked + .radio-custom {
+    border-color: var(--primary-color);
+}
+.radio-group input[type="radio"]:checked + .radio-custom::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* File Input */
+.form-group input[type="file"] {
+    font-size: 0.9rem;
+}
+
+.form-group input[type="file"]::file-selector-button {
+    background-color: var(--light-gray-bg);
+    border: 1px solid var(--border-color);
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+    transition: background-color 0.2s;
+    margin-right: 15px;
+}
+
+.form-group input[type="file"]::file-selector-button:hover {
+    background-color: #e2e6ea;
+}
+
+/* Submit Button */
+.btn-submit {
+    width: 100%;
+    background: var(--primary-color);
+    color: var(--white-color);
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background: var(--primary-hover-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+    body {
+        padding: 20px 10px;
+    }
+}
+.avatar-wrapper {
+    width: 140px;              /* hoặc tuỳ chọn: 100px, 120px */
+    height: 140px;
+    border-radius: 50%;        /* bo tròn như avatar */
+    overflow: hidden;
+    border: 2px solid #ddd;
+    margin: 0 auto 12px;       /* căn giữa và cách phần dưới */
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-wrapper {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #ccc;
+    margin-bottom: 1rem;
+}
+
+.group-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

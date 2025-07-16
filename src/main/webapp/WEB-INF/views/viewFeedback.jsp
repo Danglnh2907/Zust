@@ -1,8 +1,6 @@
 <%@ page import="dto.InteractGroupDTO" %>
-<%@ page import="dto.RespPostDTO" %>
+<%@ page import="dto.FeedbackGroupDTO" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.time.LocalDateTime" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 
@@ -10,8 +8,7 @@
 
   InteractGroupDTO group = (InteractGroupDTO) request.getAttribute("group");
 
-  List<RespPostDTO> pendingPosts = (List<RespPostDTO>) request.getAttribute("pendingPosts");
-  List<RespPostDTO> groupPosts = (List<RespPostDTO>) request.getAttribute("posts");
+  List<FeedbackGroupDTO> feedbacks = (List<FeedbackGroupDTO>) request.getAttribute("feedbacks");
 
 %>
 
@@ -20,7 +17,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= group != null ? group.getName() : "Group" %> - Zust</title>
+  <title><%= group != null ? group.getName() + " - View Feedback" : "Group" %> - Zust</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,6 +36,9 @@
     .feed-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; }
     .no-data-message-post { background-color: white; border-radius: 8px; padding: 40px; text-align: center; color: #777; }
     .feed-container { display: flex; flex-direction: column; gap: 15px; }
+    .approval-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-approve { background-color: #28a745; color: white; }
+    .btn-reject { background-color: #dc3545; color: white; }
   </style>
 </head>
 
@@ -69,83 +69,83 @@
 
 <div class="app-layout">
   <aside class="left-sidebar">
-      <div class="logo">Zust</div>
-      <nav class="sidebar-nav">
-        <ul>
-          <li><a href="${pageContext.request.contextPath}/" class="active">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-            <span>Home</span>
-          </a></li>
-          <%Account currentUser = (Account) request.getSession().getAttribute("users");%>
-          <li><a href="${pageContext.request.contextPath}/profile?userId=<%=currentUser.getId()%>">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span>My Profile</span>
-          </a></li>
-          <li><a href="${pageContext.request.contextPath}/createGroup">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="12" y1="18" x2="12" y2="12"></line>
-              <line x1="9" y1="15" x2="15" y2="15"></line>
-            </svg>
-            <span>Create Group</span>
-          </a></li>
-        </ul>
-      </nav>
-      <div class="sidebar-divider"></div>
+    <div class="logo">Zust</div>
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a href="${pageContext.request.contextPath}/" class="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home</span>
+        </a></li>
+        <%Account currentUser = (Account) request.getSession().getAttribute("users");%>
+        <li><a href="${pageContext.request.contextPath}/profile?userId=<%=currentUser.getId()%>">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>My Profile</span>
+        </a></li>
+        <li><a href="${pageContext.request.contextPath}/createGroup">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          <span>Create Group</span>
+        </a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-divider"></div>
 
-      <% List<InteractGroupDTO> myGroups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
-      <div class="groups-header">
-        <h2>My Groups</h2>
-        <span class="groups-count"><%= myGroups != null ? myGroups.size() : 0 %></span>
-      </div>
-      <div class="scrollable-group-list">
+    <% List<InteractGroupDTO> myGroups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
+    <div class="groups-header">
+      <h2>My Groups</h2>
+      <span class="groups-count"><%= myGroups != null ? myGroups.size() : 0 %></span>
+    </div>
+    <div class="scrollable-group-list">
+      <%
+        if(myGroups != null && !myGroups.isEmpty()){
+      %>
+      <div class="group-list">
         <%
-          if(myGroups != null && !myGroups.isEmpty()){
+          for(InteractGroupDTO currentGroup : myGroups){
+            String status = currentGroup.getStatus() != null ? currentGroup.getStatus().toLowerCase() : "unknown";
         %>
-        <div class="group-list">
-          <%
-            for(InteractGroupDTO currentGroup : myGroups){
-              String status = currentGroup.getStatus() != null ? currentGroup.getStatus().toLowerCase() : "unknown";
-          %>
-          <a href="${pageContext.request.contextPath}/group?id=<%= currentGroup.getId() %>" class="group-link">
-            <div class="group-item">
-              <img src="${pageContext.request.contextPath}/static/images/<%= currentGroup.getCoverImage()%>" alt="Group Avatar">
-              <div class="group-item-info">
-                <span><%= currentGroup.getName()%></span>
-                <span class="members"><%= currentGroup.getMemberCount()%> members</span>
-                <span class="status-badge status-<%= status %>"><%= status %></span>
-              </div>
+        <a href="${pageContext.request.contextPath}/group?id=<%= currentGroup.getId() %>" class="group-link">
+          <div class="group-item">
+            <img src="${pageContext.request.contextPath}/static/images/<%= currentGroup.getCoverImage()%>" alt="Group Avatar">
+            <div class="group-item-info">
+              <span><%= currentGroup.getName()%></span>
+              <span class="members"><%= currentGroup.getMemberCount()%> members</span>
+              <span class="status-badge status-<%= status %>"><%= status %></span>
             </div>
-          </a>
-          <%
-            }
-          %>
-        </div>
-        <%
-        } else {
-        %>
-        <div class="no-data-message">
-          <div class="icon"><i class="fas fa-search"></i></div>
-          <h2>No Groups Found</h2>
-        </div>
+          </div>
+        </a>
         <%
           }
         %>
       </div>
-      <button class="see-all-btn" onclick="location.href='group'">See All</button>
+      <%
+      } else {
+      %>
+      <div class="no-data-message">
+        <div class="icon"><i class="fas fa-search"></i></div>
+        <h2>No Groups Found</h2>
+      </div>
+      <%
+        }
+      %>
+    </div>
+    <button class="see-all-btn" onclick="location.href='group'">See All</button>
   </aside>
 
   <main class="main-content">
@@ -190,7 +190,6 @@
           </form>
           <% } %>
 
-          <%-- Existing Admin/Feedback Buttons --%>
           <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
           <a href="${pageContext.request.contextPath}/groupProfile?groupId=<%= group.getId() %>" class="btn btn-edit">Edit Profile</a>
           <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
@@ -212,48 +211,45 @@
     </div>
 
     <div class="group-tabs">
-      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>" class="tab-item active">Discussion</a>
+      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>" class="tab-item">Discussion</a>
       <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=members" class="tab-item">Members</a>
       <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
       <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=requests" class="tab-item">Joining Request</a>
       <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=pending" class="tab-item">Pending Post</a>
-      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=feedback" class="tab-item">View Feedback</a>
+      <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=feedback" class="tab-item active">View Feedback</a>
       <% }
         if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
       <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>&tag=report" class="tab-item">Report Content</a>
       <% } %>
     </div>
 
-    <div class="create-post-bar">
-<%--      <img src="${pageContext.request.contextPath}/static/images/default_avatar.png" alt="Your Avatar">--%>
-      <a href="${pageContext.request.contextPath}/post?action=create&groupId=<%= group.getId() %>" class="create-post-link">What's on your mind?</a>
-    </div>
-
-    <!-- Your Pending Posts Section -->
-    <% if (pendingPosts != null && !pendingPosts.isEmpty()) { %>
+    <!-- Feedbacks Section -->
     <div class="post-feed-section">
-      <h2 class="feed-header">Your Pending Posts</h2>
+      <h2 class="feed-header">Group Feedbacks</h2>
       <div class="feed">
-        <% for (RespPostDTO post : pendingPosts) {
-        out.println(post);
-        } %>
-      </div>
-    </div>
-    <% } %>
-
-    <!-- Main Group Feed Section -->
-    <div class="post-feed-section">
-      <h2 class="feed-header">Group Discussion</h2>
-      <div class="feed">
-        <% if (groupPosts == null || groupPosts.isEmpty()) { %>
+        <% if (feedbacks == null || feedbacks.isEmpty()) { %>
         <div class="no-data-message-post">
-          <h3>It's quiet in here...</h3>
-          <p>Be the first to share something in this group!</p>
+          <h3>No Feedbacks</h3>
+          <p>There are no feedbacks for this group.</p>
         </div>
         <% } else {
-          for (RespPostDTO post : groupPosts) {
-        out.println(post);
-          }
+          for (FeedbackGroupDTO dto : feedbacks) { %>
+        <div class="post" data-feedback-id="<%= dto.getFeedback().getId() %>">
+          <div class="post-header">
+            <img src="${pageContext.request.contextPath}/static/images/<%= dto.getAccount().getAvatar() %>" alt="User Avatar" class="post-avatar">
+            <div class="post-user-info">
+              <a href="${pageContext.request.contextPath}/profile?userId=<%= dto.getAccount().getId() %>" class="post-username"><%= dto.getAccount().getUsername() %></a>
+              <span class="post-time">Sent</span> <!-- Assuming status is 'sent' -->
+            </div>
+            <div class="post-options">
+              <!-- No options for feedbacks -->
+            </div>
+          </div>
+          <div class="post-content">
+            <%= dto.getFeedback().getFeedbackGroupContent() %>
+          </div>
+        </div>
+        <% }
         } %>
       </div>
     </div>
@@ -399,14 +395,5 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/post.js"></script>
 <script src="${pageContext.request.contextPath}/js/composer.js"></script>
-<script>
-  window.addEventListener('pageshow', function (event) {
-    if (sessionStorage.getItem('shouldReload') === 'true') {
-      sessionStorage.removeItem('shouldReload');
-      // Force reload even if browser loads from cache
-      window.location.reload(true);
-    }
-  });
-</script>
 </body>
 </html>

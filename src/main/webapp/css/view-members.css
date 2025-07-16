@@ -1,0 +1,239 @@
+/* view-members.css */
+
+.member-card {
+    background: #fff;
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+/* Điều chỉnh tiêu đề h2 */
+h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1c1e21;
+    margin-bottom: 15px;
+}
+
+.search-bar {
+    width: 100%;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-bar input.form-control {
+    width: 100%;
+    padding: 8px 40px 8px 36px; /* Chừa chỗ cho biểu tượng kính lúp và nút Search */
+    border: 1px solid #ccd0d5;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+    color: #1c1e21;
+    background-color: #f0f2f5;
+    transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.search-bar input.form-control:focus {
+    border-color: #1877f2;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1); /* Hiệu ứng focus đẹp hơn */
+}
+
+.search-bar input.form-control::placeholder {
+    color: #606770;
+    font-weight: 400;
+}
+
+/* Biểu tượng kính lúp */
+.search-bar .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #606770;
+    font-size: 16px;
+}
+
+/* Nút Search */
+.search-bar .search-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #1877f2;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.search-bar .search-button:hover {
+    background-color: #166fe5;
+    transform: translateY(-50%) scale(1.05); /* Hiệu ứng phóng to nhẹ */
+}
+
+.search-bar .search-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.3);
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #dddfe2;
+}
+
+.member-item:last-child {
+    border-bottom: none;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #e9ecef; /* Màu nền mặc định nếu avatar không tải */
+    object-fit: cover;
+}
+
+.post-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.post-user-name {
+    font-weight: 600;
+    color: #1c1e21;
+    font-size: 14px;
+}
+
+.post-user-fullname {
+    color: #606770;
+    font-size: 12px;
+}
+
+.post-actions-icon .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #606770;
+    border-radius: 50%;
+    padding: 5px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.post-actions-icon .icon-button:hover {
+    color: #1877f2;
+    background-color: #e7f3ff;
+}
+
+.post-actions-icon .icon-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.3);
+}
+.search-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 9999px; /* Bo tròn full */
+    padding: 5px 10px;
+    background-color: white;
+    max-width: 768px
+}
+
+.search-container input {
+    border: none;
+    outline: none;
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 9999px; /* Bo tròn */
+}
+
+.search-container .search-icon {
+    color: #999;
+    margin-left: 5px;
+}
+
+.search-container .search-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 9999px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.search-container .search-button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .member-card {
+        padding: 10px;
+    }
+
+    .post-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .post-user-name {
+        font-size: 13px;
+    }
+
+    .post-user-fullname {
+        font-size: 11px;
+    }
+
+    .post-actions-icon .icon-button {
+        font-size: 14px;
+        padding: 3px;
+    }
+
+    h2 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .search-bar input.form-control {
+        font-size: 13px;
+        padding: 6px 40px 6px 34px; /* Điều chỉnh padding cho màn hình nhỏ */
+    }
+
+    .search-bar .search-icon {
+        left: 10px;
+        font-size: 14px;
+    }
+
+    .search-bar .search-button {
+        right: 6px;
+        padding: 4px 12px;
+        font-size: 13px;
+    }
+
+}
+.icon-button {
+    text-decoration: none !important;
+    border: none;
+    background: none;
+    padding: 0;
+    box-shadow: none;
+}
