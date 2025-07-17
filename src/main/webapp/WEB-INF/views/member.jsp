@@ -291,7 +291,7 @@
                     </div>
                     <% } %>
 
-                    <a href="${pageContext.request.contextPath}/profile?id=<%= member.getId() %>" class="member-card-link">
+                    <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">
                         <div class="member-card">
                             <div class="member-card-avatar"><img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar"></div>
                             <div class="member-card-info">
@@ -344,7 +344,7 @@
                     </div>
                     <% } %>
                     <%-- The entire card structure is repeated here --%>
-                    <a href="${pageContext.request.contextPath}/profile?id=<%= member.getId() %>" class="member-card-link">
+                    <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">
                         <div class="member-card">
                             <div class="member-card-avatar"><img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar"></div>
                             <div class="member-card-info">
@@ -352,11 +352,11 @@
                                 <div class="date">Joined: <%= member.getDate().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) %></div>
                             </div>
                             <div class="member-card-action">
-                                <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>
-                                <form action="${pageContext.request.contextPath}/friendAction" method="POST"><input type="hidden" name="friendId" value="<%= member.getId() %>"><button type="submit" name="action" value="unfriend" class="btn btn-unfriend">Unfriend</button></form>
-                                <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>
-                                <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>
-                                <% } %>
+<%--                                <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>--%>
+<%--                                <form action="${pageContext.request.contextPath}/friendAction" method="POST"><input type="hidden" name="friendId" value="<%= member.getId() %>"><button type="submit" name="action" value="unfriend" class="btn btn-unfriend">Unfriend</button></form>--%>
+<%--                                <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>--%>
+<%--&lt;%&ndash;                                <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>&ndash;%&gt;--%>
+<%--                                <% } %>--%>
 
 <%--                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
 <%--                                <div class="menu" data-member-id="<%= member.getId() %>">--%>

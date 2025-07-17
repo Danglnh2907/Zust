@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
+
   <style>
     .post-feed-section { margin-top: 20px; }
     .feed-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; }
