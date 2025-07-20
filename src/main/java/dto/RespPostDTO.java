@@ -25,6 +25,8 @@ public class RespPostDTO {
     private boolean liked;
     private boolean ownPost;
     private RespPostDTO repost;
+    private int groupID;
+    private String groupName;
 
     private final Logger logger = Logger.getLogger(RespPostDTO.class.getName());
     private final String[] templates;
@@ -162,6 +164,22 @@ public class RespPostDTO {
         this.repost = repost;
     }
 
+    public int getGroupID() {
+        return groupID;
+    }
+
+    public void setGroupID(int groupID) {
+        this.groupID = groupID;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
     private String getLastTimeUpdate(Duration timeDiff) {
         if (timeDiff.toSeconds() < 60) return "Just now";
         if (timeDiff.toMinutes() < 60) return timeDiff.toMinutes() + " minutes";
@@ -210,6 +228,16 @@ public class RespPostDTO {
         return String.format(templates[3], sb);
     }
 
+    private String getIsRepostOrGroup() {
+        String result = "";
+        if (repost != null) {
+            result = "&nbsp;<span class=\"post-repost-text\">has reposted</span>";
+        } else if (groupID != 0) {
+            result = String.format("&nbsp;<span class=\"post-group-separator\">&gt;</span>&nbsp;<a href=\"/zust/group?id=%d\" class=\"post-user-name\">%s</a>", groupID, groupName);
+        }
+        return result;
+    }
+
     @Override
     public String toString() {
         /*
@@ -223,7 +251,7 @@ public class RespPostDTO {
         //Get header
         Duration timeDiff = Duration.between(getLastModified(), LocalDateTime.now());
         String header = String.format(templates[1],
-                getAvatar(), getAccountID(), getUsername(), getLastTimeUpdate(timeDiff), getAction());
+                getAvatar(), getAccountID(), getUsername(), getIsRepostOrGroup(), getLastTimeUpdate(timeDiff), getAction());
 
 
         //Get image carousel
@@ -233,8 +261,8 @@ public class RespPostDTO {
         String repostTemplate = "";
         if (repost != null) {
             //Repost only have header (without the 3-dot button), content, carousel
-            String repostHeader = String.format(templates[1], repost.getAvatar(), repost.getAccountID(), repost.getUsername(),
-                    getLastTimeUpdate(Duration.between(repost.getLastModified(), LocalDateTime.now())), "");
+            String repostHeader = String.format(templates[1], repost.getAvatar(), repost.getAccountID(), repost.getUsername(), "",
+                    getLastTimeUpdate(Duration.between(repost.getLastModified(),  LocalDateTime.now())), "");
             String repostContent = String.format(templates[2], repost.getPostContent());
             String repostImage = getImageCarousel(repost.getImages());
             repostTemplate = String.format(templates[0], repost.getPostId(), repostHeader, repostContent, repostImage, "");

@@ -179,7 +179,7 @@ public class PostDAO extends DBContext {
                 (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                 (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                 (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count,\
-                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked, p.group_id \
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.post_id = ? \
                 AND ( \
@@ -232,6 +232,19 @@ public class PostDAO extends DBContext {
         post.setRepostCount(rs.getInt("repost_count"));
         post.setOwnPost(rs.getInt("account_id") == userID);
         post.setLiked(rs.getBoolean("is_liked"));
+        post.setGroupID(rs.getInt("group_id"));
+
+        //If group_id exist (has posted in group, fetch group name)
+        if (post.getGroupID() != 0) {
+            String groupNameSQL = """
+                                    SELECT group_name FROM "group" WHERE group_id = ?""";
+            PreparedStatement groupStmt = conn.prepareStatement(groupNameSQL);
+            groupStmt.setInt(1, post.getGroupID());
+            ResultSet rs2 = groupStmt.executeQuery();
+            while (rs2.next()) {
+                post.setGroupName(rs2.getString("group_name"));
+            }
+        }
 
         //Fetch images
         String imageSql = "SELECT post_image FROM post_image WHERE post_id = ?";
@@ -271,7 +284,7 @@ public class PostDAO extends DBContext {
                 (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                 (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                 (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
-                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked, p.group_id \
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.account_id = ? \
                 AND ( \
@@ -343,7 +356,8 @@ public class PostDAO extends DBContext {
                    (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                    (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                    (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
-                   CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked, \
+                   p.group_id
             FROM post p JOIN account a ON p.account_id = a.account_id \
             WHERE p.post_status = 'published' AND \
                   (\
@@ -398,7 +412,7 @@ public class PostDAO extends DBContext {
                 (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
                 (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
                 (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
-                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_post WHERE post_id = p.post_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked, p.group_id \
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.group_id = ? ORDER BY p.post_create_date DESC""";
 
@@ -760,7 +774,8 @@ public class PostDAO extends DBContext {
                     ArrayList<RespPostDTO> posts = dao.getNewsfeedPosts(userId);
                     if (posts != null) {
                         for (RespPostDTO post : posts) {
-                            System.out.printf("Post by %s: %s (Liked: %b)\n", post.getUsername(), post.getPostContent(), post.isLiked());
+//                            System.out.printf("Post by %s: %s (Liked: %b)\n", post.getUsername(), post.getPostContent(), post.isLiked());
+                            System.out.println(post.getGroupID());
                         }
                     }
                     else {

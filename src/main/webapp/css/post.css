@@ -311,6 +311,16 @@ a {
     margin-left: 8px;
 }
 
+.post-repost-text {
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+
+.post-group-separator {
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+
 .post-options {
     margin-left: auto;
 }
