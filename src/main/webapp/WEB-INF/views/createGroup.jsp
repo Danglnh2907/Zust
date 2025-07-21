@@ -91,9 +91,9 @@
             cursor: pointer; transition: background-color 0.2s; border: 2px solid transparent;
         }
         .manager-item:hover { background-color: #f5f5f5; }
-        .manager-item-label:has(input:checked) {
+/*        .manager-item-label:has(input:checked) {
             background-color: #fff8f2; border-color: var(--primary-color);
-        }
+        }*/
 
         .manager-item input[type="checkbox"] {
             margin-right: 15px; width: 18px; height: 18px; accent-color: var(--primary-color);

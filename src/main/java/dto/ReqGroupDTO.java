@@ -1,8 +1,4 @@
 package dto;
-import model.Account;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ReqGroupDTO {
     private String groupName;
@@ -15,6 +11,10 @@ public class ReqGroupDTO {
         this.groupDescription = groupDescription;
         this.coverImage = coverImage;
         this.managerId = managerId;
+    }
+
+    public ReqGroupDTO(){
+
     }
 
     public String getGroupName() {

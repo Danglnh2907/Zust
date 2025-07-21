@@ -3,7 +3,6 @@ package dao;
 import dto.InteractGroupDTO;
 import dto.MemberDTO;
 import model.Account;
-import model.Post;
 import util.database.DBContext;
 
 import java.sql.*;
