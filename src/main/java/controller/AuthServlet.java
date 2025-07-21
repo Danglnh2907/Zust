@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/auth", "/verify", "/auth/google", "/auth/google/callback"})
+@WebServlet(urlPatterns = {"/auth", "/verify", "/auth/google", "/auth/google/callback", "/logout"})
 @MultipartConfig(
 		fileSizeThreshold = 1024 * 1024 * 2,
 		maxFileSize = 1024 * 1024 * 10,
@@ -50,10 +50,21 @@ public class AuthServlet extends HttpServlet {
 			case "/auth/google/callback":
 				handleGoogleCallback(request, response);
 				break;
+			case "/logout":
+				handleLogout(request, response);
+				break;
 			default:
 				showAuthPage(request, response);
 				break;
 		}
+	}
+
+	private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			session.invalidate();
+		}
+		response.sendRedirect(request.getContextPath() + "/login?message=" + java.net.URLEncoder.encode("You have been logged out.", StandardCharsets.UTF_8));
 	}
 
 	@Override

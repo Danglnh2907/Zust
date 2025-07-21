@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
 <%@ page import="model.*" %>
-<%@ page import="dto.RespPostDTO" %>
+<%@ page import="model.RespPostDTO" %>
 
 <%
   Map<String, List<?>> searchResults = (Map<String, List<?>>) request.getAttribute("searchResults");

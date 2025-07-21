@@ -3,9 +3,8 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="model.Group" %>
 <%@ page import="dao.PostDAO" %>
-<%@ page import="model.Post" %>
-<%@ page import="dto.InteractGroupDTO" %>
-<%@ page import="dto.RespPostDTO" %><%--
+<%@ page import="model.InteractGroupDTO" %>
+<%@ page import="model.RespPostDTO" %><%--
   Created by IntelliJ IDEA.
   User: Asus
   Date: 7/5/2025

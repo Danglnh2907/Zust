@@ -1,7 +1,7 @@
 package dao;
 
-import dto.AcceptReportDTO;
-import dto.ResReportCommentDTO;
+import model.AcceptReportDTO;
+import model.ResReportCommentDTO;
 import model.Account;
 import util.database.DBContext;
 

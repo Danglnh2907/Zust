@@ -1,9 +1,9 @@
 package controller;
 
 import dao.FeedbackGroupDAO;
-import dto.ResGroupDTO;
+import model.ResGroupDTO;
 import dao.GroupDAO;
-import dto.FeedbackGroupDTO;
+import model.FeedbackGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

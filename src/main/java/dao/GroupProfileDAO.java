@@ -1,5 +1,5 @@
 package dao;
-import dto.GroupProfileDTO;
+import model.GroupProfileDTO;
 import util.database.DBContext;
 
 import java.sql.Connection;

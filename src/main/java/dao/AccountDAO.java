@@ -1,6 +1,5 @@
 package dao;
 
-import dto.ResGroupDTO;
 import model.Account;
 import model.FriendRequest;
 import util.database.DBContext;

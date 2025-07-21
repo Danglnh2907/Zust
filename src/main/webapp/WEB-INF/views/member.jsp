@@ -1,5 +1,5 @@
-<%@ page import="dto.InteractGroupDTO" %>
-<%@ page import="dto.MemberDTO" %>
+<%@ page import="model.InteractGroupDTO" %>
+<%@ page import="model.MemberDTO" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.time.LocalDateTime" %>

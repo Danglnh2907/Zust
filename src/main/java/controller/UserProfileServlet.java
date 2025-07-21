@@ -2,7 +2,7 @@ package controller;
 
 import dao.AccountDAO;
 import dao.PostDAO;
-import dto.RespPostDTO;
+import model.RespPostDTO;
 import model.Account;
 import model.FriendRequest;
 

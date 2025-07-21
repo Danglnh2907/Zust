@@ -1,8 +1,8 @@
 package dao;
 
-import dto.AcceptReportDTO;
-import dto.ResReportPostDTO;
-import dto.RespPostDTO;
+import model.AcceptReportDTO;
+import model.ResReportPostDTO;
+import model.RespPostDTO;
 import model.Account;
 import util.database.DBContext;
 
@@ -20,22 +20,23 @@ public class ReportPostDAO extends DBContext {
 
     public List<ResReportPostDTO> getAll() {
         List<ResReportPostDTO> reportPostList = new ArrayList<>();
-        String sql = "SELECT rp.report_id, rp.report_content, rp.report_create_date, rp.report_status, " +
-                "ra.account_id AS reporter_account_id, ra.username AS reporter_username, ra.password AS reporter_password, ra.fullname AS reporter_fullname, ra.email AS reporter_email, ra.phone AS reporter_phone, ra.gender AS reporter_gender, ra.dob AS reporter_dob, ra.avatar AS reporter_avatar, ra.bio AS reporter_bio, ra.credit AS reporter_credit, ra.account_status AS reporter_account_status, ra.account_role AS reporter_account_role, " +
-                "pa.account_id AS poster_account_id, pa.username AS poster_username, pa.avatar AS poster_avatar, " +
-                "p.post_id, p.post_content, p.post_create_date, p.post_last_update, p.post_privacy, p.post_status, " +
-                "pi.post_image, h.hashtag_name, " +
-                "(SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, " +
-                "(SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, " +
-                "(SELECT COUNT(*) FROM post rp WHERE rp.repost_post_id = p.post_id AND rp.post_status = 'published') AS repost_count " +
-                "FROM report_post rp " +
-                "INNER JOIN account ra ON rp.account_id = ra.account_id " +
-                "INNER JOIN post p ON rp.post_id = p.post_id " +
-                "INNER JOIN account pa ON p.account_id = pa.account_id " +
-                "LEFT JOIN post_image pi ON p.post_id = pi.post_id " +
-                "LEFT JOIN tag_hashtag th ON p.post_id = th.post_id " +
-                "LEFT JOIN hashtag h ON th.hashtag_id = h.hashtag_id" +
-                " WHERE rp.report_status = 'sent' AND p.post_status = 'published'";
+        String sql = """
+                SELECT rp.report_id, rp.report_content, rp.report_create_date, rp.report_status,
+                ra.account_id AS reporter_account_id, ra.username AS reporter_username, ra.password AS reporter_password, ra.fullname AS reporter_fullname, ra.email AS reporter_email, ra.phone AS reporter_phone, ra.gender AS reporter_gender, ra.dob AS reporter_dob, ra.avatar AS reporter_avatar, ra.bio AS reporter_bio, ra.credit AS reporter_credit, ra.account_status AS reporter_account_status, ra.account_role AS reporter_account_role,
+                pa.account_id AS poster_account_id, pa.username AS poster_username, pa.avatar AS poster_avatar,
+                p.post_id, p.post_content, p.post_create_date, p.post_last_update, p.post_privacy, p.post_status,
+                pi.post_image, h.hashtag_name,
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count,
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count,
+                (SELECT COUNT(*) FROM post rp WHERE rp.repost_post_id = p.post_id AND rp.post_status = 'published') AS repost_count
+                FROM report_post rp
+                INNER JOIN account ra ON rp.account_id = ra.account_id
+                INNER JOIN post p ON rp.post_id = p.post_id
+                INNER JOIN account pa ON p.account_id = pa.account_id
+                LEFT JOIN post_image pi ON p.post_id = pi.post_id
+                LEFT JOIN tag_hashtag th ON p.post_id = th.post_id
+                LEFT JOIN hashtag h ON th.hashtag_id = h.hashtag_id
+                WHERE rp.report_status = 'sent' AND p.post_status = 'published'""";
 
         try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);

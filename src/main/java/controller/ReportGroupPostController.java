@@ -3,9 +3,9 @@ package controller;
 import dao.PostDAO;
 import dao.ReportGroupPostDAO;
 import dao.GroupDAO; // Thêm import GroupDAO
-import dto.AcceptGroupReportDTO;
-import dto.ResGroupReportPostDTO;
-import dto.ResGroupDTO; // Thêm import ResGroupDTO nếu cần
+import model.AcceptGroupReportDTO;
+import model.ResGroupReportPostDTO;
+import model.ResGroupDTO; // Thêm import ResGroupDTO nếu cần
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

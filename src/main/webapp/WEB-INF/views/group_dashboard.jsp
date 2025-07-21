@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List" %>
-<%@ page import="dto.ResGroupDTO" %>
+<%@ page import="model.ResGroupDTO" %>
 <%@ page import="model.Account" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 

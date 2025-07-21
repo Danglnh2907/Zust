@@ -1,8 +1,8 @@
-<%@ page import="dto.RespPostDTO" %>
+<%@ page import="model.RespPostDTO" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="model.Account" %>
-<%@ page import="dto.InteractGroupDTO" %>
+<%@ page import="model.InteractGroupDTO" %>
 <%@ page import="java.util.List" %>
 <html>
 <head>

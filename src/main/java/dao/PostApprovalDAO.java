@@ -1,6 +1,6 @@
 package dao;
 
-import dto.PostApprovalDTO;
+import model.PostApprovalDTO;
 import model.Account;
 import model.Post;
 import util.database.DBContext;
