@@ -317,18 +317,4 @@ public class SearchServlet extends HttpServlet {
 					java.net.URLEncoder.encode("Refresh failed", "UTF-8"));
 		}
 	}
-
-	/**
-	 * Escape JSON special characters
-	 */
-	private String escapeJson(String input) {
-		if (input == null) return "";
-		return input.replace("\\", "\\\\")
-				.replace("\"", "\\\"")
-				.replace("\b", "\\b")
-				.replace("\f", "\\f")
-				.replace("\n", "\\n")
-				.replace("\r", "\\r")
-				.replace("\t", "\\t");
-	}
 }
