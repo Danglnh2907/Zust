@@ -1,23 +1,19 @@
 package controller;
 
-import dao.AccountDAO;
 import dao.GroupDAO;
-import dto.ReqGroupDTO;
+import model.ReqGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import model.Account;
-import model.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.service.FileService;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
 import java.util.UUID;

@@ -7,7 +7,7 @@
 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ page import="dto.ResGroupDTO" %>
+<%@ page import="model.ResGroupDTO" %>
 <%@ page import="model.Account" %>
 <!DOCTYPE html>
 <html lang="en">

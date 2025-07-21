@@ -1,9 +1,9 @@
 package controller;
 
 import dao.GroupDAO;
-import dto.ResGroupDTO;
+import model.ResGroupDTO;
 import dao.DiscussionPostDAO;
-import dto.DiscussionPostDTO;
+import model.DiscussionPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

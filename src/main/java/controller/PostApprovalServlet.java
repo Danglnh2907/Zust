@@ -2,8 +2,8 @@ package controller;
 
 import dao.PostApprovalDAO;
 import dao.GroupDAO;
-import dto.PostApprovalDTO;
-import dto.ResGroupDTO;
+import model.PostApprovalDTO;
+import model.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

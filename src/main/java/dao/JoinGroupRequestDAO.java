@@ -1,6 +1,6 @@
 package dao;
 
-import dto.JoinGroupRequestDTO;
+import model.JoinGroupRequestDTO;
 import model.Account;
 import model.JoinGroupRequest;
 import util.database.DBContext;

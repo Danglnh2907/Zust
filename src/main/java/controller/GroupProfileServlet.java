@@ -4,8 +4,7 @@ package controller;
 // Import các lớp cần thiết
 import dao.GroupProfileDAO;
 import util.service.FileService;
-import dao.GroupDAO;
-import dto.GroupProfileDTO;
+import model.GroupProfileDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,12 +14,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.io.InputStream;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 // Đăng ký servlet với URL /groupProfile

@@ -1,8 +1,8 @@
 package dao;
 
-import dto.ReportPostDTO;
-import dto.ReqPostDTO;
-import dto.RespPostDTO;
+import model.ReportPostDTO;
+import model.ReqPostDTO;
+import model.RespPostDTO;
 import util.database.DBContext;
 
 import java.sql.Connection;

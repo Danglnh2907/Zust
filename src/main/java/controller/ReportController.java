@@ -6,8 +6,8 @@ import java.util.logging.Logger;
 
 import dao.CommentDAO;
 import dao.PostDAO;
-import dto.ReportCommentDTO;
-import dto.ReportPostDTO;
+import model.ReportCommentDTO;
+import model.ReportPostDTO;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 import jakarta.servlet.ServletException;

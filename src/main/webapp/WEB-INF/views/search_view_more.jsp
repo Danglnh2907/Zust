@@ -1,7 +1,7 @@
 <%@ page import="model.Account" %>
 <%@ page import="model.Group" %>
 <%@ page import="java.util.*" %>
-<%@ page import="dto.InteractGroupDTO" %>
+<%@ page import="model.InteractGroupDTO" %>
 <%--
 Created by IntelliJ IDEA.
   User: Asus

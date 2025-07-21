@@ -1,8 +1,7 @@
 package dao;
 
-import dto.RespPostDTO;
+import model.RespPostDTO;
 import model.Account;
-import model.Post;
 import model.Group;
 
 import org.slf4j.Logger;
@@ -27,6 +26,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -58,11 +58,12 @@ public class SearchDAO implements AutoCloseable {
 		try {
 			this.analyzer = new StandardAnalyzer();
 
-			if (!Files.exists(Paths.get(INDEX_DIR))) {
-				Files.createDirectories(Paths.get(INDEX_DIR));
+			Path path = Paths.get(INDEX_DIR);
+			if (!Files.exists(path)) {
+				Files.createDirectories(path);
 			}
 
-			this.directory = FSDirectory.open(Paths.get(INDEX_DIR));
+			this.directory = FSDirectory.open(path);
 
 			// Clear existing incompatible index
 			boolean shouldClearIndex = false;

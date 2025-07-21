@@ -2,8 +2,8 @@ package controller;
 
 import dao.GroupDAO;
 import dao.JoinGroupRequestDAO;
-import dto.JoinGroupRequestDTO;
-import dto.ResGroupDTO;
+import model.JoinGroupRequestDTO;
+import model.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

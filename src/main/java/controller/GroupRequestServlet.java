@@ -1,7 +1,7 @@
 package controller;
 
 import dao.GroupDAO;
-import dto.ResGroupDTO;
+import model.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

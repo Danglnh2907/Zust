@@ -1,4 +1,4 @@
-<%@ page import="dto.RespPostDTO" %>
+<%@ page import="model.RespPostDTO" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="model.Account" %>
 <%@ page import="java.util.List" %>

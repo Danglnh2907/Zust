@@ -1,8 +1,8 @@
 package dao;
 
-import dto.ReportCommentDTO;
-import dto.ReqCommentDTO;
-import dto.RespCommentDTO;
+import model.ReportCommentDTO;
+import model.ReqCommentDTO;
+import model.RespCommentDTO;
 import util.database.DBContext;
 
 import java.sql.*;
