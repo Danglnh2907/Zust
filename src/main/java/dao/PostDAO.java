@@ -11,13 +11,16 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class PostDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Random random = new Random();
 
     public boolean createPost(ReqPostDTO dto) {
         /*
@@ -32,7 +35,7 @@ public class PostDAO extends DBContext {
         Connection conn = null;
         try {
             //Get connection
-            conn = new DBContext().getConnection();;
+            conn = new DBContext().getConnection();
             if (conn == null) {
                 logger.warning("No connection available");
                 return false;
@@ -298,7 +301,7 @@ public class PostDAO extends DBContext {
                 ) \
                 ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = new DBContext().getConnection();) {
+        try (Connection conn = new DBContext().getConnection()) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return posts; // Return empty list
@@ -330,7 +333,7 @@ public class PostDAO extends DBContext {
      * @return RespPostDTO object corresponding to the post
      */
     public RespPostDTO getPost(int postId, int userID) {
-        try (Connection conn = new DBContext().getConnection();) {
+        try (Connection conn = new DBContext().getConnection()) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return null;
@@ -372,10 +375,9 @@ public class PostDAO extends DBContext {
                       OR (p.group_id IN (SELECT group_id FROM participate WHERE account_id = ?)) \
                       /* All public posts from anyone */ \
                       OR (p.post_privacy = 'public' AND p.group_id IS NULL) \
-                  )\
-            ORDER BY p.post_create_date DESC""";
+                  )""";
 
-        try (Connection conn = new DBContext().getConnection();) {
+        try (Connection conn = new DBContext().getConnection()) {
             if (conn == null) {
                 logger.warning("No connection available");
                 return posts;
@@ -395,7 +397,68 @@ public class PostDAO extends DBContext {
         } catch (SQLException e) {
             logger.warning(e.getMessage());
         }
-        return posts;
+//        return posts;
+        return feedAlgo(posts);
+    }
+
+    private ArrayList<RespPostDTO> feedAlgo(ArrayList<RespPostDTO> posts) {
+        /*
+         * The main feed will display posts based on some priorities and conditions:
+         * Current users have permission to view the post (posts that have public status, friends’ posts
+         * that have public or friend status, posts belong to groups user has joined) (already done in SQL query)
+         * The main feed algorithms will prioritize feed belong to group user has joined.
+         * The algorithm will prioritize with feed that has a bigger interaction value, which is calculated by:
+         * 40% like count + 30% comment count + 30% repost count.
+         * The algorithm will prefer post more recently:
+         * recently = create date * random multiplier (add a random multiplier to make the feed not an obvious
+         * sorting by create date)
+         */
+
+        if (posts.isEmpty()) {
+            return posts;
+        }
+
+        ArrayList<RespPostDTO> feeds = new ArrayList<>(posts);
+
+
+        //Sort the feeds based on a calculated score
+        feeds.sort((p1, p2) -> {
+            //1. Interaction Score
+            double interactionScore1 = 0.4 * p1.getLikeCount() + 0.3 * p1.getCommentCount() + 0.3 * p1.getRepostCount();
+            double interactionScore2 = 0.4 * p2.getLikeCount() + 0.3 * p2.getCommentCount() + 0.3 * p2.getRepostCount();
+
+            //2. Recency Score
+            //Using epoch seconds directly would make recent posts have giant scores that dwarf interaction scores.
+            //We'll use the timestamp as a base and apply a random multiplier.
+            long recency1 = (p1.getLastModified() != null) ? p1.getLastModified().toEpochSecond(ZoneOffset.UTC) : 0;
+            long recency2 = (p2.getLastModified() != null) ? p2.getLastModified().toEpochSecond(ZoneOffset.UTC) : 0;
+
+            /*
+             * To balance the huge recency value with the small interaction score,
+             * we can use a logarithmic scale for recency and then combine.
+             * This prevents recency from completely dominating the score.
+             * We subtract a large constant to keep the log values positive and in a reasonable range.
+             * (1609459200L is the epoch for 2021-01-01)
+             */
+            double timeFactor1 = Math.log(Math.max(1, recency1 - 1609459200L));
+            double timeFactor2 = Math.log(Math.max(1, recency2 - 1609459200L));
+
+            //Add randomness
+            timeFactor1 *= (1 + (random.nextDouble() - 0.5) * 0.1); // +/- 5%
+            timeFactor2 *= (1 + (random.nextDouble() - 0.5) * 0.1);
+
+            //3. Priority Boost for groups
+            double priorityBoost1 = (p1.getGroupID() != 0) ? 1.5 : 1.0;
+            double priorityBoost2 = (p2.getGroupID() != 0) ? 1.5 : 1.0;
+
+            //Combine all factors
+            double finalScore1 = priorityBoost1 * (interactionScore1 + timeFactor1);
+            double finalScore2 = priorityBoost2 * (interactionScore2 + timeFactor2);
+
+            return Double.compare(finalScore2, finalScore1); //Descending order
+        });
+
+        return feeds;
     }
 
     /**
@@ -416,7 +479,7 @@ public class PostDAO extends DBContext {
                 FROM post p JOIN account a ON p.account_id = a.account_id \
                 WHERE p.post_status = 'published' AND p.group_id = ? ORDER BY p.post_create_date DESC""";
 
-        try (Connection conn = new DBContext().getConnection();) {
+        try (Connection conn = new DBContext().getConnection()) {
             if (conn == null) {
                 logger.warning("No connection available!");
                 return posts;
@@ -439,7 +502,7 @@ public class PostDAO extends DBContext {
     public boolean editPost(int postId, ReqPostDTO postDTO) {
         Connection conn = null;
         try {
-            conn = new DBContext().getConnection();;
+            conn = new DBContext().getConnection();
             if (conn == null) {
                 logger.warning("No connection available");
                 return false;
