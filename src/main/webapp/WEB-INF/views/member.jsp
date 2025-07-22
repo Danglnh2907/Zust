@@ -210,17 +210,17 @@
                     <% if (interactStatus == InteractGroupDTO.InteractStatus.UNJOINED) { %>
                     <button type="button" class="btn btn-join" id="openJoinModal" data-group-id="<%= group.getId() %>">Join Group</button>
                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED || interactStatus == InteractGroupDTO.InteractStatus.MANAGER) { %>
-                    <form style="display:inline;">
+                    <form method="POST" style="display:inline;">
                         <input type="hidden" name="groupId" value="<%= group.getId() %>">
                         <input type="hidden" name="action" value="leave">
                         <button type="submit" class="btn btn-leave">Leave Group</button>
                     </form>
-                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                        <input type="hidden" name="action" value="leave">
-                        <button type="submit" class="btn btn-leave">Disband Group</button>
-                    </form>
+<%--                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>--%>
+<%--                    <form method="POST" style="display:inline;">--%>
+<%--                        <input type="hidden" name="groupId" value="<%= group.getId() %>">--%>
+<%--                        <input type="hidden" name="action" value="leave">--%>
+<%--                        <button type="submit" class="btn btn-leave">Disband Group</button>--%>
+<%--                    </form>--%>
                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.SENT) { %>
                     <form method="POST" style="display:inline;">
                         <input type="hidden" name="groupId" value="<%= group.getId() %>">
@@ -228,11 +228,9 @@
                         <button type="submit" class="btn btn-cancel">Cancel Request</button>
                     </form>
                     <% } %>
-
-                    <%-- Existing Admin/Feedback Buttons --%>
                     <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                    <a href="${pageContext.request.contextPath}/groupProfile?id=<%= group.getId() %>" class="btn btn-edit">Edit Profile</a>
-                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
+                    <a href="${pageContext.request.contextPath}/groupProfile?groupId=<%= group.getId() %>" class="btn btn-edit">Edit Profile</a>
+                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) { %>
                     <button type="button" class="btn btn-feedback" id="openFeedbackModal">Send Feedback</button>
                     <% } %>
                 </div>
@@ -280,17 +278,6 @@
                     for (MemberDTO member : managerList) {
                         if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
                 <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
-
-                    <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
-                    <div class="menu" data-member-id="<%= member.getId() %>">
-                        <i class="fas fa-ellipsis-v"></i>
-                        <div class="menu-dropdown">
-                            <button class="kick-btn">Kick member</button>
-                            <button class="promote-btn">Invite as manager</button>
-                        </div>
-                    </div>
-                    <% } %>
-
                     <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">
                         <div class="member-card">
                             <div class="member-card-avatar"><img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar"></div>
@@ -298,22 +285,13 @@
                                 <div class="name"><%= member.getName() %></div>
                                 <div class="date">Managed: <%= member.getDate().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) %></div>
                             </div>
-                            <div class="member-card-action">
-                                <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>
-                                <form action="${pageContext.request.contextPath}/friendAction" method="POST"><input type="hidden" name="friendId" value="<%= member.getId() %>"><button type="submit" name="action" value="unfriend" class="btn btn-unfriend">Unfriend</button></form>
-                                <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>
-                                <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>
-                                <% } %>
-<%--                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
-<%--                                <div class="menu" data-member-id="<%= member.getId() %>">--%>
-<%--                                    <i class="fas fa-ellipsis-v"></i>--%>
-<%--                                    <div class="menu-dropdown">--%>
-<%--                                        <button class="kick-btn">Kick member</button>--%>
-<%--                                        <!-- Promote không áp dụng cho managers (đã là manager rồi), nên ẩn hoặc disable nếu cần -->--%>
-<%--                                    </div>--%>
-<%--                                </div>--%>
+<%--                            <div class="member-card-action">--%>
+<%--                                <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>--%>
+<%--                                <form action="${pageContext.request.contextPath}/friendAction" method="POST"><input type="hidden" name="friendId" value="<%= member.getId() %>"><button type="submit" name="action" value="unfriend" class="btn btn-unfriend">Unfriend</button></form>--%>
+<%--                                <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>--%>
+<%--                                <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>--%>
 <%--                                <% } %>--%>
-                            </div>
+<%--                            </div>--%>
                         </div>
                     </a>
                 </div>
@@ -334,43 +312,42 @@
                         if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
                 <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
 
-                    <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
-                    <div class="menu" data-member-id="<%= member.getId() %>">
-                        <i class="fas fa-ellipsis-v"></i>
-                        <div class="menu-dropdown">
-                            <button class="kick-btn">Kick member</button>
-                            <button class="promote-btn">Invite as manager</button>
-                        </div>
-                    </div>
-                    <% } %>
+<%--                    <div class="member-card-action">--%>
+<%--                        <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
+<%--                        <div class="menu" data-member-id="<%= member.getId() %>">--%>
+<%--                            <i class="fas fa-ellipsis-v"></i>--%>
+<%--                            <div class="menu-dropdown">--%>
+<%--                                <button class="kick-btn">Kick member</button>--%>
+<%--                                <button class="promote-btn">Invite as manager</button>--%>
+<%--                            </div>--%>
+<%--                        </div>--%>
+<%--                        <% } %>--%>
+<%--                    </div>--%>
                     <%-- The entire card structure is repeated here --%>
-                    <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">
+<%--                    <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">--%>
                         <div class="member-card">
-                            <div class="member-card-avatar"><img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar"></div>
+                            <div class="member-card-avatar">
+                                <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>" class="member-card-link">
+                                    <img src="${pageContext.request.contextPath}/static/images/<%= member.getAvatar() %>" alt="Avatar">
+                                </a>
+                            </div>
                             <div class="member-card-info">
                                 <div class="name"><%= member.getName() %></div>
                                 <div class="date">Joined: <%= member.getDate().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) %></div>
                             </div>
                             <div class="member-card-action">
-<%--                                <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>--%>
-<%--                                <form action="${pageContext.request.contextPath}/friendAction" method="POST"><input type="hidden" name="friendId" value="<%= member.getId() %>"><button type="submit" name="action" value="unfriend" class="btn btn-unfriend">Unfriend</button></form>--%>
-<%--                                <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>--%>
-<%--&lt;%&ndash;                                <button type="button" class="btn btn-add-friend btn-open-friend-modal" data-friend-id="<%= member.getId() %>" data-friend-name="<%= member.getName() %>">Add Friend</button>&ndash;%&gt;--%>
-<%--                                <% } %>--%>
-
-<%--                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>--%>
-<%--                                <div class="menu" data-member-id="<%= member.getId() %>">--%>
-<%--                                    <i class="fas fa-ellipsis-v"></i>--%>
-<%--                                    <div class="menu-dropdown">--%>
-<%--                                        <button class="kick-btn">Kick member</button>--%>
-<%--                                        <button class="promote-btn">Invite as manager</button>--%>
-<%--                                    </div>--%>
-<%--                                </div>--%>
-<%--                                <% } %>--%>
-
+                                <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
+                                <div class="menu" data-member-id="<%= member.getId() %>">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                    <div class="menu-dropdown">
+                                        <button class="kick-btn">Kick member</button>
+                                        <button class="promote-btn">Invite as manager</button>
+                                    </div>
+                                </div>
+                                <% } %>
                             </div>
                         </div>
-                    </a>
+
                 </div>
                 <%     }
                 }
@@ -573,7 +550,7 @@
             }
         });
 
-        // Xử lý Kick member
+        // --- Xử lý Kick member ---
         document.querySelectorAll('.kick-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -581,19 +558,18 @@
                 if (confirm('Are you sure you want to kick this member?')) {
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '${pageContext.request.contextPath}/group';
-                    form.innerHTML = `
-                    <input type="hidden" name="action" value="kick_member">
-                    <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                    <input type="hidden" name="memberId" value="${memberId}">
-                `;
+                    form.action = '<%= request.getContextPath() %>/group';
+                    form.innerHTML =
+                        '<input type="hidden" name="action" value="kick_member">' +
+                        '<input type="hidden" name="groupId" value="<%= group.getId() %>">' +
+                        '<input type="hidden" name="memberId" value="' + memberId + '">';
                     document.body.appendChild(form);
                     form.submit();
                 }
             });
         });
 
-        // Xử lý Promote to manager
+// --- Xử lý Promote to manager ---
         document.querySelectorAll('.promote-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -601,17 +577,17 @@
                 if (confirm('Are you sure you want to invite this member as manager?')) {
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '${pageContext.request.contextPath}/group';
-                    form.innerHTML = `
-                    <input type="hidden" name="action" value="promote_manager">
-                    <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                    <input type="hidden" name="memberId" value="${memberId}">
-                `;
+                    form.action = '<%= request.getContextPath() %>/group';
+                    form.innerHTML =
+                        '<input type="hidden" name="action" value="promote_manager">' +
+                        '<input type="hidden" name="groupId" value="<%= group.getId() %>">' +
+                        '<input type="hidden" name="memberId" value="' + memberId + '">';
                     document.body.appendChild(form);
                     form.submit();
                 }
             });
         });
+
     });
 </script>
 </body>

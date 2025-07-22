@@ -168,13 +168,26 @@ public class ReportGroupPostDAO {
                     stmt.executeUpdate();
                 }
 
-//                String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
-//                        "VALUES ('Post get Deleted', ?, GETDATE(), 'sent', ?)";
-//                try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
-//                    stmt.setString(1, acceptReportDTO.getNotificationContent());
-//                    stmt.setInt(2, acceptReportDTO.getReportedAccountId());
-//                    stmt.executeUpdate();
-//                }
+                String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
+                       "VALUES ('Post get Deleted', ?, GETDATE(), 'sent', ?)";
+               try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
+                    stmt.setString(1, acceptReportDTO.getNotificationContent());
+                   stmt.setInt(2, acceptReportDTO.getReportedAccountId());
+                    stmt.executeUpdate();
+                }
+
+                String subtractCreditSql = "UPDATE account SET credit = credit - 5 WHERE account_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(subtractCreditSql)) {
+                    stmt.setInt(1, acceptReportDTO.getReportedAccountId());
+                    stmt.executeUpdate();
+                }
+
+                // Add 3 credits to the reporter account
+                String addCreditSql = "UPDATE account SET credit = credit + 1 WHERE account_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(addCreditSql)) {
+                    stmt.setInt(1, acceptReportDTO.getReportAccountId());
+                    stmt.executeUpdate();
+                }
 
                 conn.commit();
             } catch (SQLException e) {

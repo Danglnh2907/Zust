@@ -219,12 +219,12 @@
                         <input type="hidden" name="action" value="leave">
                         <button type="submit" class="btn btn-leave">Leave Group</button>
                     </form>
-                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                        <input type="hidden" name="action" value="disband">
-                        <button type="submit" class="btn btn-leave">Disband Group</button>
-                    </form>
+<%--                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>--%>
+<%--                    <form method="POST" style="display:inline;">--%>
+<%--                        <input type="hidden" name="groupId" value="<%= group.getId() %>">--%>
+<%--                        <input type="hidden" name="action" value="disband">--%>
+<%--                        <button type="submit" class="btn btn-leave">Disband Group</button>--%>
+<%--                    </form>--%>
                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.SENT) { %>
                     <form method="POST" style="display:inline;">
                         <input type="hidden" name="groupId" value="<%= group.getId() %>">
@@ -264,9 +264,9 @@
             <% } %>
         </div>
 
-        <div class="create-post-bar">
-            <a href="${pageContext.request.contextPath}/post?action=create&groupId=<%= group.getId() %>" class="create-post-link">What's on your mind?</a>
-        </div>
+<%--        <div class="create-post-bar">--%>
+<%--            <a href="${pageContext.request.contextPath}/post?action=create&groupId=<%= group.getId() %>" class="create-post-link">What's on your mind?</a>--%>
+<%--        </div>--%>
 
         <% if ("requests".equals(request.getParameter("tag")) && (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER)) { %>
         <div class="join-requests-section">
@@ -287,7 +287,14 @@
                             <div class="user-details">
                                 <span class="username"><%= joinRequest.getAccount().getUsername() %></span>
                                 <span class="fullname"><%= joinRequest.getAccount().getFullname() %></span>
-                                <span class="request-date">Requested on: <%= joinRequest.getRequest().getJoinGroupRequestDate() != null ? joinRequest.getRequest().getJoinGroupRequestDate() : "N/A" %></span>
+                                <%
+                                    java.time.Instant instant = joinRequest.getRequest().getJoinGroupRequestDate();
+                                    String formattedDate = instant != null
+                                            ? java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
+                                            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                            : "N/A";
+                                %>
+                                <span class="request-date">Requested on: <%= formattedDate %></span>
                             </div>
                         </div>
                         <div class="request-content">

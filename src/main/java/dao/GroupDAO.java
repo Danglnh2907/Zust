@@ -670,7 +670,19 @@ public class GroupDAO extends DBContext {
             return false;
         }
     }
-
+    public boolean disbandGroup(int groupId) {
+        logger.info( " is the leader for group ID: " + groupId);
+        String sql = "UPDATE [group] SET group_status = 'deleted' WHERE group_id = ?";
+        try (Connection conn = new DBContext().getConnection();
+            PreparedStatement stmt = connection.prepareStatement(sql)){
+            stmt.setInt(1, groupId);
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
+    }
     public boolean isLeader(int accountId, int groupId) {
         logger.info("Checking if account ID: " + accountId + " is the leader for group ID: " + groupId);
         String sql = "SELECT 1 FROM [group] WHERE account_id = ? AND group_id = ?";

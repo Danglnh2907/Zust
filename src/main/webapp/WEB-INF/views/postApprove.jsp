@@ -32,13 +32,80 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
     <style>
-        .post-feed-section { margin-top: 20px; }
-        .feed-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; }
-        .no-data-message-post { background-color: white; border-radius: 8px; padding: 40px; text-align: center; color: #777; }
-        .feed-container { display: flex; flex-direction: column; gap: 15px; }
-        .approval-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-approve { background-color: #28a745; color: white; }
-        .btn-reject { background-color: #dc3545; color: white; }
+        /* === APPROVAL BUTTONS WRAPPER === */
+        .approval-actions-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding-bottom: 10px;
+        }
+
+        /* === APPROVE / REJECT BUTTONS === */
+        .approval-form {
+            display: inline-block;
+        }
+
+        .btn-approve,
+        .btn-reject {
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-approve {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+        .post-images {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .post-images img {
+            max-width: 100%;
+            max-height: 400px;
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
+            width: calc(50% - 10px); /* Hiển thị 2 ảnh mỗi hàng nếu có nhiều */
+            flex-grow: 1;
+            flex-basis: 200px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .post-images img:hover {
+            transform: scale(1.02);
+        }
+
+
     </style>
 </head>
 
@@ -176,12 +243,12 @@
                         <input type="hidden" name="action" value="leave">
                         <button type="submit" class="btn btn-leave">Leave Group</button>
                     </form>
-                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                        <input type="hidden" name="action" value="disband">
-                        <button type="submit" class="btn btn-leave">Disband Group</button>
-                    </form>
+<%--                    <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>--%>
+<%--                    <form method="POST" style="display:inline;">--%>
+<%--                        <input type="hidden" name="groupId" value="<%= group.getId() %>">--%>
+<%--                        <input type="hidden" name="action" value="disband">--%>
+<%--                        <button type="submit" class="btn btn-leave">Disband Group</button>--%>
+<%--                    </form>--%>
                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.SENT) { %>
                     <form method="POST" style="display:inline;">
                         <input type="hidden" name="groupId" value="<%= group.getId() %>">
@@ -262,20 +329,21 @@
                         <% } %>
                     </div>
                     <% } %>
-                    <div class="approval-actions">
-                        <form method="POST" style="display:inline;">
+                    <div class="approval-actions-wrapper">
+                        <form method="POST" class="approval-form">
                             <input type="hidden" name="action" value="approve_post">
                             <input type="hidden" name="postId" value="<%= dto.getPost().getId() %>">
                             <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                            <button type="submit" class="btn btn-approve">Approve</button>
+                            <button type="submit" class="btn-approve">Approve</button>
                         </form>
-                        <form method="POST" style="display:inline;">
+                        <form method="POST" class="approval-form">
                             <input type="hidden" name="action" value="reject_post">
                             <input type="hidden" name="postId" value="<%= dto.getPost().getId() %>">
                             <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                            <button type="submit" class="btn btn-reject">Reject</button>
+                            <button type="submit" class="btn-reject">Reject</button>
                         </form>
                     </div>
+
                 </div>
                 <% }
                 } %>

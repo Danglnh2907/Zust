@@ -24,13 +24,14 @@ public class FeedbackGroupDAO extends DBContext {
         }
     }
 
-    private static final String SELECT_FEEDBACK_BY_GROUP_ID =
-            "SELECT fg.feedback_group_id, fg.feedback_group_content, fg.report_create_date, fg.report_status, " +
-                    "a.account_id, a.username, a.avatar, a.fullname " +
-                    "FROM feedback_group fg " +
-                    "JOIN account a ON fg.account_id = a.account_id " +
-                    "WHERE fg.group_id = ? AND fg.report_status = 'sent' " +
-                    "ORDER BY fg.report_create_date DESC";
+    private static final String SELECT_FEEDBACK_BY_GROUP_ID = """
+
+            SELECT fg.feedback_group_id, fg.feedback_group_content, fg.report_create_date, fg.report_status, 
+                    a.account_id, a.username, a.avatar, a.fullname 
+                    FROM feedback_group fg 
+                    JOIN account a ON fg.account_id = a.account_id 
+                    WHERE fg.group_id = ? AND fg.report_status = 'sent' 
+                    ORDER BY fg.report_create_date DESC""";
 
     public List<FeedbackGroupDTO> getFeedbacksByGroupId(int groupId, String status) {
         List<FeedbackGroupDTO> feedbacks = new ArrayList<>();
@@ -63,29 +64,4 @@ public class FeedbackGroupDAO extends DBContext {
     }
 
 
-//    public boolean processFeedback(int feedbackId, String action) {
-//        String updateSql = "UPDATE feedback_group SET report_status = ? WHERE feedback_group_id = ?";
-//        try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
-//            connection.setAutoCommit(false);
-//            updateStmt.setBoolean(1, "0".equalsIgnoreCase(action));
-//            updateStmt.setInt(2, feedbackId);
-//
-//            int rowsAffected = updateStmt.executeUpdate();
-//            if (rowsAffected == 0) {
-//                connection.rollback();
-//                return false;
-//            }
-//
-//            connection.commit();
-//            return true;
-//        } catch (SQLException e) {
-//            LOGGER.severe("Error processing feedback: " + e.getMessage());
-//            try {
-//                connection.rollback();
-//            } catch (SQLException ex) {
-//                LOGGER.severe("Rollback failed: " + ex.getMessage());
-//            }
-//            return false;
-//        }
-//    }
 }

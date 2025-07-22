@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
+import java.sql.Timestamp;
 public class JoinGroupRequestDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
     private final Connection connection;
@@ -24,13 +24,13 @@ public class JoinGroupRequestDAO extends DBContext {
         }
     }
 
-    private static final String SELECT_REQUESTS_BY_GROUP_ID =
-            "SELECT jgr.join_group_request_id, jgr.join_group_request_content, jgr.join_group_request_date, " +
-                    "jgr.join_group_request_status, a.account_id, a.username, a.avatar, a.fullname " +
-                    "FROM join_group_request jgr " +
-                    "JOIN account a ON jgr.account_id = a.account_id " +
-                    "WHERE jgr.group_id = ? AND jgr.join_group_request_status = 'sent' " +
-                    "ORDER BY jgr.join_group_request_date DESC";
+    private static final String SELECT_REQUESTS_BY_GROUP_ID = """
+            SELECT jgr.join_group_request_id, jgr.join_group_request_content, jgr.join_group_request_date, 
+                    jgr.join_group_request_status, a.account_id, a.username, a.avatar, a.fullname 
+                    FROM join_group_request jgr 
+                    JOIN account a ON jgr.account_id = a.account_id 
+                    WHERE jgr.group_id = ? AND jgr.join_group_request_status = 'sent' 
+                    ORDER BY jgr.join_group_request_date DESC """;
 
     public List<JoinGroupRequestDTO> getRequestsByGroupId(int groupId) {
         List<JoinGroupRequestDTO> requests = new ArrayList<>();
@@ -41,7 +41,12 @@ public class JoinGroupRequestDAO extends DBContext {
                     JoinGroupRequest request = new JoinGroupRequest();
                     request.setId(rs.getInt("join_group_request_id"));
                     request.setJoinGroupRequestContent(rs.getString("join_group_request_content"));
-//                    request.setJoinGroupRequestDate(rs.getObject("join_group_request_date", LocalDateTime.class));
+
+                    Timestamp ts = rs.getTimestamp("join_group_request_date");
+                    if (ts != null) {
+                        request.setJoinGroupRequestDate(ts.toInstant());
+                    }
+
                     request.setJoinGroupRequestStatus(rs.getString("join_group_request_status"));
 
                     Account account = new Account();

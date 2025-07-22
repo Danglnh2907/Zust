@@ -6,7 +6,7 @@ import dao.PostDAO;
 import model.InteractGroupDTO;
 import model.MemberDTO;
 import model.RespPostDTO;
-import dao.MemberViewDAO; // Thêm import
+import dao.ParticipateDAO; // Thêm import
 import dao.FeedbackGroupDAO;
 import model.FeedbackGroupDTO;
 import model.PostApprovalDTO;
@@ -195,7 +195,7 @@ public class GroupServlet extends HttpServlet {
         GroupDAO groupDAO = new GroupDAO();
         JoinGroupRequestDAO joinGroupRequestDAO = new JoinGroupRequestDAO();
         // Get form parameters
-        MemberViewDAO memberDAO = new MemberViewDAO(); // Thêm instance
+        ParticipateDAO memberDAO = new ParticipateDAO(); // Thêm instance
         PostDAO postDAO = new PostDAO();
         ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO(); // Thêm DAO
         String action = request.getParameter("action");
@@ -406,12 +406,13 @@ public class GroupServlet extends HttpServlet {
                 boolean kickSuccess = memberDAO.removeMember(memberId, groupId);
                 if (kickSuccess) {
                     logger.info("User ID: " + userID + " successfully kicked member ID: " + memberId + " from group ID: " + groupId);
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&success=" + URLEncoder.encode("Member removed successfully", StandardCharsets.UTF_8));
+                    return;
                 } else {
                     logger.warning("Failed to kick member ID: " + memberId + " from group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Failed to kick member", StandardCharsets.UTF_8));
                     return;
                 }
-                break;
 
             case "promote_manager":
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
@@ -431,12 +432,14 @@ public class GroupServlet extends HttpServlet {
                 boolean promoteSuccess = memberDAO.promoteToManager(promoteMemberId, groupId);
                 if (promoteSuccess) {
                     logger.info("User ID: " + userID + " successfully promoted member ID: " + promoteMemberId + " to manager in group ID: " + groupId);
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&success=" + URLEncoder.encode("Member promoted to manager", StandardCharsets.UTF_8));
+                    return;
                 } else {
                     logger.warning("Failed to promote member ID: " + promoteMemberId + " to manager in group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Failed to promote manager", StandardCharsets.UTF_8));
                     return;
                 }
-                break;
+
             default:
                 logger.warning("Invalid action: " + action + " for group ID: " + groupId);
 //                response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Invalid action", StandardCharsets.UTF_8));

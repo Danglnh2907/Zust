@@ -6,16 +6,16 @@ import java.util.List;
 /**
  * DTO class to transfer member data from the participate table.
  */
-public class MemberViewDTO {
+public class ParticipateDTO {
     private Participate participate;
     private Account account;
     private List<String> errors;
 
-    public MemberViewDTO() {
+    public ParticipateDTO() {
         this.errors = new ArrayList<>();
     }
 
-    public MemberViewDTO(Participate participate, Account account) {
+    public ParticipateDTO(Participate participate, Account account) {
         this();
         this.participate = participate;
         this.account = account;
