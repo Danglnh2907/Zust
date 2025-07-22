@@ -15,11 +15,16 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @WebServlet(name = "UserProfileServlet", urlPatterns = {"/profile"})
 public class UserProfileServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        /*
+         * /profile?userId=USER_ID
+         */
+
         try {
             int userId = Integer.parseInt(request.getParameter("userId"));
             AccountDAO accountDAO = new AccountDAO();
@@ -35,7 +40,7 @@ public class UserProfileServlet extends HttpServlet {
                 List<Account> friends = accountDAO.getFriends(userProfile.getId());
                 request.setAttribute("friends", friends);
 
-                if (currentUser != null && currentUser.getId() == userProfile.getId()) {
+                if (currentUser != null && Objects.equals(currentUser.getId(), userProfile.getId())) {
                     List<FriendRequest> friendRequests = accountDAO.getFriendRequests(currentUser.getId());
                     request.setAttribute("friendRequests", friendRequests);
                 } else if (currentUser != null) {

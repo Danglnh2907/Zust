@@ -558,7 +558,7 @@ public class AuthDAO extends DBContext{
 			}
 
 			String sql = """
-					SELECT password FROM account WHERE username= ?""";
+					SELECT password FROM account WHERE username= ? AND account_role = 'admin'""";
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.setString(1, username);
 			ResultSet rs = stmt.executeQuery();

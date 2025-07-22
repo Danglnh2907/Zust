@@ -283,26 +283,27 @@
                     <% for (JoinGroupRequestDTO joinRequest : joinRequests) { %>
                     <div class="join-request-item">
                         <div class="request-user-info">
-                            <img src="${pageContext.request.contextPath}/static/images/<%= joinRequest.getAccount().getAvatar() %>" alt="User Avatar" class="avatar">
+                            <img src="${pageContext.request.contextPath}/static/images/<%= joinRequest.getAvatar() %>"
+                                 alt="User Avatar" class="avatar">
                             <div class="user-details">
-                                <span class="username"><%= joinRequest.getAccount().getUsername() %></span>
-                                <span class="fullname"><%= joinRequest.getAccount().getFullname() %></span>
-                                <span class="request-date">Requested on: <%= joinRequest.getRequest().getJoinGroupRequestDate() != null ? joinRequest.getRequest().getJoinGroupRequestDate() : "N/A" %></span>
+                                <span class="username"><%= joinRequest.getUsername() %></span>
+                                <span class="fullname"><%= joinRequest.getFullname() %></span>
+                                <span class="request-date">Requested on: <%= joinRequest.getCreatedAt() != null ? joinRequest.getCreatedAt() : "N/A" %></span>
                             </div>
                         </div>
                         <div class="request-content">
-                            <p><%= joinRequest.getRequest().getJoinGroupRequestContent() != null ? joinRequest.getRequest().getJoinGroupRequestContent() : "No message provided." %></p>
+                            <p><%= joinRequest.getMessage() != null ? joinRequest.getMessage() : "No message provided." %></p>
                         </div>
                         <div class="request-actions">
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="action" value="approve">
-                                <input type="hidden" name="requestId" value="<%= joinRequest.getRequest().getId() %>">
+                                <input type="hidden" name="requestId" value="<%= joinRequest.getRequesterID() %>">
                                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
                                 <button type="submit" class="btn btn-success">Approve</button>
                             </form>
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="action" value="reject">
-                                <input type="hidden" name="requestId" value="<%= joinRequest.getRequest().getId() %>">
+                                <input type="hidden" name="requestId" value="<%= joinRequest.getRequesterID() %>">
                                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
                                 <button type="submit" class="btn btn-danger">Reject</button>
                             </form>

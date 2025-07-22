@@ -188,7 +188,7 @@
     </div>
 
     <% int accountId = (int)request.getAttribute("accountId"); %>
-    <form action="${pageContext.request.contextPath}/createGroup" method="POST" enctype="multipart/form-data">
+    <form action="${pageContext.request.contextPath}/group?action=create" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="creatorId" value="<%= accountId%>">
         <div class="form-group">
             <label for="coverImage" class="label-title">Cover Image</label>

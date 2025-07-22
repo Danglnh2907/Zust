@@ -6,13 +6,10 @@
   Refactored for a modern UI.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.GroupProfileDTO" %>
-<%@ page import="model.ResGroupDTO" %>
-<%@ page import="model.Account" %>
 <%@ page import="model.Group" %>
 <%
     // Get the group object from the request. It might be null.
-    GroupProfileDTO group = (GroupProfileDTO) request.getAttribute("group");
+    Group group = (Group) request.getAttribute("group");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,7 +29,7 @@
     </header>
 
     <div class="back-link-container">
-        <a href="${pageContext.request.contextPath}/group?id=<%= group.getGroupId() %>" class="back-link">
+        <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>" class="back-link">
             <i class="fas fa-arrow-left"></i>
             <span>Back</span>
         </a>
@@ -52,17 +49,16 @@
             <h2>Current Profile</h2>
             <% if (group != null) { %>
             <div class="avatar-wrapper">
-                <% if (group.getAvatarPath() != null && !group.getAvatarPath().isEmpty()) { %>
-                <img src="<%= request.getContextPath() + "/static/images/" + group.getAvatarPath() %>" alt="Group Avatar" class="group-avatar" />
-
+                <% if (group.getGroupCoverImage() != null && !group.getGroupCoverImage().isEmpty()) { %>
+                <img src="<%= request.getContextPath() + "/static/images/" + group.getGroupCoverImage() %>"
+                     alt="Group Avatar" class="group-avatar" />
                 <% } else { %>
                 <div class="no-avatar">No Avatar</div>
                 <% } %>
             </div>
             <div class="profile-info">
                 <p><strong>Group Name:</strong> <%= group.getGroupName() %></p>
-                <p><strong>Description:</strong> <%= group.getDescription() != null ? group.getDescription() : "N/A" %></p>
-                <p><strong>Status:</strong> <%= group.getStatus() %></p>
+                <p><strong>Description:</strong> <%= group.getGroupDescription() != null ? group.getGroupDescription() : "N/A" %></p>
             </div>
             <% } else { %>
             <p>No group information available.</p>
@@ -72,40 +68,19 @@
         <!-- Update Form Card (Right Side) -->
         <div class="card update-form">
             <h2>Update Group Profile</h2>
-            <form action="<%= request.getContextPath() %>/groupProfile" method="post" enctype="multipart/form-data">
+            <form action="<%= request.getContextPath() %>/group?action=edit" method="post" enctype="multipart/form-data">
                 <%-- Hidden field to pass the group ID --%>
-                <input type="hidden" name="groupId" value="<%= group != null ? group.getGroupId() : "" %>">
+                <input type="hidden" name="groupId" value="<%= group.getId() %>">
 
                 <div class="form-group">
                     <label for="groupName">Group Name</label>
-                    <input type="text" id="groupName" name="groupName" value="<%= group != null ? group.getGroupName() : "" %>" required>
+                    <input type="text" id="groupName" name="groupName" value="<%= group.getGroupName() %>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4"><%= group != null ? group.getDescription() : "" %></textarea>
+                    <textarea id="description" name="description" rows="4"><%= group.getGroupDescription() %></textarea>
                 </div>
-
-<%--                <div class="form-group">--%>
-<%--                    <label>Status</label>--%>
-<%--                    <div class="radio-group">--%>
-<%--                        <label for="active">--%>
-<%--                            <input type="radio" id="active" name="status" value="active" <% if (group != null && "active".equals(group.getStatus())) { %>checked<% } %>>--%>
-<%--                            <span class="radio-custom"></span>--%>
-<%--                            Active--%>
-<%--                        </label>--%>
-<%--                        <label for="banned">--%>
-<%--                            <input type="radio" id="banned" name="status" value="banned" <% if (group != null && "banned".equals(group.getStatus())) { %>checked<% } %>>--%>
-<%--                            <span class="radio-custom"></span>--%>
-<%--                            Banned--%>
-<%--                        </label>--%>
-<%--                        <label for="deleted">--%>
-<%--                            <input type="radio" id="deleted" name="status" value="deleted" <% if (group != null && "deleted".equals(group.getStatus())) { %>checked<% } %>>--%>
-<%--                            <span class="radio-custom"></span>--%>
-<%--                            Deleted--%>
-<%--                        </label>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
 
                 <div class="form-group">
                     <label for="avatar">Change Avatar</label>

@@ -234,19 +234,18 @@
         </div>
         <% } else {
           for (FeedbackGroupDTO dto : feedbacks) { %>
-        <div class="post" data-feedback-id="<%= dto.getFeedback().getId() %>">
+        <div class="post" data-feedback-id="">
           <div class="post-header">
-            <img src="${pageContext.request.contextPath}/static/images/<%= dto.getAccount().getAvatar() %>" alt="User Avatar" class="post-avatar">
+            <img src="${pageContext.request.contextPath}/static/images/<%= dto.getAvatar() %>" alt="User Avatar" class="post-avatar">
             <div class="post-user-info">
-              <a href="${pageContext.request.contextPath}/profile?userId=<%= dto.getAccount().getId() %>" class="post-username"><%= dto.getAccount().getUsername() %></a>
-              <span class="post-time">Sent</span> <!-- Assuming status is 'sent' -->
+              <a href="${pageContext.request.contextPath}/profile?userId=<%= dto.getRequesterID() %>" class="post-username"><%= dto.getUsername() %></a>
             </div>
             <div class="post-options">
               <!-- No options for feedbacks -->
             </div>
           </div>
           <div class="post-content">
-            <%= dto.getFeedback().getFeedbackGroupContent() %>
+            <%= dto.getContent() %>
           </div>
         </div>
         <% }

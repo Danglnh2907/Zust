@@ -168,7 +168,7 @@
                     </svg>
                     <span>My Profile</span>
                 </a></li>
-                <li><a href="${pageContext.request.contextPath}/createGroup">
+                <li><a href="${pageContext.request.contextPath}/group?action=create">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -255,6 +255,50 @@
                 </div>
             </div>
 
+            <!-- NEW: Notification Icon and Dropdown -->
+            <div class="notification-container">
+                <button class="notification-btn" id="notification-btn" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge hidden" id="notification-badge"></span>
+                </button>
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <div class="notification-header">
+                        <h3>Notifications</h3>
+                        <button id="mark-all-read-btn">Mark all as read</button>
+                    </div>
+                    <div class="notification-list" id="notification-list">
+                        <!-- Sample notifications -->
+                        <div class="notification-item unread">
+                            <img src="https://i.pravatar.cc/150?u=janedoe" class="avatar" alt="User Avatar">
+                            <div class="notification-content">
+                                <div class="notification-body"><b>Jane Doe</b> liked your post.</div>
+                                <div class="notification-timestamp">5m ago</div>
+                            </div>
+                        </div>
+                        <div class="notification-item unread">
+                            <img src="https://i.pravatar.cc/150?u=johnsmith" class="avatar" alt="User Avatar">
+                            <div class="notification-content">
+                                <div class="notification-title">New Follower</div>
+                                <div class="notification-body"><b>John Smith</b> started following you.</div>
+                                <div class="notification-timestamp">1h ago</div>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <img src="https://i.pravatar.cc/150?u=emily" class="avatar" alt="User Avatar">
+                            <div class="notification-content">
+                                <div class="notification-body"><b>Emily White</b> commented on your post.</div>
+                                <div class="notification-timestamp">Yesterday</div>
+                            </div>
+                        </div>
+
+                        <%
+
+                        %>
+
+                    </div>
+                </div>
+            </div>
+
             <%
                 String linkAvatar = account.getAvatar();
             %>
@@ -312,6 +356,8 @@
 <script src="${pageContext.request.contextPath}/js/post.js"></script>
 <script src="${pageContext.request.contextPath}/js/composer.js"></script>
 <script src="${pageContext.request.contextPath}/js/search.js"></script>
+    <script src="${pageContext.request.contextPath}/js/notification.js"></script>
+
 
 <script>
     window.addEventListener('pageshow', function (event) {
