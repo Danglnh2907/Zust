@@ -15,6 +15,8 @@ import model.JoinGroupRequestDTO;
 import dao.ReportGroupPostDAO;
 import model.ResGroupReportPostDTO;
 import model.AcceptGroupReportDTO;
+import dao.GroupCommentReportDAO;
+import model.GroupCommentReportDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -155,22 +157,30 @@ public class GroupServlet extends HttpServlet {
             }
         }
         else if (tag.equals("report")) {
-            logger.info("Fetching reported posts for group ID: " + groupId);
+            logger.info("Fetching reported posts and comments for group ID: " + groupId);
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
                 ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO();
+                GroupCommentReportDAO commentReportDAO = new GroupCommentReportDAO();
+
                 try {
                     List<ResGroupReportPostDTO> reportPostList = reportGroupPostDAO.getAllReportsForGroupManager(groupId, userID);
+                    List<GroupCommentReportDTO> reportCommentList = commentReportDAO.getByGroupId(groupId);
+
                     request.setAttribute("reportPostList", reportPostList);
+                    request.setAttribute("reportCommentList", reportCommentList);
+
                     request.getRequestDispatcher("/WEB-INF/views/reported_group.jsp").forward(request, response);
                 } catch (SQLException e) {
-                    logger.severe("Database error retrieving report posts: " + e.getMessage());
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Failed to retrieve report posts", StandardCharsets.UTF_8));
+                    logger.severe("Database error retrieving report content: " + e.getMessage());
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" +
+                            URLEncoder.encode("Failed to retrieve report data", StandardCharsets.UTF_8));
                 }
+            } else {
+                response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" +
+                        URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
             }
-            }
-        else {
-            logger.info("Action " + tag + " for group ID: " + groupId + " is not implemented, doing nothing");
         }
+
     }
 
     @Override
@@ -439,7 +449,32 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Failed to promote manager", StandardCharsets.UTF_8));
                     return;
                 }
+            case "accept_comment":
+                GroupCommentReportDAO commentReportDAO = new GroupCommentReportDAO();
+                GroupCommentReportDTO commentDTO = new GroupCommentReportDTO();
+                commentDTO.setReportId(Integer.parseInt(request.getParameter("reportId")));
+                commentDTO.setReportAccountId(Integer.parseInt(request.getParameter("reporterId")));
+                commentDTO.setReportedAccountId(Integer.parseInt(request.getParameter("reportedId")));
+                commentDTO.setCommentId(Integer.parseInt(request.getParameter("commentId")));
+                commentDTO.setNotificationContent(request.getParameter("suspensionMessage"));
+                if (commentReportDAO.acceptReport(commentDTO)) {
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Comment report accepted", StandardCharsets.UTF_8));
+                    return;
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Failed to accept comment report", StandardCharsets.UTF_8));
+                    return;
+                }
 
+            case "dismiss_comment":
+                int commentReportId = Integer.parseInt(request.getParameter("reportId"));
+                commentReportDAO = new GroupCommentReportDAO();
+                if (commentReportDAO.dismissReport(commentReportId)) {
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Comment report dismissed", StandardCharsets.UTF_8));
+                    return;
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Failed to dismiss comment report", StandardCharsets.UTF_8));
+                    return;
+                }
             default:
                 logger.warning("Invalid action: " + action + " for group ID: " + groupId);
 //                response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Invalid action", StandardCharsets.UTF_8));

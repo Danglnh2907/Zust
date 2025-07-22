@@ -6,13 +6,12 @@
 <%@ page import="model.Account" %>
 <%@ page import="model.ResGroupReportPostDTO" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page import="model.GroupCommentReportDTO" %>
 
 <%
-
   InteractGroupDTO group = (InteractGroupDTO) request.getAttribute("group");
-
   List<ResGroupReportPostDTO> reportPostList = (List<ResGroupReportPostDTO>) request.getAttribute("reportPostList");
-
+  List<GroupCommentReportDTO> reportCommentList = (List<GroupCommentReportDTO>) request.getAttribute("reportCommentList");
 %>
 
 <!DOCTYPE html>
@@ -48,6 +47,107 @@
     .reported-post { border-top: 1px solid #dee2e6; padding-top: 15px; }
     .report-actions { display: flex; gap: 10px; justify-content: flex-end; }
     .suspension-textarea { resize: vertical; min-height: 80px; }
+
+
+    /* Modal layout giống feedback/join modal */
+    #suspendModal {
+      display: none;
+      position: fixed;
+      z-index: 1050;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #suspendModal .modal-content-wrapper {
+      background-color: #fff;
+      padding: 25px 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    #suspendModal .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #suspendModal .modal-header h2 {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    #suspendModal .modal-close {
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+      transition: color 0.2s;
+    }
+
+    #suspendModal .modal-close:hover {
+      color: #333;
+    }
+
+    #suspendModal .modal-body {
+      margin-bottom: 20px;
+    }
+
+    #suspendModal .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    #suspendModal textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .report-card {
+      border: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .report-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .report-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .report-details {
+      flex-grow: 1;
+    }
+    .report-reason {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .reported-post {
+      border-top: 1px solid #dee2e6;
+      padding-top: 15px;
+    }
+    .report-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
   </style>
 </head>
 
@@ -233,7 +333,68 @@
       <% } %>
     </div>
 
-    <!-- Main Report Content Section -->
+
+    <!-- Main Report Comment Section -->
+    <div class="post-feed-section">
+      <h2 class="feed-header">Reported Comments</h2>
+      <div class="feed">
+        <% if (reportCommentList == null || reportCommentList.isEmpty()) { %>
+        <div class="no-data-message-post">
+          <h3>No Reported Comments</h3>
+          <p>No comment reports are available for review.</p>
+        </div>
+        <% } else {
+          for (GroupCommentReportDTO report : reportCommentList) { %>
+        <div class="card report-card">
+          <div class="card-body">
+            <div class="report-header">
+              <img src="${pageContext.request.contextPath}/static/images/<%= report.getReporter().getAvatar() %>" alt="Reporter Avatar" class="report-avatar">
+              <div class="report-details">
+                <h5 class="card-title mb-1">Reported by: <%= report.getReporter().getUsername() %></h5>
+                <small class="text-muted">Date: <%= report.getReportDate() %></small>
+              </div>
+            </div>
+            <div class="report-reason mt-3">
+              <p class="card-text"><strong>Report Reason:</strong> <%= report.getReportMessage() %></p>
+            </div>
+            <div class="reported-post mt-3">
+              <h6 class="card-subtitle mb-2 text-muted">Reported Comment:</h6>
+              <p><%= report.getCommentContent() %></p>
+              <% if (report.getCommentImage() != null && !report.getCommentImage().isEmpty()) { %>
+              <img src="${pageContext.request.contextPath}/static/images/<%= report.getCommentImage() %>" class="img-fluid mt-2">
+              <% } %>
+
+            </div>
+            <div class="report-actions mt-4">
+              <!-- APPROVE -->
+              <form method="POST" action="${pageContext.request.contextPath}/group" class="d-inline-block">
+                <input type="hidden" name="action" value="accept_comment">
+                <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                <input type="hidden" name="reporterId" value="<%= report.getReportAccountId() %>">
+                <input type="hidden" name="reportedId" value="<%= report.getReportedAccountId() %>">
+                <input type="hidden" name="commentId" value="<%= report.getCommentId() %>">
+                <input type="hidden" name="suspensionMessage" value="Your comment has been removed due to violation.">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i> Approve</button>
+              </form>
+
+              <!-- DISMISS -->
+              <form method="POST" action="${pageContext.request.contextPath}/group" class="ms-2 d-inline-block">
+                <input type="hidden" name="action" value="dismiss_comment">
+                <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                <button type="submit" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Dismiss</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <% } } %>
+      </div>
+    </div>
+
+
+
+    <!-- Main Report Posts Section -->
     <div class="post-feed-section">
       <h2 class="feed-header">Reported Content</h2>
       <div class="feed">
@@ -261,18 +422,16 @@
               <%= report.getPost() %>
             </div>
             <div class="report-actions mt-4">
-<%--              <label for="suspensionMessage" class="form-label">Suspension Message:</label>--%>
-<%--              <textarea id="suspensionMessage" name="suspensionMessage" class="form-control suspension-textarea mb-2" placeholder="Enter suspension message..." required></textarea>--%>
-              <form method="POST" action="${pageContext.request.contextPath}/group" class="d-flex flex-column">
-                <input type="hidden" name="action" value="accept">
-                <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
-                <input type="hidden" name="reporterId" value="<%= report.getAccount().getId() %>">
-                <input type="hidden" name="reportedPostId" value="<%= report.getPost().getPostId() %>">
-<%--                <label for="suspensionMessage" class="form-label">Suspension Message:</label>--%>
-<%--               <textarea id="suspensionMessage" name="suspensionMessage" class="form-control suspension-textarea mb-2" placeholder="Enter suspension message..." required></textarea>--%>
-                <button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i> Approve</button>
-              </form>
+              <!-- Nút mở modal Takedown Post -->
+              <button type="button" class="btn btn-danger btn-takedown"
+                      data-report-id="<%= report.getReportId() %>"
+                      data-reporter-id="<%= report.getAccount().getId() %>"
+                      data-reported-id="<%= report.getPost().getUsername() != null ? report.getPost().getUsername() : "0" %>"
+                      data-reported-post-id="<%= report.getPost().getPostId() %>">
+                <i class="fas fa-check me-1"></i> Approve
+              </button>
+
+              <!-- Nút từ chối báo cáo -->
               <form method="POST" action="${pageContext.request.contextPath}/group" class="ms-2">
                 <input type="hidden" name="action" value="dismiss">
                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
@@ -280,6 +439,7 @@
                 <button type="submit" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Disapprove</button>
               </form>
             </div>
+
           </div>
         </div>
         <% }
@@ -289,6 +449,35 @@
     <% } %>
   </main>
 </div>
+
+<!-- Approve model-->
+<div class="modal" id="suspendModal">
+  <div class="modal-content-wrapper">
+    <div class="modal-header">
+      <h2>Confirm Approve</h2>
+      <button class="modal-close">×</button>
+    </div>
+    <form id="suspendForm" method="POST" action="${pageContext.request.contextPath}/group">
+      <div class="modal-body">
+        <p>Are you sure you want to Approve this post?</p>
+        <label for="suspensionMessage" class="form-label">Suspension Message:</label>
+        <textarea id="suspensionMessage" name="suspensionMessage" class="form-control suspension-textarea mb-2" placeholder="Enter suspension message..." required></textarea>
+
+        <!-- Hidden inputs -->
+        <input type="hidden" name="action" value="accept">
+        <input type="hidden" id="hiddenReportId" name="reportId">
+        <input type="hidden" id="hiddenReporterId" name="reporterId">
+        <input type="hidden" id="hiddenReportedId" name="reportedId">
+        <input type="hidden" id="hiddenReportedPostId" name="reportedPostId">
+        <input type="hidden" name="groupId" value="<%= group.getId() %>">
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i> Approve</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 <!-- Feedback Modal -->
 <div id="feedbackModal" class="modal">
@@ -335,6 +524,32 @@
 </div>
 
 <script>
+  // Close suspend modal when clicking on the close button (×)
+  document.querySelector('#suspendModal .modal-close')?.addEventListener('click', function () {
+    document.getElementById('suspendModal').style.display = 'none';
+  });
+
+  // Optional: Close modal if user clicks outside content area
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('suspendModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  document.querySelectorAll('.btn-takedown').forEach(button => {
+    button.addEventListener('click', function(event) {
+      event.preventDefault();
+
+      suspendForm.querySelector('#hiddenReportId').value = this.dataset.reportId;
+      suspendForm.querySelector('#hiddenReporterId').value = this.dataset.reporterId;
+      suspendForm.querySelector('#hiddenReportedId').value = this.dataset.reportedId;
+      suspendForm.querySelector('#hiddenReportedPostId').value = this.dataset.reportedPostId;
+
+      suspendModal.style.display = 'flex';
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function() {
     // --- "Read More" for Group Description ---
     const descContainer = document.querySelector('.group-description');
