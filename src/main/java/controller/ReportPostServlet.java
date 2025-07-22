@@ -2,8 +2,8 @@ package controller;
 
 import dao.PostDAO;
 import dao.ReportPostDAO;
-import dto.AcceptReportDTO;
-import dto.ResReportPostDTO;
+import model.AcceptReportDTO;
+import model.ResReportPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

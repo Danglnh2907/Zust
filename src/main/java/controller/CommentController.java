@@ -1,9 +1,9 @@
 package controller;
 
 import dao.CommentDAO;
-import dto.ReportCommentDTO;
-import dto.ReqCommentDTO;
-import dto.RespCommentDTO;
+import model.ReportCommentDTO;
+import model.ReqCommentDTO;
+import model.RespCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;

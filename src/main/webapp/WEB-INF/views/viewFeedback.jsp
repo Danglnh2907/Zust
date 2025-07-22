@@ -1,5 +1,5 @@
-<%@ page import="dto.InteractGroupDTO" %>
-<%@ page import="dto.FeedbackGroupDTO" %>
+<%@ page import="model.InteractGroupDTO" %>
+<%@ page import="model.FeedbackGroupDTO" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>

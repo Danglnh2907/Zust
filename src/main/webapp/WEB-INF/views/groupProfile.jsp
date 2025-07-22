@@ -6,8 +6,8 @@
   Refactored for a modern UI.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="dto.GroupProfileDTO" %>
-<%@ page import="dto.ResGroupDTO" %>
+<%@ page import="model.GroupProfileDTO" %>
+<%@ page import="model.ResGroupDTO" %>
 <%@ page import="model.Account" %>
 <%@ page import="model.Group" %>
 <%

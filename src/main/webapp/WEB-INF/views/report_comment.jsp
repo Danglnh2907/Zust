@@ -1,8 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList" %>
-<%@ page import="dto.RespCommentDTO" %>
+<%@ page import="model.RespCommentDTO" %>
 <%@ page import="model.Account" %>
-<%@ page import="dto.ResReportCommentDTO" %>
+<%@ page import="model.ResReportCommentDTO" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 
 

@@ -2,8 +2,8 @@ package controller;
 
 import dao.GroupDAO;
 import dao.PostDAO;
-import dto.InteractGroupDTO;
-import dto.RespPostDTO;
+import model.InteractGroupDTO;
+import model.RespPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

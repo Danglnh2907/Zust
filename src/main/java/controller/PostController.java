@@ -11,12 +11,11 @@ import dao.AccountDAO;
 import dao.CommentDAO;
 import dao.GroupDAO;
 import dao.PostDAO;
-import dto.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
-import model.Account;
+import model.*;
 import util.service.FileService;
 
 @WebServlet(name = "PostControllerServlet", value = "/post")

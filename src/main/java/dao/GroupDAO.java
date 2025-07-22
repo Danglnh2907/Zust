@@ -1,7 +1,7 @@
 package dao;
 
-import dto.InteractGroupDTO;
-import dto.MemberDTO;
+import model.InteractGroupDTO;
+import model.MemberDTO;
 import model.Account;
 import util.database.DBContext;
 
@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import dto.ReqGroupDTO;
-import dto.ResGroupDTO;
+import model.ReqGroupDTO;
+import model.ResGroupDTO;
 
 
 public class GroupDAO extends DBContext {
