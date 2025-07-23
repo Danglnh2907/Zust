@@ -3,22 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.group-tabs a[data-tab]');
     const sections = document.querySelectorAll('.post-card');
 
-    // tabs.forEach(tab => {
-    //     tab.addEventListener('click', (e) => {
-    //         e.preventDefault();
-    //
-    //         // Update active tab
-    //         tabs.forEach(t => t.classList.remove('active'));
-    //         tab.classList.add('active');
-    //
-    //         // Show/hide section based on data-tab value
-    //         const tabId = tab.dataset.tab;
-    //         sections.forEach(section => {
-    //             section.style.display = (section.id === tabId) ? 'block' : 'none';
-    //         });
-    //     });
-    // });
-
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             const href = tab.getAttribute('href');

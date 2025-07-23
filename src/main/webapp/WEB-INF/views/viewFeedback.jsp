@@ -32,6 +32,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
         <style>
             .post-feed-section {
                 margin-top: 20px;
@@ -510,9 +511,27 @@
                 integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
                 crossorigin="anonymous"></script>
         <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-<%--        <script src="${pageContext.request.contextPath}/js/post.js"></script>--%>
-<%--        <script src="${pageContext.request.contextPath}/js/composer.js"></script>--%>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
         <script src="${pageContext.request.contextPath}/js/notification.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Profile dropdown menu logic
+                const profileNav = document.querySelector('.nav-profile');
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+
+                profileNav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.matches('.nav-profile, .nav-profile *')) {
+                        if (dropdownMenu.classList.contains('show')) {
+                            dropdownMenu.classList.remove('show');
+                        }
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

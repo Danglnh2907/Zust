@@ -26,6 +26,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
         <style>
             .no-data-message {
                 background-color: var(--white);
@@ -340,6 +341,25 @@
                     window.location.reload();
                 }
             });
+
+            window.addEventListener('DOMContentLoaded', () => {
+                // Profile dropdown menu logic
+                const profileNav = document.querySelector('.nav-profile');
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+
+                profileNav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.matches('.nav-profile, .nav-profile *')) {
+                        if (dropdownMenu.classList.contains('show')) {
+                            dropdownMenu.classList.remove('show');
+                        }
+                    }
+                });
+            })
         </script>
 
     </body>

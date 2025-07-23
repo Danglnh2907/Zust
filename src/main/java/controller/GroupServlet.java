@@ -5,7 +5,6 @@ import dao.PostDAO;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
 import model.*;
-import dao.ReportGroupPostDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import util.service.FileService;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.logging.Logger;
-import java.sql.SQLException; // Thêm import
 
 @WebServlet(
         name = "GroupServlet",
@@ -154,15 +152,8 @@ public class GroupServlet extends HttpServlet {
         else if (tag.equals("report")) {
             logger.info("Fetching reported posts for group ID: " + groupId);
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO();
-                try {
-                    List<ResGroupReportPostDTO> reportPostList = reportGroupPostDAO.getAllReportsForGroupManager(groupId, userID);
-                    request.setAttribute("reportPostList", reportPostList);
-                    request.getRequestDispatcher("/WEB-INF/views/reported_group.jsp").forward(request, response);
-                } catch (SQLException e) {
-                    logger.severe("Database error retrieving report posts: " + e.getMessage());
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Failed to retrieve report posts", StandardCharsets.UTF_8));
-                }
+                request.setAttribute("reportPostList", groupDAO.getReports(userID, groupId));
+                request.getRequestDispatcher("/WEB-INF/views/reported_group.jsp").forward(request, response);
             }
         }
         else if (tag.equals("edit")) {
@@ -220,8 +211,6 @@ public class GroupServlet extends HttpServlet {
         }
 
         // Get form parameters
-        PostDAO postDAO = new PostDAO();
-        ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO(); // Thêm DAO
         String groupIdParam = request.getParameter("groupId");
         int groupId;
         try {
@@ -358,66 +347,34 @@ public class GroupServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=pending");
                 return;
             }
-            case "accept-report": {
-                if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
-                    logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Không có quyền xử lý báo cáo", StandardCharsets.UTF_8));
-                    return;
-                }
-                int reportId = Integer.parseInt(request.getParameter("reportId"));
-                int reporterId = Integer.parseInt(request.getParameter("reporterId"));
-                int reportedPostId = Integer.parseInt(request.getParameter("reportedPostId"));
-                String suspensionMessage = request.getParameter("suspensionMessage");
-
-                int reportedAccountId;
-                try {
-                    reportedAccountId = postDAO.getAccountIdByPostId(reportedPostId);
-                    if (reportedAccountId == 0) {
-                        logger.warning("No account found for reported post ID: " + reportedPostId);
-                        response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("ID bài viết không hợp lệ", StandardCharsets.UTF_8));
-                        return;
-                    }
-                } catch (SQLException e) {
-                    logger.severe("Database error retrieving account ID for post ID: " + reportedPostId + ": " + e.getMessage());
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Lỗi cơ sở dữ liệu khi lấy thông tin bài viết", StandardCharsets.UTF_8));
-                    return;
-                }
-
-                AcceptGroupReportDTO acceptReportDTO = new AcceptGroupReportDTO();
-                acceptReportDTO.setReportId(reportId);
-                acceptReportDTO.setReportAccountId(reporterId);
-                acceptReportDTO.setReportedAccountId(reportedAccountId);
-                acceptReportDTO.setReportedPostId(reportedPostId);
-                acceptReportDTO.setNotificationContent(suspensionMessage);
-
-                try {
-                    reportGroupPostDAO.acceptReportForGroup(acceptReportDTO, userID);
-                    logger.info("User ID: " + userID + " successfully accepted report ID: " + reportId + " for post ID: " + reportedPostId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Báo cáo đã được chấp nhận", StandardCharsets.UTF_8));
-                    return; // Tránh gọi doGet
-                } catch (SQLException e) {
-                    logger.severe("Database error processing report: " + e.getMessage());
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Lỗi khi xử lý báo cáo: " + e.getMessage(), StandardCharsets.UTF_8));
-                    return;
-                }
-            }
+            case "accept-report":
             case "dismiss-report": {
+                logger.info("Reach here");
+
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
                     return;
                 }
-                int dismissReportId = Integer.parseInt(request.getParameter("reportId"));
+
                 try {
-                    reportGroupPostDAO.dismissReportForGroup(dismissReportId, userID);
-                    logger.info("User ID: " + userID + " successfully dismissed report ID: " + dismissReportId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Báo cáo đã bị từ chối", StandardCharsets.UTF_8));
-                    return;
-                } catch (SQLException e) {
-                    logger.severe("Database error dismissing report: " + e.getMessage());
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Failed to dismiss report: " + e.getMessage(), StandardCharsets.UTF_8));
+                    int reportId = Integer.parseInt(request.getParameter("reportId"));
+                    String reportType = request.getParameter("reportType");
+
+                    boolean success = groupDAO.processReport(reportId, action.equals("accept-report"), reportType);
+                    if (success) {
+                        logger.info("Report ID: " + reportId + " processed successfully with action: " + action);
+                    } else {
+                        logger.warning("Failed to process report ID: " + reportId);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid ID format while processing report: " + e.getMessage());
+                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Invalid report data provided.", StandardCharsets.UTF_8));
                     return;
                 }
+
+                response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report");
+                return;
             }
             case "kick_member": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {

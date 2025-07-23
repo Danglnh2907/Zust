@@ -20,15 +20,16 @@ public class ReportCommentDAO extends DBContext {
     public List<ResReportCommentDTO> getAll() {
         logger.info("Retrieving all sent comment reports");
         List<ResReportCommentDTO> reports = new ArrayList<>();
-        String sql = "SELECT cr.report_id, cr.account_id, cr.comment_id, cr.report_content, cr.report_create_date,\n" +
-                "c.comment_content, c.comment_image, c.account_id AS commenter_id,\n" +
-                "ra.username AS reporter_username, ra.Fullname AS reporter_Fullname, ra.avatar AS reporter_avatar,\n" +
-                "ca.username AS commenter_username, ca.Fullname AS commenter_Fullname, ca.avatar AS commenter_avatar\n" +
-                "FROM report_comment cr\n" +
-                "INNER JOIN comment c ON cr.comment_id = c.comment_id\n" +
-                "INNER JOIN account ra ON cr.account_id = ra.account_id\n" +
-                "INNER JOIN account ca ON c.account_id = ca.account_id\n" +
-                "WHERE cr.report_status = 'sent' AND ra.account_status = 'active' AND ca.account_status = 'active' AND c.comment_status = 0";
+        String sql = """
+                SELECT cr.report_id, cr.account_id, cr.comment_id, cr.report_content, cr.report_create_date, 
+                c.comment_content, c.comment_image, c.account_id AS commenter_id, 
+                ra.username AS reporter_username, ra.Fullname AS reporter_Fullname, ra.avatar AS reporter_avatar,
+                ca.username AS commenter_username, ca.Fullname AS commenter_Fullname, ca.avatar AS commenter_avatar
+                FROM report_comment cr
+                INNER JOIN comment c ON cr.comment_id = c.comment_id
+                INNER JOIN account ra ON cr.account_id = ra.account_id
+                INNER JOIN account ca ON c.account_id = ca.account_id
+                WHERE cr.report_status = 'sent' AND ra.account_status = 'active' AND ca.account_status = 'active' AND c.comment_status = 0""";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

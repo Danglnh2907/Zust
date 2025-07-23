@@ -24,15 +24,23 @@ body {
 
 /* --- Main Content --- */
 .app-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: 100vh;
+}
+
+.left-sidebar {
+    background-color: #fff;
+    padding: 20px;
+    border-right: 1px solid #e0e0e0;
     display: flex;
-    justify-content: center;
-    min-height: 100vh;
+    flex-direction: column;
 }
 
 .main-content {
-    display: flex;
-    justify-content: center;
-    background-color: var(--background-color);
+    background-color: #f0f2f5;
+    overflow-y: auto;
+    padding: 20px;
 }
 
 .logo {

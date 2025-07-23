@@ -906,6 +906,139 @@ public class GroupDAO extends DBContext {
         return false;
     }
 
+    public ArrayList<GroupReport> getReports(int groupId, int userID) {
+        Connection conn;
+        ArrayList<GroupReport> reports = new ArrayList<>();
+        try {
+            conn = (new DBContext()).getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return reports;
+            }
+
+            /*=== Fetch reported posts ===*/
+
+            //Get all posts in the group
+            PostDAO postDAO = new PostDAO();
+            ArrayList<RespPostDTO> posts = postDAO.getPostsInGroup(groupId, userID);
+
+            //Get all the reported post in database
+            String postSQL = """
+                    SELECT rp.*, a.* FROM report_post rp \
+                    JOIN account a ON a.account_id = rp.account_id \
+                    WHERE rp.report_status = 'sent'""";
+            PreparedStatement postStmt = conn.prepareStatement(postSQL);
+            ResultSet rs = postStmt.executeQuery();
+            while (rs.next()) {
+                //Get postID from list of report
+                int reportedPostID = rs.getInt("post_id");
+                //Check if this post is posted within group
+                RespPostDTO reportedPost = posts.stream()
+                        .filter(post -> post.getPostId() == reportedPostID)
+                        .findFirst()
+                        .orElse(null);
+                if (reportedPost != null) {
+                    GroupReport report = new GroupReport();
+                    report.setReportedPost(reportedPost);
+                    report.setReportID(rs.getInt("report_id"));
+                    report.setReportContent(rs.getString("report_content"));
+                    report.setReporterID(rs.getInt("account_id"));
+                    report.setReporterUsername(rs.getString("username"));
+                    report.setReporterAvatar(rs.getString("avatar"));
+                    reports.add(report);
+                }
+            }
+
+            /*=== Fetch reported comments ===*/
+
+            //Get all comment belongs to a group in database
+            String cmtSQL = """
+                    SELECT rc.*, p.*, a.* FROM report_comment rc \
+                    JOIN comment c ON c.comment_id = rc.comment_id \
+                    JOIN post p ON p.post_id = c.post_id \
+                    JOIN account a ON a.account_id = rc.account_id \
+                    WHERE p.group_id = ? AND rc.report_status = 'sent'""";
+            PreparedStatement cmtStmt = conn.prepareStatement(cmtSQL);
+            cmtStmt.setInt(1, groupId);
+            ResultSet cmtRs = cmtStmt.executeQuery();
+            while (cmtRs.next()) {
+                //Create RespCommentDTO
+                RespCommentDTO comment = new RespCommentDTO();
+                comment.setId(rs.getInt("comment_id"));
+                comment.setContent(cmtRs.getString("comment_content"));
+                comment.setImage(cmtRs.getString("comment_image"));
+                comment.setCreatedAt(cmtRs.getTimestamp("comment_create_date") != null ?
+                                rs.getTimestamp("comment_create_date").toLocalDateTime() :
+                                null);
+                comment.setUpdatedAt(cmtRs.getTimestamp("comment_last_update") != null ?
+                        rs.getTimestamp("comment_last_update").toLocalDateTime() : null);
+                comment.setTotalLikes(0);
+                comment.setAccountID(cmtRs.getInt("account_id"));
+                comment.setUsername(cmtRs.getString("username"));
+                comment.setAvatar(cmtRs.getString("avatar"));
+                comment.setPostID(cmtRs.getInt("post_id"));
+                comment.setReplyID(cmtRs.getInt("reply_comment_id"));
+                comment.setOwnComment(false);
+                comment.setLiked(false);
+
+                //Create GroupReport
+                GroupReport report = new GroupReport();
+                report.setReportID(cmtRs.getInt("report_id"));
+                report.setReportContent(cmtRs.getString("report_content"));
+                report.setReporterID(cmtRs.getInt("account_id"));
+                report.setReporterUsername(cmtRs.getString("username"));
+                report.setReporterAvatar(cmtRs.getString("avatar"));
+                report.setReportedComment(comment);
+                reports.add(report);
+            }
+        } catch (Exception e) {
+            logger.warning("Failed to get reports in group " + e.getMessage());
+        }
+        return reports;
+    }
+
+    public boolean processReport(int reportId, boolean isApprove, String reportType) {
+        Connection conn;
+        try {
+            conn = (new DBContext()).getConnection();
+            if (conn == null) {
+                logger.warning("No connection available");
+                return false;
+            }
+            conn.setAutoCommit(false);
+
+            String tableName;
+            if ("post".equalsIgnoreCase(reportType)) {
+                tableName = "report_post";
+            } else if ("comment".equalsIgnoreCase(reportType)) {
+                tableName = "report_comment";
+            } else {
+                logger.warning("Invalid report type provided: " + reportType);
+                return false;
+            }
+
+            String sql = "UPDATE " + tableName + " SET report_status = ? WHERE report_id = ?";
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, isApprove ? "accepted" : "rejected");
+            stmt.setInt(2, reportId);
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                conn.commit();
+                logger.info("Report " + reportId + " in " + tableName + " processed successfully with action: " + (isApprove ? "accepted" : "rejected"));
+                return true;
+            }
+
+            conn.rollback();
+            logger.warning("Report processing failed! No rows affected for report_id: " + reportId + " in table: " + tableName);
+            return false;
+        } catch (Exception e) {
+            logger.warning("Failed to process group report " + e.getMessage());
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
         PostDAO postDao = new PostDAO();

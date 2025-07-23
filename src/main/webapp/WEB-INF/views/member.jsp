@@ -28,7 +28,7 @@
               integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
               crossorigin="anonymous">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/group.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <style>
             /* --- STYLES FOR MEMBER LIST PAGE --- */
@@ -810,6 +810,23 @@
                             form.submit();
                         }
                     });
+                });
+
+                // Profile dropdown menu logic
+                const profileNav = document.querySelector('.nav-profile');
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+
+                profileNav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.matches('.nav-profile, .nav-profile *')) {
+                        if (dropdownMenu.classList.contains('show')) {
+                            dropdownMenu.classList.remove('show');
+                        }
+                    }
                 });
             });
         </script>
