@@ -102,6 +102,11 @@
         .menu.active .menu-dropdown { display: block; }
         .kick-btn { color: #dc3545; } /* Màu đỏ cho kick */
         .promote-btn { color: #28a745; } /* Màu xanh cho promote */
+        .feed-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 
@@ -262,7 +267,7 @@
         </div>
 
         <div class="members-header">
-            <h2>Group Members</h2>
+            <h2 class="feed-header">Group Members</h2>
             <div class="search-box">
                 <input type="text" id="memberSearchInput" placeholder=" Find a member..." style="font-family: 'Inter', FontAwesome;">
             </div>

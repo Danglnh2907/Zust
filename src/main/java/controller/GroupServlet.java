@@ -15,8 +15,8 @@ import model.JoinGroupRequestDTO;
 import dao.ReportGroupPostDAO;
 import model.ResGroupReportPostDTO;
 import model.AcceptGroupReportDTO;
-import dao.GroupCommentReportDAO;
-import model.GroupCommentReportDTO;
+import dao.ReportGroupCommentDAO;
+import model.ResGroupReportCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -160,11 +160,11 @@ public class GroupServlet extends HttpServlet {
             logger.info("Fetching reported posts and comments for group ID: " + groupId);
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
                 ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO();
-                GroupCommentReportDAO commentReportDAO = new GroupCommentReportDAO();
+                ReportGroupCommentDAO commentReportDAO = new ReportGroupCommentDAO();
 
                 try {
                     List<ResGroupReportPostDTO> reportPostList = reportGroupPostDAO.getAllReportsForGroupManager(groupId, userID);
-                    List<GroupCommentReportDTO> reportCommentList = commentReportDAO.getByGroupId(groupId);
+                    List<ResGroupReportCommentDTO> reportCommentList = commentReportDAO.getByGroupId(groupId);
 
                     request.setAttribute("reportPostList", reportPostList);
                     request.setAttribute("reportCommentList", reportCommentList);
@@ -450,8 +450,8 @@ public class GroupServlet extends HttpServlet {
                     return;
                 }
             case "accept_comment":
-                GroupCommentReportDAO commentReportDAO = new GroupCommentReportDAO();
-                GroupCommentReportDTO commentDTO = new GroupCommentReportDTO();
+                ReportGroupCommentDAO commentReportDAO = new ReportGroupCommentDAO();
+                ResGroupReportCommentDTO commentDTO = new ResGroupReportCommentDTO();
                 commentDTO.setReportId(Integer.parseInt(request.getParameter("reportId")));
                 commentDTO.setReportAccountId(Integer.parseInt(request.getParameter("reporterId")));
                 commentDTO.setReportedAccountId(Integer.parseInt(request.getParameter("reportedId")));
@@ -467,7 +467,7 @@ public class GroupServlet extends HttpServlet {
 
             case "dismiss_comment":
                 int commentReportId = Integer.parseInt(request.getParameter("reportId"));
-                commentReportDAO = new GroupCommentReportDAO();
+                commentReportDAO = new ReportGroupCommentDAO();
                 if (commentReportDAO.dismissReport(commentReportId)) {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Comment report dismissed", StandardCharsets.UTF_8));
                     return;

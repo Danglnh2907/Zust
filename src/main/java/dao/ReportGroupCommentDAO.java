@@ -1,7 +1,7 @@
 package dao;
 
 import model.Account;
-import model.GroupCommentReportDTO;
+import model.ResGroupReportCommentDTO;
 import util.database.DBContext;
 
 import java.sql.*;
@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class GroupCommentReportDAO extends DBContext {
+public class ReportGroupCommentDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public List<GroupCommentReportDTO> getByGroupId(int groupId) {
-        List<GroupCommentReportDTO> reports = new ArrayList<>();
+    public List<ResGroupReportCommentDTO> getByGroupId(int groupId) {
+        List<ResGroupReportCommentDTO> reports = new ArrayList<>();
 
         String sql = """
             SELECT rc.report_id, rc.account_id AS reporter_id, rc.comment_id, rc.report_content, rc.report_create_date,
@@ -36,7 +36,7 @@ public class GroupCommentReportDAO extends DBContext {
             stmt.setInt(1, groupId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    GroupCommentReportDTO dto = new GroupCommentReportDTO();
+                    ResGroupReportCommentDTO dto = new ResGroupReportCommentDTO();
                     dto.setReportId(rs.getInt("report_id"));
                     dto.setCommentId(rs.getInt("comment_id"));
                     dto.setCommentContent(rs.getString("comment_content"));
@@ -70,7 +70,7 @@ public class GroupCommentReportDAO extends DBContext {
         return reports;
     }
 
-    public boolean acceptReport(GroupCommentReportDTO dto) {
+    public boolean acceptReport(ResGroupReportCommentDTO dto) {
         String updateReportSql = "UPDATE report_comment SET report_status = 'accepted' WHERE report_id = ?";
         String updateCommentSql = "UPDATE comment SET comment_status = 1 WHERE comment_id = ?";
         String reduceCreditSql = "UPDATE account SET credit = credit - 5 WHERE account_id = ?";

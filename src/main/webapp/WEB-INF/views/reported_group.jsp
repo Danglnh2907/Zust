@@ -6,12 +6,12 @@
 <%@ page import="model.Account" %>
 <%@ page import="model.ResGroupReportPostDTO" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
-<%@ page import="model.GroupCommentReportDTO" %>
+<%@ page import="model.ResGroupReportCommentDTO" %>
 
 <%
   InteractGroupDTO group = (InteractGroupDTO) request.getAttribute("group");
   List<ResGroupReportPostDTO> reportPostList = (List<ResGroupReportPostDTO>) request.getAttribute("reportPostList");
-  List<GroupCommentReportDTO> reportCommentList = (List<GroupCommentReportDTO>) request.getAttribute("reportCommentList");
+  List<ResGroupReportCommentDTO> reportCommentList = (List<ResGroupReportCommentDTO>) request.getAttribute("reportCommentList");
 %>
 
 <!DOCTYPE html>
@@ -344,7 +344,7 @@
           <p>No comment reports are available for review.</p>
         </div>
         <% } else {
-          for (GroupCommentReportDTO report : reportCommentList) { %>
+          for (ResGroupReportCommentDTO report : reportCommentList) { %>
         <div class="card report-card">
           <div class="card-body">
             <div class="report-header">

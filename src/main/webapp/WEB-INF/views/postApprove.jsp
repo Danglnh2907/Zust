@@ -104,7 +104,14 @@
         .post-images img:hover {
             transform: scale(1.02);
         }
-
+        .post-feed-section {
+            margin-top: 20px;
+        }
+        .feed-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
 
     </style>
 </head>

@@ -2,7 +2,7 @@ package model;
 
 import java.util.Date;
 
-public class GroupCommentReportDTO {
+public class ResGroupReportCommentDTO {
     // Dùng để hiển thị
     private int reportId;
     private int commentId;
@@ -18,7 +18,7 @@ public class GroupCommentReportDTO {
     private int reportedAccountId;     // Người bị report
     private String notificationContent;
 
-    public GroupCommentReportDTO() {
+    public ResGroupReportCommentDTO() {
         this.reporter = new Account();
         this.commenter = new Account();
     }
