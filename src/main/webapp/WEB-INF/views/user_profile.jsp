@@ -129,7 +129,8 @@
                     <a class="btn change-password-btn" href="${pageContext.request.contextPath}/change_password">
                         <i class="fa-solid fa-change-password"></i> Change Password
                     </a>
-                    <% } else if (currentUser != null && !currentUser.getId().equals(profile.getId())) {
+                    <% } else {
+                        if (currentUser != null && !currentUser.getId().equals(profile.getId())) {
                         Boolean areFriends = (Boolean) request.getAttribute("areFriends");
                         Boolean friendRequestPending = (Boolean) request.getAttribute("friendRequestPending");
 
@@ -146,7 +147,13 @@
                         <i class="fa-solid fa-user-plus"></i> Add Friend
                     </button>
                     <% }
-                    } %>
+                    %>
+                        <a class="btn report-btn" href="${pageContext.request.contextPath}/report?type=account&id=<%= profile.getId()%>">
+                            <i class="fas fa-flag"></i>Report
+                        </a>
+                    <%
+                    }
+                    }%>
                 </div>
             </div>
 

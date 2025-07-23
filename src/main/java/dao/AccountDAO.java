@@ -1,13 +1,13 @@
 package dao;
 
 import model.Account;
+import model.ReportAccountDTO;
 import model.FriendRequest;
+import model.ResReportAccountDTO;
 import util.database.DBContext;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -330,5 +330,75 @@ public class AccountDAO extends DBContext {
             }
         }
         return false;
+    }
+
+    public boolean report(ReportAccountDTO report) {
+        String sql = """
+                INSERT INTO report_account (report_content, report_account_id, reported_account_id, report_create_date, report_status) \
+                VALUES (?, ?, ?, ?, ?)""";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, report.getContent());
+            stmt.setInt(2, report.getReporterId());
+            stmt.setInt(3, report.getReportedId());
+            stmt.setTimestamp(4, Timestamp.valueOf(report.getCreatedAt()));
+            stmt.setString(5, report.getStatus());
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            logger.warning("Failed to report post: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<ResReportAccountDTO> getAllReports() {
+        logger.info("Retrieving all sent account reports");
+        List<ResReportAccountDTO> reports = new ArrayList<>();
+        String sql = "SELECT ra.report_id, ra.report_account_id, ra.reported_account_id, ra.report_content, ra.report_create_date, " +
+                "racc.username AS reporter_username, racc.avatar AS reporter_avatar, " +
+                "ruacc.username AS reported_username, ruacc.avatar AS reported_avatar " +
+                "FROM report_account ra " +
+                "INNER JOIN account racc ON ra.report_account_id = racc.account_id " +
+                "INNER JOIN account ruacc ON ra.reported_account_id = ruacc.account_id " +
+                "WHERE ra.report_status = 'sent' AND racc.account_status = 'active' AND ruacc.account_status = 'active'";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                ResReportAccountDTO report = new ResReportAccountDTO();
+                report.setReportId(rs.getInt("report_id"));
+
+                // Set reporter
+                Account reporter = new Account();
+                reporter.setId(rs.getInt("report_account_id"));
+                reporter.setUsername(rs.getString("reporter_username"));
+                reporter.setAvatar(rs.getString("reporter_avatar"));
+                report.setReporter(reporter);
+
+                // Set reported user
+                Account reportedUser = new Account();
+                reportedUser.setId(rs.getInt("reported_account_id"));
+                reportedUser.setUsername(rs.getString("reported_username"));
+                reportedUser.setAvatar(rs.getString("reported_avatar"));
+                report.setReportedUser(reportedUser);
+
+                // Set report details
+                report.setReportContent(rs.getString("report_content"));
+                report.setReportDate(rs.getTimestamp("report_create_date").toLocalDateTime());
+
+                reports.add(report);
+            }
+            logger.info("Successfully retrieved " + reports.size() + " sent account reports");
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve sent account reports - Error: " + e.getMessage());
+        }
+
+        return reports;
+    }
+
+    public static void main(String[] args) {
+        AccountDAO dao = new AccountDAO();
+        System.out.println(dao.getAllReports());
     }
 }
