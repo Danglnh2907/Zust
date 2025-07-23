@@ -135,7 +135,7 @@
                 <h3><i class="fas fa-envelope-open-text"></i> Report Reason</h3>
                 <div class="report-date">Date: <%= dt.format(report.getReportDate())%></div>
                 <div class="report-message">
-                    <% String message = report.getReportMessage();
+                    <% String message = report.getReportContent();
                         if (message != null && message.length() > 100) {
                             String shortMsg = message.substring(0, 100) + "..."; %>
                     <span class="short-text"><%= shortMsg %></span>
@@ -147,11 +147,7 @@
                     <form action="reportComment" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deleted this comment? This action cannot be undone.');">
                         <input type="hidden" name="action" value="accept">
                         <input type="hidden" name="reportId" value="<%= report.getId() %>">
-                        <input type="hidden" name="reportAccountId" value="<%= report.getReporter().getId() %>">
-                        <input type="hidden" name="reportedAccountId" value="<%= report.getCommenter().getId() %>">
-                        <input type="hidden" name="reportedId" value="<%= report.getCommentId() %>">
-                        <input type="hidden" name="notificationContent" value="<%= report.getReportMessage()%>">
-                        <button type="submit" class="btn btn-delete">Delete Comment</button>
+                        <button type="submit" class="btn btn-delete">Takedown Comment</button>
                     </form>
                     <form action="reportComment" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">

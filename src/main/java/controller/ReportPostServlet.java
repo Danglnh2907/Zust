@@ -2,7 +2,6 @@ package controller;
 
 import dao.PostDAO;
 import dao.ReportPostDAO;
-import model.AcceptReportDTO;
 import model.ResReportPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -62,29 +61,10 @@ public class ReportPostServlet extends HttpServlet {
             if ("accept".equalsIgnoreCase(action)) {
                 // Handle accept report form
                 int reportId = Integer.parseInt(request.getParameter("reportId"));
-                int reporterId = Integer.parseInt(request.getParameter("reporterId"));
-                int reportedPostId = Integer.parseInt(request.getParameter("reportedPostId"));
-                String suspensionMessage = request.getParameter("suspensionMessage");
-
-                // Retrieve reported account ID by looking up the post's account_id
-                int reportedAccountId = postDAO.getAccountIdByPostId(reportedPostId);
-                if (reportedAccountId == 0) {
-                    LOGGER.warning("No account found for reported post ID: " + reportedPostId);
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid reported post ID");
-                    return;
-                }
-
-                // Create AcceptReportDTO
-                AcceptReportDTO acceptReportDTO = new AcceptReportDTO();
-                acceptReportDTO.setReportId(reportId);
-                acceptReportDTO.setReportAccountId(reporterId);
-                acceptReportDTO.setReportedAccountId(reportedAccountId);
-                acceptReportDTO.setReportedId(reportedPostId);
-                acceptReportDTO.setNotificationContent(suspensionMessage);
 
                 // Process the accept report
-                reportPostDAO.acceptReport(acceptReportDTO);
-                LOGGER.info("Successfully accepted report ID: " + reportId + " for post ID: " + reportedPostId);
+                reportPostDAO.acceptReport(reportId);
+                LOGGER.info("Successfully accepted report ID: " + reportId + " for post ID: " + reportId);
             } else if ("dismiss".equalsIgnoreCase(action)) {
                 // Handle dismiss report form
                 int reportId = Integer.parseInt(request.getParameter("reportId"));
