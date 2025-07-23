@@ -398,19 +398,8 @@
                         <p>No managers found.</p>
                         <% } else {
                             for (MemberDTO member : managerList) {
-                                if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
+                        %>
                         <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
-
-                            <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
-                            <div class="menu" data-member-id="<%= member.getId() %>">
-                                <i class="fas fa-ellipsis-v"></i>
-                                <div class="menu-dropdown">
-                                    <button class="kick-btn">Kick member</button>
-                                    <button class="promote-btn">Invite as manager</button>
-                                </div>
-                            </div>
-                            <% } %>
-
                             <a href="${pageContext.request.contextPath}/profile?userId=<%= member.getId() %>"
                                class="member-card-link">
                                 <div class="member-card">
@@ -424,26 +413,10 @@
                                             Managed: <%= member.getDate().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) %>
                                         </div>
                                     </div>
-                                    <div class="member-card-action">
-                                        <% if (member.getInteractStatus() == MemberDTO.InteractStatus.FRIEND) { %>
-                                        <form action="${pageContext.request.contextPath}/friendAction" method="POST">
-                                            <input type="hidden" name="friendId" value="<%= member.getId() %>">
-                                            <button type="submit" name="action" value="unfriend"
-                                                    class="btn btn-unfriend">Unfriend
-                                            </button>
-                                        </form>
-                                        <% } else if (member.getInteractStatus() == MemberDTO.InteractStatus.NORMAL) { %>
-                                        <button type="button" class="btn btn-add-friend btn-open-friend-modal"
-                                                data-friend-id="<%= member.getId() %>"
-                                                data-friend-name="<%= member.getName() %>">Add Friend
-                                        </button>
-                                        <% } %>
-                                    </div>
                                 </div>
                             </a>
                         </div>
                         <% }
-                        }
                         } %>
                     </div>
                 </div>
@@ -457,11 +430,10 @@
                             members.
                         </div>
                         <% } else {
-                            for (MemberDTO member : memberList) {
-                                if (member.getInteractStatus() != MemberDTO.InteractStatus.BLOCK) { %>
+                            for (MemberDTO member : memberList) {%>
                         <div class="member-card-wrapper" data-member-name="<%= member.getName().toLowerCase() %>">
 
-                            <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) && member.getInteractStatus() != MemberDTO.InteractStatus.SELF) { %>
+                            <% if ((interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER)) { %>
                             <div class="menu" data-member-id="<%= member.getId() %>">
                                 <i class="fas fa-ellipsis-v"></i>
                                 <div class="menu-dropdown">
@@ -484,14 +456,10 @@
                                             Joined: <%= member.getDate().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) %>
                                         </div>
                                     </div>
-                                    <div class="member-card-action">
-
-                                    </div>
                                 </div>
                             </a>
                         </div>
                         <% }
-                        }
                         } %>
                     </div>
                 </div>
