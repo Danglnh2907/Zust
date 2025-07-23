@@ -32,6 +32,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
 
         <style>
             .no-data-message {
@@ -353,19 +354,36 @@
                             </div>
                         </div>
                     </div>
-
                     <%
                         Account account = (Account) request.getSession().getAttribute("users");
                         String linkAvatar = account.getAvatar();
                     %>
                     <div class="nav-profile-container">
+                        <!-- Notification button -->
+                        <div class="notification-container">
+                            <button class="notification-btn" id="notification-btn" aria-label="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge hidden" id="notification-badge"></span>
+                            </button>
+                            <div class="notification-dropdown" id="notification-dropdown">
+                                <div class="notification-header">
+                                    <h3>Notifications</h3>
+                                    <button id="mark-all-read-btn">Mark all as read</button>
+                                </div>
+                                <div class="notification-list" id="notification-list">
+                                    <!-- Data will be populated by JS here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile and dropdown for logout here -->
                         <a href="#" class="nav-profile">
                             <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
                                  alt="User Profile Picture">
                             <span><%=account.getFullname()%></span>
                         </a>
                         <div class="dropdown-menu">
-                            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Log out</a>
                         </div>
                     </div>
                 </header>
@@ -505,6 +523,7 @@
         <script src="${pageContext.request.contextPath}/js/post.js"></script>
         <script src="${pageContext.request.contextPath}/js/composer.js"></script>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
+        <script src="${pageContext.request.contextPath}/js/notification.js"></script>
         <script>
             function sendFriendRequest(userId) {
                 fetch('${pageContext.request.contextPath}/friend_request', {
@@ -528,6 +547,25 @@
                 })
                 .catch(error => console.error('Error:', error));
             }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Profile dropdown menu logic
+                const profileNav = document.querySelector('.nav-profile');
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+
+                profileNav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.matches('.nav-profile, .nav-profile *')) {
+                        if (dropdownMenu.classList.contains('show')) {
+                            dropdownMenu.classList.remove('show');
+                        }
+                    }
+                });
+            })
         </script>
     </body>
 </html>

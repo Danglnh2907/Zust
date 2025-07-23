@@ -1,6 +1,7 @@
 package controller;
 
 import dao.AccountDAO;
+import dao.GroupDAO;
 import dao.PostDAO;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
@@ -95,6 +96,9 @@ public class UserProfileServlet extends HttpServlet {
                     request.setAttribute("areFriends", areFriends);
                     request.setAttribute("friendRequestPending", friendRequestPending);
                 }
+
+                //Get list of joined groups (for UI render)
+                request.setAttribute("group", (new GroupDAO()).getJoinedGroups(account.getId()));
 
                 request.getSession().setAttribute("userProfile", userProfile);
                 request.getRequestDispatcher("/WEB-INF/views/user_profile.jsp").forward(request, response);
