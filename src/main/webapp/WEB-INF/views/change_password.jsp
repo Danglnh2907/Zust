@@ -25,7 +25,7 @@
                 <div id="message-container"></div>
             <% } %>
 
-            <form id="changePasswordForm" action="change_password" method="post">
+            <form id="changePasswordForm" action="profile?action=change_password" method="post">
                 <div class="form-group">
                     <label for="current-password">Current Password</label>
                     <input type="password" id="current-password" name="currentPassword" required>

@@ -47,16 +47,13 @@ public class GoogleOAuthService {
             throw new IllegalStateException("GOOGLE_CLIENT_ID is not configured in save.env");
         }
 
-        StringBuilder url = new StringBuilder("https://accounts.google.com/o/oauth2/v2/auth");
-        url.append("?client_id=").append(URLEncoder.encode(clientId, StandardCharsets.UTF_8));
-        url.append("&redirect_uri=").append(URLEncoder.encode(redirectUri, StandardCharsets.UTF_8));
-        url.append("&response_type=code");
-        url.append("&scope=").append(URLEncoder.encode("openid email profile", StandardCharsets.UTF_8));
-        url.append("&state=").append(URLEncoder.encode(state != null ? state : "zust-auth", StandardCharsets.UTF_8));
-        url.append("&access_type=offline");
-        url.append("&prompt=consent");
-
-        return url.toString();
+        return "https://accounts.google.com/o/oauth2/v2/auth" + "?client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8) +
+               "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
+               "&response_type=code" +
+               "&scope=" + URLEncoder.encode("openid email profile", StandardCharsets.UTF_8) +
+               "&state=" + URLEncoder.encode(state != null ? state : "zust-auth", StandardCharsets.UTF_8) +
+               "&access_type=offline" +
+               "&prompt=consent";
     }
 
     public GoogleUserInfo getUserInfo(String authorizationCode) throws IOException, InterruptedException {
@@ -136,7 +133,7 @@ public class GoogleOAuthService {
         userInfo.setGivenName(userInfoJson.has("given_name") ? userInfoJson.get("given_name").asText() : null);
         userInfo.setFamilyName(userInfoJson.has("family_name") ? userInfoJson.get("family_name").asText() : null);
         userInfo.setPicture(userInfoJson.has("picture") ? userInfoJson.get("picture").asText() : null);
-        userInfo.setVerifiedEmail(userInfoJson.has("verified_email") ? userInfoJson.get("verified_email").asBoolean() : false);
+        userInfo.setVerifiedEmail(userInfoJson.has("verified_email") && userInfoJson.get("verified_email").asBoolean());
 
         return userInfo;
     }

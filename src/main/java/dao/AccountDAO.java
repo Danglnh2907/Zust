@@ -11,15 +11,17 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AccountDAO extends DBContext {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     public List<Account> getActiveAccounts() {
-        List<Account> accounts = new ArrayList<Account>();
-        String sql = "SELECT * FROM account\n" +
-                "WHERE account_status = 'active' AND account_role = 'user'";
+        List<Account> accounts = new ArrayList<>();
+        String sql = """
+                SELECT * FROM account \
+                WHERE account_status = 'active' AND account_role = 'user'""";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -86,23 +88,19 @@ public class AccountDAO extends DBContext {
     public boolean updateAccount(Account account) {
         try {
             String sql = """
-                    UPDATE account
-                    SET username = ?, password = ?, fullname = ?, phone = ?, gender = ?, dob = ?, avatar = ?, cover_image = ?, bio = ?, credit = ?, account_status = ?, account_role = ?
+                    UPDATE account \
+                    SET fullname = ?, phone = ?, gender = ?, dob = ?, \
+                        avatar = ?, cover_image = ?, bio = ? \
                     WHERE account_id = ?""";
             PreparedStatement stmt = new DBContext().getConnection().prepareStatement(sql);
-            stmt.setString(1, account.getUsername());
-            stmt.setString(2, account.getPassword());
-            stmt.setString(3, account.getFullname());
-            stmt.setString(4, account.getPhone());
-            stmt.setBoolean(5, account.getGender());
-            stmt.setDate(6, account.getDob() != null ? Date.valueOf(account.getDob()) : null);
-            stmt.setString(7, account.getAvatar());
-            stmt.setString(8, account.getCoverImage());
-            stmt.setString(9, account.getBio());
-            stmt.setInt(10, account.getCredit());
-            stmt.setString(11, account.getAccountStatus());
-            stmt.setString(12, account.getAccountRole());
-            stmt.setInt(13, account.getId());
+            stmt.setString(1, account.getFullname());
+            stmt.setString(2, account.getPhone());
+            stmt.setBoolean(3, account.getGender());
+            stmt.setDate(4, account.getDob() != null ? Date.valueOf(account.getDob()) : null);
+            stmt.setString(5, account.getAvatar());
+            stmt.setString(6, account.getCoverImage());
+            stmt.setString(7, account.getBio());
+            stmt.setInt(8, account.getId());
             return stmt.executeUpdate() >= 1;
         } catch (SQLException e) {
             logger.warning("Failed to update user: " + e.getMessage());
@@ -131,9 +129,10 @@ public class AccountDAO extends DBContext {
     }
 
     public boolean areFriends(int userId1, int userId2) {
-        String sql = "SELECT 1 FROM interact " +
-                "WHERE ((actor_account_id = ? AND target_account_id = ?) " +
-                "OR (actor_account_id = ? AND target_account_id = ?)) AND interact_status = 'friend'";
+        String sql = """
+                SELECT 1 FROM interact \
+                WHERE ((actor_account_id = ? AND target_account_id = ?) \
+                OR (actor_account_id = ? AND target_account_id = ?)) AND interact_status = 'friend'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId1);
             ps.setInt(2, userId2);
@@ -149,8 +148,9 @@ public class AccountDAO extends DBContext {
     }
 
     public boolean isFriendRequestPending(int senderId, int receiverId) {
-        String sql = "SELECT 1 FROM friend_request WHERE ((send_account_id = ? AND receive_account_id = ?) " +
-                "OR (send_account_id = ? AND receive_account_id = ?)) AND friend_request_status = 'sent'";
+        String sql = """
+                SELECT 1 FROM friend_request WHERE ((send_account_id = ? AND receive_account_id = ?) \
+                OR (send_account_id = ? AND receive_account_id = ?)) AND friend_request_status = 'sent'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, senderId);
             ps.setInt(2, receiverId);
@@ -166,7 +166,9 @@ public class AccountDAO extends DBContext {
     }
 
     public void createFriendRequest(int senderId, int receiverId, String content) {
-        String sql = "INSERT INTO friend_request (send_account_id, receive_account_id, friend_request_content) VALUES (?, ?, ?)";
+        String sql = """
+                INSERT INTO friend_request (send_account_id, receive_account_id, friend_request_content) \
+                VALUES (?, ?, ?)""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, senderId);
             ps.setInt(2, receiverId);
@@ -178,7 +180,12 @@ public class AccountDAO extends DBContext {
     }
 
     public boolean unfriend(int userId1, int userId2) {
-        String sql = "DELETE FROM interact WHERE ((actor_account_id = ? AND target_account_id = ?) OR (actor_account_id = ? AND target_account_id = ?)) AND interact_status = 'friend'";
+        String sql = """
+                DELETE FROM interact \
+                WHERE (\
+                  (actor_account_id = ? AND target_account_id = ?) OR \
+                (actor_account_id = ? AND target_account_id = ?)) AND \
+                interact_status = 'friend'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId1);
             ps.setInt(2, userId2);
@@ -193,7 +200,10 @@ public class AccountDAO extends DBContext {
     }
 
     public void updateFriendRequestStatus(int requestId, String status) {
-        String sql = "UPDATE friend_request SET friend_request_status = ? WHERE friend_request_id = ?";
+        String sql = """
+                UPDATE friend_request \
+                SET friend_request_status = ? \
+                WHERE friend_request_id = ?""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, requestId);
@@ -204,7 +214,9 @@ public class AccountDAO extends DBContext {
     }
 
     public void addFriend(int userId1, int userId2) {
-        String sql = "INSERT INTO interact (actor_account_id, target_account_id, interact_status) VALUES (?, ?, 'friend')";
+        String sql = """
+                INSERT INTO interact (actor_account_id, target_account_id, interact_status) \
+                VALUES (?, ?, 'friend')""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId1);
             ps.setInt(2, userId2);
@@ -216,8 +228,11 @@ public class AccountDAO extends DBContext {
 
     public List<FriendRequest> getFriendRequests(int userId) {
         List<FriendRequest> requests = new ArrayList<>();
-        String sql = "SELECT fr.*, a.username as sender_username, a.avatar as sender_avatar FROM friend_request fr " +
-                "JOIN account a ON fr.send_account_id = a.account_id WHERE receive_account_id = ? AND friend_request_status = 'sent'";
+        String sql = """
+                SELECT fr.*, a.username as sender_username, a.avatar as sender_avatar \
+                FROM friend_request fr \
+                JOIN account a ON fr.send_account_id = a.account_id \
+                WHERE receive_account_id = ? AND friend_request_status = 'sent' AND a.account_status = 'active'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -245,13 +260,14 @@ public class AccountDAO extends DBContext {
 
     public List<Account> getFriends(int userId) {
         List<Account> friends = new ArrayList<>();
-        String sql = "SELECT a.* FROM account a " +
-                "JOIN interact i ON a.account_id = i.target_account_id " +
-                "WHERE i.actor_account_id = ? AND i.interact_status = 'friend' " +
-                "UNION " +
-                "SELECT a.* FROM account a " +
-                "JOIN interact i ON a.account_id = i.actor_account_id " +
-                "WHERE i.target_account_id = ? AND i.interact_status = 'friend'";
+        String sql = """
+                SELECT a.* FROM account a \
+                JOIN interact i ON a.account_id = i.target_account_id \
+                WHERE i.actor_account_id = ? AND i.interact_status = 'friend' AND a.account_status = 'active' \
+                UNION \
+                SELECT a.* FROM account a \
+                JOIN interact i ON a.account_id = i.actor_account_id \
+                WHERE i.target_account_id = ? AND i.interact_status = 'friend' AND a.account_status = 'active'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, userId);
@@ -273,14 +289,14 @@ public class AccountDAO extends DBContext {
 
 
     public boolean changePassword(int accountId, String currentPassword, String newHashedPassword) {
-        PreparedStatement pstmt = null;
+        PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             // Verify current password
             String sql = "SELECT password FROM account WHERE account_id = ?";
-            pstmt = connection.prepareStatement(sql);
-            pstmt.setInt(1, accountId);
-            rs = pstmt.executeQuery();
+            stmt = connection.prepareStatement(sql);
+            stmt.setInt(1, accountId);
+            rs = stmt.executeQuery();
 
             if (rs.next()) {
                 String storedHashedPassword = rs.getString("password");
@@ -290,51 +306,29 @@ public class AccountDAO extends DBContext {
 
                 // Update password
                 String updateSql = "UPDATE account SET password = ? WHERE account_id = ?";
-                pstmt = connection.prepareStatement(updateSql);
-                pstmt.setString(1, newHashedPassword);
-                pstmt.setInt(2, accountId);
+                stmt = connection.prepareStatement(updateSql);
+                stmt.setString(1, newHashedPassword);
+                stmt.setInt(2, accountId);
 
-                int rowsAffected = pstmt.executeUpdate();
+                int rowsAffected = stmt.executeUpdate();
 
-                if (rowsAffected > 0) {
-                    // Log the password change
-                    String logSql = "INSERT INTO account_log (account_id, account_log_content) VALUES (?, ?)";
-                    pstmt = connection.prepareStatement(logSql);
-                    pstmt.setInt(1, accountId);
-                    pstmt.setString(2, "Password changed successfully");
-                    pstmt.executeUpdate();
-                    return true;
-                }
+                return rowsAffected > 0;
             }
         } catch (SQLException e) {
             logger.warning("Failed to change password: " + e.getMessage());
         } finally {
             try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
+                if (rs != null) {
+                    rs.close();
+                }
+
+                if (stmt != null) {
+                    stmt.close();
+                }
             } catch (SQLException e) {
                 logger.warning("Error closing resources: " + e.getMessage());
             }
         }
         return false;
-    }
-
-    public String hashPassword(String password) {
-        return BCrypt.hashpw(password, BCrypt.gensalt());
-    }
-
-    
-
-    public static void main(String[] args) {
-        AccountDAO dao = new AccountDAO();
-//        System.out.println(dao.getActiveAccounts());
-//        System.out.println(dao.getActiveAccountsManagers(31));
-//        Account account = dao.getAccountById(1);
-//        System.out.println(account.getAvatar());
-//        System.out.println(account.getUsername());
-//
-//        account.setPassword("123456");
-//        account.setBio("Update bio");
-//        dao.updateAccount(account);
     }
 }

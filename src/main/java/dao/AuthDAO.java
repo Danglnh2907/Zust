@@ -547,4 +547,61 @@ public class AuthDAO extends DBContext{
 			}
 		}
 	}
+
+	public boolean isAdminLoggedIn(String username, String password) {
+		Connection conn;
+		try {
+			conn = new DBContext().getConnection();
+			if (conn == null) {
+				LOGGER.warn("Failed to connect to database");
+				return false;
+			}
+
+			String sql = """
+					SELECT password FROM account WHERE username= ? AND account_role = 'admin'""";
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			stmt.setString(1, username);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				String hashedPassword = rs.getString("password");
+				return BCrypt.checkpw(password, hashedPassword);
+			}
+			return false;
+		} catch (Exception e) {
+			LOGGER.warn("Failed to check if admin logged in");
+			return false;
+		}
+	}
+
+	public void registerAdmin(String username, String password) {
+		Connection conn;
+		try {
+			conn = new DBContext().getConnection();
+			if (conn == null) {
+				LOGGER.warn("Failed to connect to database!");
+				return;
+			}
+
+			String sql = """
+					INSERT INTO account (username, password, fullname, email, account_status, account_role) \
+					VALUES (?, ?, 'Zust admin', 'zust.developer@gmail.com', 'active', 'admin')""";
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			stmt.setString(1, username);
+			stmt.setString(2, BCrypt.hashpw(password, BCrypt.gensalt()));
+			int rowsAffected = stmt.executeUpdate();
+			if (rowsAffected == 0) {
+				LOGGER.warn("Failed to register admin");
+			} else {
+				LOGGER.info("Successfully registered admin");
+			}
+		} catch (Exception e) {
+			LOGGER.warn("Failed to Register admin");
+		}
+	}
+
+	public static void main(String[] args) {
+		AuthDAO dao = new AuthDAO(new FileService());
+		dao.registerAdmin("admin", "123456");
+
+	}
 }

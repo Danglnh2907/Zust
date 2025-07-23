@@ -1,32 +1,23 @@
 package controller;
 
 import dao.GroupDAO;
-import dao.JoinGroupRequestDAO;
 import dao.PostDAO;
-import model.InteractGroupDTO;
-import model.MemberDTO;
-import model.RespPostDTO;
-import dao.MemberViewDAO; // Thêm import
-import dao.FeedbackGroupDAO;
-import model.FeedbackGroupDTO;
-import model.PostApprovalDTO;
-import dao.PostApprovalDAO;
-import model.JoinGroupRequestDTO;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.*;
+import model.*;
 import dao.ReportGroupPostDAO;
-import model.ResGroupReportPostDTO;
-import model.AcceptGroupReportDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import model.Account;
+import util.service.FileService;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
+import java.util.Scanner;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.sql.SQLException; // Thêm import
 
@@ -34,13 +25,18 @@ import java.sql.SQLException; // Thêm import
         name = "GroupServlet",
         value = "/group"
 )
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class GroupServlet extends HttpServlet {
-
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        /*
+         * /group?action=create
+         * /group?id=GROUP_ID&tag=TAG
+         */
 
+        //Get session
         HttpSession session = request.getSession();
         int userID;
         try {
@@ -58,15 +54,24 @@ public class GroupServlet extends HttpServlet {
             return;
         }
 
+        //If request has action parameter, serve the UI for the create group page
+        String action = request.getParameter("action");
+        if (action != null && action.equals("create")) {
+            request.setAttribute("accountId", userID);
+            request.getRequestDispatcher("/WEB-INF/views/createGroup.jsp").forward(request, response);
+            return;
+        }
+
+        //Else, process the group information fetching
         GroupDAO groupDAO = new GroupDAO();
-        List<InteractGroupDTO> joinedGroups = groupDAO.getJoinedGroups(userID);
-        request.setAttribute("joinedGroups", joinedGroups);
+        PostDAO postDAO = new PostDAO();
+        request.setAttribute("joinedGroups", groupDAO.getJoinedGroups(userID));
+
         String idParam = request.getParameter("id");
         if (idParam == null) {
             // No id provided, get all groups and joined groups
             logger.info("No group ID provided, fetching all groups and joined groups for user ID: " + userID);
-            List<InteractGroupDTO> allGroups = groupDAO.getAllGroups(userID);
-            request.setAttribute("allGroups", allGroups);
+            request.setAttribute("allGroups", groupDAO.getAllGroups(userID));
             request.getRequestDispatcher("/WEB-INF/views/groups.jsp").forward(request, response);
             return;
         }
@@ -89,14 +94,13 @@ public class GroupServlet extends HttpServlet {
         request.setAttribute("group", group);
 
         // Handle actions
-        if (tag == null || (!tag.equals("members") && !tag.equals("requests") && !tag.equals("pending") && !tag.equals("feedback") && !tag.equals("assign") && !tag.equals("report"))) {
-            PostDAO postDAO = new PostDAO();
+        if (tag == null || (!tag.equals("members") && !tag.equals("requests") && !tag.equals("pending") &&
+                            !tag.equals("feedback") && !tag.equals("assign") && !tag.equals("report") && !tag.equals("edit"))) {
             logger.info("Fetching posts and pending posts for group ID: " + groupId);
             List<RespPostDTO> pendingPosts = postDAO.getPendingPosts(userID, groupId);
             List<RespPostDTO> posts = postDAO.getPostsInGroup(userID, groupId);
             request.setAttribute("posts", posts);
             request.setAttribute("pendingPosts", pendingPosts);
-
             request.getRequestDispatcher("/WEB-INF/views/group.jsp").forward(request, response);
         } else if (tag.equals("members")) {
             logger.info("Fetching managers and members for group ID: " + groupId);
@@ -104,22 +108,18 @@ public class GroupServlet extends HttpServlet {
             List<MemberDTO> members = groupDAO.getMembers(userID, groupId);
             request.setAttribute("managers", managers);
             request.setAttribute("members", members);
-
             request.getRequestDispatcher("/WEB-INF/views/member.jsp").forward(request, response);
         }
         else if (tag.equals("requests")) {
             logger.info("Fetching join requests for group ID: " + groupId);
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                JoinGroupRequestDAO joinGroupRequestDAO = new JoinGroupRequestDAO();
-                List<JoinGroupRequestDTO> joinRequests = joinGroupRequestDAO.getRequestsByGroupId(groupId);
-                request.setAttribute("joinRequests", joinRequests);
+                request.setAttribute("joinRequests", groupDAO.getAllPendingUser(groupId));
                 request.getRequestDispatcher("/WEB-INF/views/joinRequest.jsp").forward(request, response);
             } else {
                 logger.warning("User ID: " + userID + " does not have permission to view requests for group ID: " + groupId);
                 response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
             }
         }
-
         else if (tag.equals("pending")) {
             logger.info("Fetching pending posts for group ID: " + groupId);
             if (group == null) {
@@ -128,9 +128,7 @@ public class GroupServlet extends HttpServlet {
                 return;
             }
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                PostApprovalDAO postApprovalDAO = new PostApprovalDAO();
-                List<PostApprovalDTO> pendingPosts = postApprovalDAO.getPendingPosts(userID);
-                request.setAttribute("pendingPosts", pendingPosts);
+                request.setAttribute("pendingPosts", (new PostDAO()).getPendingPosts(userID, groupId));
                 request.getRequestDispatcher("/WEB-INF/views/postApprove.jsp").forward(request, response);
             } else {
                 logger.warning("User ID: " + userID + " does not have permission to view pending posts for group ID: " + groupId);
@@ -145,8 +143,7 @@ public class GroupServlet extends HttpServlet {
                 return;
             }
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                FeedbackGroupDAO feedbackDAO = new FeedbackGroupDAO();
-                List<FeedbackGroupDTO> feedbacks = feedbackDAO.getFeedbacksByGroupId(groupId, "sent");
+                List<FeedbackGroupDTO> feedbacks = groupDAO.getAllFeedback(groupId);
                 request.setAttribute("feedbacks", feedbacks);
                 request.getRequestDispatcher("/WEB-INF/views/viewFeedback.jsp").forward(request, response);
             } else {
@@ -167,7 +164,12 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Failed to retrieve report posts", StandardCharsets.UTF_8));
                 }
             }
-            }
+        }
+        else if (tag.equals("edit")) {
+            Group grp = groupDAO.getGroupProfile(groupId);
+            request.setAttribute("group", grp);
+            request.getRequestDispatcher("/WEB-INF/views/groupProfile.jsp").forward(request, response);
+        }
         else {
             logger.info("Action " + tag + " for group ID: " + groupId + " is not implemented, doing nothing");
         }
@@ -175,6 +177,10 @@ public class GroupServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        /*
+         * /group?id=GROUP_ID&action=ACTION
+         */
+
         HttpSession session = request.getSession();
         int userID;
         try {
@@ -192,13 +198,30 @@ public class GroupServlet extends HttpServlet {
             return;
         }
 
+        //Handle create group action first (since no group ID is provided unlike other action)
         GroupDAO groupDAO = new GroupDAO();
-        JoinGroupRequestDAO joinGroupRequestDAO = new JoinGroupRequestDAO();
+        String action = request.getParameter("action");
+        if (action != null && action.equals("create")) {
+            ReqGroupDTO groupDTO = extractData(request.getParts());
+            if(groupDTO == null) {
+                logger.info("Create group: Error in parsing data");
+                request.setAttribute("msg", "Failed to send data");
+            } else {
+                boolean success = groupDAO.createGroup(groupDTO);
+                if (success) {
+                    logger.info("Create group: Success");
+                    request.setAttribute("msg", "Created group successfully. Please wait for admin approval.");
+                } else {
+                    logger.info("Create group: Error");
+                    request.setAttribute("msg", "Failed to create group. Try again.");
+                }
+            }
+            doGet(request, response);
+        }
+
         // Get form parameters
-        MemberViewDAO memberDAO = new MemberViewDAO(); // Thêm instance
         PostDAO postDAO = new PostDAO();
         ReportGroupPostDAO reportGroupPostDAO = new ReportGroupPostDAO(); // Thêm DAO
-        String action = request.getParameter("action");
         String groupIdParam = request.getParameter("groupId");
         int groupId;
         try {
@@ -217,115 +240,125 @@ public class GroupServlet extends HttpServlet {
         }
 
         logger.info("Processing POST action: " + action + " for group ID: " + groupId + " by user ID: " + userID);
-//        String redirectUrl = request.getContextPath() + "/group?id=" + groupId;
 
         switch (action) {
-            case "leave":
+            case "leave": { //Leave group
                 boolean leaveSuccess = groupDAO.leaveGroup(userID, groupId);
                 if (leaveSuccess) {
                     logger.info("User ID: " + userID + " successfully left group ID: " + groupId);
                 } else {
                     logger.warning("Failed to leave group ID: " + groupId + " for user ID: " + userID);
-//                    response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Failed to leave group", StandardCharsets.UTF_8));
                 }
                 break;
-
-            case "cancel_request":
-                boolean cancelSuccess = joinGroupRequestDAO.cancelJoinGroup(userID, groupId);
+            }
+            case "cancel_request": { //Cancel join group request
+                boolean cancelSuccess = groupDAO.cancelJoinGroup(userID, groupId);
                 if (cancelSuccess) {
                     logger.info("User ID: " + userID + " successfully canceled join request for group ID: " + groupId);
-//                    response.sendRedirect(redirectUrl);
                 } else {
                     logger.warning("Failed to cancel join request for group ID: " + groupId + " for user ID: " + userID);
-//                    response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Failed to cancel join request", StandardCharsets.UTF_8));
                 }
                 break;
-
-            case "send_feedback":
+            }
+            case "send_feedback": { //Send feedback to group manager
                 String feedbackContent = request.getParameter("feedbackContent");
                 if (feedbackContent == null || feedbackContent.trim().isEmpty()) {
                     logger.warning("Feedback content is empty for group ID: " + groupId + " by user ID: " + userID);
-//                    response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Feedback content is required", StandardCharsets.UTF_8));
                     return;
                 }
                 boolean feedbackSuccess = groupDAO.feedback(userID, groupId, feedbackContent.trim());
                 if (feedbackSuccess) {
                     logger.info("User ID: " + userID + " successfully sent feedback for group ID: " + groupId);
-//                    response.sendRedirect(redirectUrl);
                 } else {
                     logger.warning("Failed to send feedback for group ID: " + groupId + " for user ID: " + userID);
-//                    response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Failed to send feedback", StandardCharsets.UTF_8));
                 }
                 break;
-
-            case "join":
+            }
+            case "join": { //Send join group request to group manager
                 String joinMessage = request.getParameter("joinMessage");
                 if (joinMessage == null) {
                     joinMessage = "";
                 }
-                boolean joinSuccess = joinGroupRequestDAO.joinGroup(userID, joinMessage.trim(), groupId);
+                boolean joinSuccess = groupDAO.joinGroup(userID, joinMessage.trim(), groupId);
                 if (joinSuccess) {
                     logger.info("User ID: " + userID + " successfully sent join request for group ID: " + groupId);
-//                    response.sendRedirect(redirectUrl);
-
                 } else {
                     logger.warning("Failed to send join request for group ID: " + groupId + " for user ID: " + userID);
-//                    response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Failed to send join request", StandardCharsets.UTF_8));
                 }
                 break;
-            case "approve":
-            case "reject":
-                if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
-                    logger.warning("User ID: " + userID + " does not have permission to process requests for group ID: " + groupId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
-                    return;
-                }
-                String requestIdParam = request.getParameter("requestId");
-                int requestId;
+            }
+            case "edit": { //Edit group profile (group manager use case)
                 try {
-                    requestId = Integer.parseInt(requestIdParam);
+                    String groupName = request.getParameter("groupName");
+                    String description = request.getParameter("description");
+                    String imagePath = "";
+                    File uploadDir = new File((new FileService()).getLocationPath() + File.separator + "images");
+                    for (Part part : request.getParts()) {
+                        imagePath = handleImagePart(part, uploadDir);
+                    }
+                    Group group = new Group();
+                    group.setId(Integer.parseInt(request.getParameter("groupId")));
+                    group.setGroupName(groupName);
+                    group.setGroupCoverImage(imagePath);
+                    group.setGroupDescription(description);
+                    boolean success = groupDAO.setGroupProfile(group);
+                    if (success) {
+                        request.setAttribute("message", "Group successfully updated.");
+                        request.setAttribute("group", group);
+                    } else {
+                        request.setAttribute("error", "Failed to update group.");
+                        request.setAttribute("group", group);
+                    }
+                    response.sendRedirect(request.getContextPath() + "/group?action=edit&id=" + groupId);
+                    return;
                 } catch (NumberFormatException e) {
-                    logger.warning("Invalid request ID format: " + requestIdParam);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=requests&error=" + URLEncoder.encode("Invalid request ID", StandardCharsets.UTF_8));
-                    return;
-                }
-                boolean processSuccess = joinGroupRequestDAO.processRequest(requestId, action);
-                if (processSuccess) {
-                    logger.info("User ID: " + userID + " successfully " + action + "d request ID: " + requestId + " for group ID: " + groupId);
-                } else {
-                    logger.warning("Failed to " + action + " request ID: " + requestId + " for group ID: " + groupId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=requests&error=" + URLEncoder.encode("Failed to process request", StandardCharsets.UTF_8));
-                    return;
+                    logger.warning("Invalid group ID: " + request.getParameter("groupId"));
                 }
                 break;
-
-            case "approve_post":
-            case "reject_post":
+            }
+            case "approve": //Approve join group request (group manager use case)
+            case "reject": {
+                //Reject join group request (group manager use case)
+                //Both approve join group request and reject is the same core logic, just different value
+                //So we group them into one block for processing
+                try {
+                    int requestId = Integer.parseInt(request.getParameter("requestId"));
+                    boolean success = groupDAO.setPendingUsers(requestId, groupId, action.equals("approve"));
+                    if (success) {
+                        logger.info("Approve join request success: " + groupId);
+                    } else {
+                        logger.warning("Failed to approve join request: " + groupId + " for user ID: " + userID);
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid request ID: " + request.getParameter("requestId"));
+                }
+                break;
+            }
+            case "accept-post": //Approve pending post (group manager use case)
+            case "dismiss-post": {
+                //Dismiss pending post (group manager use case)
+                //Core logic is the same, just different value, so we group both in one process
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process posts for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
                     return;
                 }
-                String postIdParam = request.getParameter("postId");
-                int postId;
+
                 try {
-                    postId = Integer.parseInt(postIdParam);
+                    int postID = Integer.parseInt(request.getParameter("postId"));
+                    boolean success = groupDAO.processPost(postID, action.equals("accept-post"));
+                    if (success) {
+                        logger.info("Post processing request success for post ID: " + postID);
+                    } else {
+                        logger.warning("Failed to process post for post ID: " + postID + " by user ID: " + userID);
+                    }
                 } catch (NumberFormatException e) {
-                    logger.warning("Invalid post ID format: " + postIdParam);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=pending&error=" + URLEncoder.encode("Invalid post ID", StandardCharsets.UTF_8));
-                    return;
+                    logger.warning("Invalid post ID format: " + request.getParameter("postId"));
                 }
-                PostApprovalDAO postApprovalDAO = new PostApprovalDAO();
-                boolean processSuccesspost = postApprovalDAO.processPost(postId, action.equals("approve_post") ? "approve" : "reject");
-                if (processSuccesspost) {
-                    logger.info("User ID: " + userID + " successfully " + action + "d post ID: " + postId + " for group ID: " + groupId);
-                } else {
-                    logger.warning("Failed to " + action + " post ID: " + postId + " for group ID: " + groupId);
-                    response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=pending&error=" + URLEncoder.encode("Failed to process post", StandardCharsets.UTF_8));
-                    return;
-                }
-                break;
-            case "accept":
+                response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=pending");
+                return;
+            }
+            case "accept-report": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Không có quyền xử lý báo cáo", StandardCharsets.UTF_8));
@@ -346,7 +379,6 @@ public class GroupServlet extends HttpServlet {
                     }
                 } catch (SQLException e) {
                     logger.severe("Database error retrieving account ID for post ID: " + reportedPostId + ": " + e.getMessage());
-                    e.printStackTrace(); // Thêm để debug
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Lỗi cơ sở dữ liệu khi lấy thông tin bài viết", StandardCharsets.UTF_8));
                     return;
                 }
@@ -365,12 +397,11 @@ public class GroupServlet extends HttpServlet {
                     return; // Tránh gọi doGet
                 } catch (SQLException e) {
                     logger.severe("Database error processing report: " + e.getMessage());
-                    e.printStackTrace(); // Thêm để debug lỗi DAO
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Lỗi khi xử lý báo cáo: " + e.getMessage(), StandardCharsets.UTF_8));
                     return;
                 }
-
-            case "dismiss":
+            }
+            case "dismiss-report": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -381,14 +412,14 @@ public class GroupServlet extends HttpServlet {
                     reportGroupPostDAO.dismissReportForGroup(dismissReportId, userID);
                     logger.info("User ID: " + userID + " successfully dismissed report ID: " + dismissReportId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&success=" + URLEncoder.encode("Báo cáo đã bị từ chối", StandardCharsets.UTF_8));
-                    return; // Tránh gọi doGet
+                    return;
                 } catch (SQLException e) {
                     logger.severe("Database error dismissing report: " + e.getMessage());
-                    e.printStackTrace(); // Thêm để debug lỗi DAO
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Failed to dismiss report: " + e.getMessage(), StandardCharsets.UTF_8));
                     return;
                 }
-            case "kick_member":
+            }
+            case "kick_member": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to kick members in group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -403,7 +434,7 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Invalid member ID", StandardCharsets.UTF_8));
                     return;
                 }
-                boolean kickSuccess = memberDAO.removeMember(memberId, groupId);
+                boolean kickSuccess = groupDAO.kickMember(memberId, groupId);
                 if (kickSuccess) {
                     logger.info("User ID: " + userID + " successfully kicked member ID: " + memberId + " from group ID: " + groupId);
                 } else {
@@ -412,8 +443,8 @@ public class GroupServlet extends HttpServlet {
                     return;
                 }
                 break;
-
-            case "promote_manager":
+            }
+            case "promote_manager": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to promote managers in group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -428,7 +459,7 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Invalid member ID", StandardCharsets.UTF_8));
                     return;
                 }
-                boolean promoteSuccess = memberDAO.promoteToManager(promoteMemberId, groupId);
+                boolean promoteSuccess = groupDAO.assignManager(promoteMemberId, groupId);
                 if (promoteSuccess) {
                     logger.info("User ID: " + userID + " successfully promoted member ID: " + promoteMemberId + " to manager in group ID: " + groupId);
                 } else {
@@ -437,11 +468,114 @@ public class GroupServlet extends HttpServlet {
                     return;
                 }
                 break;
-            default:
+            }
+            default: {
                 logger.warning("Invalid action: " + action + " for group ID: " + groupId);
-//                response.sendRedirect(redirectUrl + "&error=" + URLEncoder.encode("Invalid action", StandardCharsets.UTF_8));
                 break;
+            }
         }
-        doGet(request, response);
+        response.sendRedirect(request.getContextPath() + "/group?id=" + groupId);
+    }
+
+    private ReqGroupDTO extractData(Collection<Part> parts) {
+        FileService fileService = new FileService(getServletContext());
+        File uploadDir = new File(fileService.getLocationPath() + File.separator + "images");
+
+        String groupName = null;
+        String groupDescription = null;
+        String imagePath = null;
+        int creatorId = 0;
+
+        if (!uploadDir.exists()) {
+            //Create directory and check if it success
+            if (!uploadDir.mkdirs()) { // Use mkdirs() to create parent directories too
+                logger.warning("Failed to create upload directory: " + uploadDir.getAbsolutePath());
+                return null;
+            }
+        }
+        try {
+            for (Part part : parts) {
+                String fieldName = part.getName();
+                if (fieldName == null) continue;
+
+                if (fieldName.equals("groupName")) {
+                    groupName = readPartAsString(part).trim();
+                }
+                else if (fieldName.equals("groupDescription")) {
+                    groupDescription = readPartAsString(part);
+                }
+                else if (fieldName.startsWith("coverImage")) {
+                    imagePath = handleImagePart(part, uploadDir);
+                }
+                else if (fieldName.equals("creatorId")) {
+                    String managerIDRaw = readPartAsString(part);
+                    if (managerIDRaw != null && !managerIDRaw.trim().isEmpty()) {
+                        try {
+                            creatorId = Integer.parseInt(managerIDRaw.trim());
+                        } catch (NumberFormatException e) {
+                            logger.warning("Invalid group ID format: " + managerIDRaw);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warning("Error extracting data from parts: " + e.getMessage());
+            return null;
+        }
+
+        return new ReqGroupDTO(groupName, groupDescription, imagePath, creatorId);
+    }
+
+    private String readPartAsString(Part part) {
+        try (Scanner scanner = new Scanner(part.getInputStream(), StandardCharsets.UTF_8)) {
+            scanner.useDelimiter("\\A");
+            return scanner.hasNext() ? scanner.next() : "";
+        } catch (Exception e) {
+            logger.warning("Failed to read part as string: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String handleImagePart(Part part, File uploadDir) {
+        String imagePath = null;
+        try {
+            String fileName = "";
+            String contentDisposition = part.getHeader("content-disposition");
+
+            if (contentDisposition != null) {
+                for (String cd : contentDisposition.split(";")) {
+                    if (cd.trim().startsWith("filename")) {
+                        fileName = cd.substring(cd.indexOf('=') + 1)
+                                .trim().replace("\"", "");
+                        fileName = fileName.substring(Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\')) + 1);
+                        break;
+                    }
+                }
+            }
+
+            if (fileName.isEmpty()) {
+                String existingImage = readPartAsString(part);
+                if (existingImage != null && !existingImage.trim().isEmpty()) {
+                    imagePath = existingImage.trim();
+                }
+            } else if (part.getSize() > 0) {
+                // Handle new image upload - only if there's actual content
+                String fileExtension = "";
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                    fileExtension = fileName.substring(dotIndex);
+                }
+
+                String newFileName = UUID.randomUUID() + "_" + System.currentTimeMillis() + fileExtension;
+                String filePath = uploadDir.getAbsolutePath() + File.separator + newFileName;
+
+                part.write(filePath);
+                imagePath = newFileName;
+                logger.info("Successfully saved image: " + newFileName);
+            }
+        } catch (Exception e) {
+            logger.warning("Failed to handle image part: " + e.getMessage());
+        }
+        return imagePath;
     }
 }

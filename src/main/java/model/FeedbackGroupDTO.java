@@ -4,41 +4,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FeedbackGroupDTO {
-    private FeedbackGroup feedback;
-    private Account account;
-    private List<String> errors;
+    private String content;
+    private int requesterID;
+    private String username;
+    private String avatar;
 
     public FeedbackGroupDTO() {
-        this.errors = new ArrayList<>();
     }
 
-    public FeedbackGroupDTO(FeedbackGroup feedback, Account account) {
-        this();
-        this.feedback = feedback;
-        this.account = account;
+    public String getAvatar() {
+        return avatar;
     }
 
-    public FeedbackGroup getFeedback() {
-        return feedback;
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
-    public void setFeedback(FeedbackGroup feedback) {
-        this.feedback = feedback;
+    public String getContent() {
+        return content;
     }
 
-    public Account getAccount() {
-        return account;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
+    public int getRequesterID() {
+        return requesterID;
     }
 
-    public List<String> getErrors() {
-        return errors;
+    public void setRequesterID(int requesterID) {
+        this.requesterID = requesterID;
     }
 
-    public void addError(String error) {
-        this.errors.add(error);
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

@@ -6,22 +6,16 @@ public class MemberDTO {
     private int id;
     private String name;
     private String avatar;
-    private InteractStatus interactStatus;
     private LocalDateTime date;
-
-    public enum InteractStatus {
-        NORMAL, BLOCK, FRIEND, SELF
-    }
 
     // Constructor
     public MemberDTO() {
     }
 
-    public MemberDTO(int id, String name, String avatar, InteractStatus interactStatus, LocalDateTime date) {
+    public MemberDTO(int id, String name, String avatar, LocalDateTime date) {
         this.id = id;
         this.name = name;
         this.avatar = avatar;
-        this.interactStatus = interactStatus;
         this.date = date;
     }
 
@@ -48,14 +42,6 @@ public class MemberDTO {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
-    }
-
-    public InteractStatus getInteractStatus() {
-        return interactStatus;
-    }
-
-    public void setInteractStatus(InteractStatus interactStatus) {
-        this.interactStatus = interactStatus;
     }
 
     public LocalDateTime getDate() {

@@ -166,8 +166,9 @@ public class AuthServlet extends HttpServlet {
 			errorMessage = "Username and password cannot be empty.";
 		} else {
 			try {
-				if(username.equals("admin") && password.equals("123456")) {
-					response.sendRedirect(request.getContextPath() + "/dashboard");
+				if(authDAO.isAdminLoggedIn(username, password)) {
+					request.getSession().setAttribute("isAdminLoggedIn", true);
+					request.getRequestDispatcher("/dashboard").forward(request, response);
 					return;
 				}
 
