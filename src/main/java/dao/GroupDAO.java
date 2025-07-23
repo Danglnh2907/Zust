@@ -268,33 +268,20 @@ public class GroupDAO extends DBContext {
         logger.info("Retrieving members for group ID: " + groupId + " for account ID: " + accountId);
         List<MemberDTO> memberList = new ArrayList<>();
         String sql = """
-                SELECT a.account_id, a.username, a.avatar, p.participate_start_date, \
-                CASE \
-                    WHEN a.account_id = ? THEN 'SELF' \
-                    WHEN EXISTS (\
-                        SELECT 1 FROM friend_request fr \
-                        WHERE fr.friend_request_status = 'accepted' \
-                        AND ((fr.send_account_id = ? AND fr.receive_account_id = a.account_id) OR (fr.send_account_id = a.account_id AND fr.receive_account_id = ?))\
-                    ) THEN 'FRIEND' \
-                    ELSE 'NORMAL' \
-                END AS interact_status \
+                SELECT a.account_id, a.username, a.avatar, p.participate_start_date \
                 FROM participate p \
-                INNER JOIN account a ON p.account_id = a.account_id \
+                JOIN account a ON p.account_id = a.account_id \
                 WHERE p.group_id = ? AND a.account_status = 'active' \
                 AND NOT EXISTS (SELECT 1 FROM manage m WHERE m.group_id = p.group_id AND m.account_id = p.account_id)""";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, accountId); // For SELF check
-            stmt.setInt(2, accountId); // For FRIEND check (sent)
-            stmt.setInt(3, accountId); // For FRIEND check (received)
-            stmt.setInt(4, groupId);   // For group_id filter
+            stmt.setInt(1, groupId);   // For group_id filter
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     MemberDTO memberDTO = new MemberDTO();
                     memberDTO.setId(rs.getInt("account_id"));
                     memberDTO.setName(rs.getString("username"));
                     memberDTO.setAvatar(rs.getString("avatar"));
-                    memberDTO.setInteractStatus(MemberDTO.InteractStatus.valueOf(rs.getString("interact_status")));
                     memberDTO.setDate(rs.getTimestamp("participate_start_date").toLocalDateTime());
                     memberList.add(memberDTO);
                 }
@@ -311,32 +298,19 @@ public class GroupDAO extends DBContext {
         logger.info("Retrieving managers for group ID: " + groupId + " for account ID: " + accountId);
         List<MemberDTO> managerList = new ArrayList<>();
         String sql = """
-                SELECT a.account_id, a.username, a.avatar, m.manage_start_date, \
-                CASE \
-                    WHEN a.account_id = ? THEN 'SELF' \
-                    WHEN EXISTS (\
-                        SELECT 1 FROM friend_request fr \
-                        WHERE fr.friend_request_status = 'accepted' \
-                        AND ((fr.send_account_id = ? AND fr.receive_account_id = a.account_id) OR (fr.send_account_id = a.account_id AND fr.receive_account_id = ?))\
-                    ) THEN 'FRIEND' \
-                    ELSE 'NORMAL' \
-                END AS interact_status \
+                SELECT a.account_id, a.username, a.avatar, m.manage_start_date \
                 FROM manage m \
-                INNER JOIN account a ON m.account_id = a.account_id \
+                JOIN account a ON m.account_id = a.account_id \
                 WHERE m.group_id = ? AND a.account_status = 'active'""";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, accountId); // For SELF check
-            stmt.setInt(2, accountId); // For FRIEND check (sent)
-            stmt.setInt(3, accountId); // For FRIEND check (received)
-            stmt.setInt(4, groupId);   // For group_id filter
+            stmt.setInt(1, groupId);   // For group_id filter
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     MemberDTO memberDTO = new MemberDTO();
                     memberDTO.setId(rs.getInt("account_id"));
                     memberDTO.setName(rs.getString("username"));
                     memberDTO.setAvatar(rs.getString("avatar"));
-                    memberDTO.setInteractStatus(MemberDTO.InteractStatus.valueOf(rs.getString("interact_status")));
                     memberDTO.setDate(rs.getTimestamp("manage_start_date").toLocalDateTime());
                     managerList.add(memberDTO);
                 }
@@ -935,6 +909,7 @@ public class GroupDAO extends DBContext {
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
         PostDAO postDao = new PostDAO();
-        System.out.println(postDao.getPendingPosts(2, 1));
+        System.out.println(dao.getMembers(1, 1));
+
     }
 }

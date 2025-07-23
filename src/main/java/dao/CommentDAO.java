@@ -53,7 +53,7 @@ public class CommentDAO extends DBContext {
                 CAST(IIF(EXISTS (SELECT 1 FROM like_comment WHERE comment_id = c.comment_id AND account_id = ?), 1, 0) AS BIT) AS is_liked \
                 FROM comment c \
                 JOIN account a ON a.account_id = c.account_id \
-                WHERE c.post_id = ? AND c.comment_status = 0 \
+                WHERE c.post_id = ? AND c.comment_status = 0 AND a.account_status = 'active'\
                 ORDER BY c.comment_last_update DESC""";
 
         try (Connection conn = new DBContext().getConnection();

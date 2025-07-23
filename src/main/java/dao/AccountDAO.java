@@ -232,7 +232,7 @@ public class AccountDAO extends DBContext {
                 SELECT fr.*, a.username as sender_username, a.avatar as sender_avatar \
                 FROM friend_request fr \
                 JOIN account a ON fr.send_account_id = a.account_id \
-                WHERE receive_account_id = ? AND friend_request_status = 'sent'""";
+                WHERE receive_account_id = ? AND friend_request_status = 'sent' AND a.account_status = 'active'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -263,11 +263,11 @@ public class AccountDAO extends DBContext {
         String sql = """
                 SELECT a.* FROM account a \
                 JOIN interact i ON a.account_id = i.target_account_id \
-                WHERE i.actor_account_id = ? AND i.interact_status = 'friend' \
+                WHERE i.actor_account_id = ? AND i.interact_status = 'friend' AND a.account_status = 'active' \
                 UNION \
                 SELECT a.* FROM account a \
                 JOIN interact i ON a.account_id = i.actor_account_id \
-                WHERE i.target_account_id = ? AND i.interact_status = 'friend'""";
+                WHERE i.target_account_id = ? AND i.interact_status = 'friend' AND a.account_status = 'active'""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, userId);
