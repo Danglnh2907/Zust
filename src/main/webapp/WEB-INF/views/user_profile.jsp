@@ -505,7 +505,7 @@
                     formData.append('coverImage', document.getElementById('currentCoverImage').value);
                 }
 
-                fetch('/zust/editProfile', { // Assuming a servlet mapped to /zust/editProfile
+                fetch('/zust/profile?action=edit', { // Assuming a servlet mapped to /zust/editProfile
                     method: 'POST',
                     body: formData
                 })

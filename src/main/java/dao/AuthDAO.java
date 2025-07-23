@@ -583,7 +583,7 @@ public class AuthDAO extends DBContext{
 			}
 
 			String sql = """
-					INSERT INTO account (username, password, fullname, email, account_status, account_role) 
+					INSERT INTO account (username, password, fullname, email, account_status, account_role) \
 					VALUES (?, ?, 'Zust admin', 'zust.developer@gmail.com', 'active', 'admin')""";
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.setString(1, username);

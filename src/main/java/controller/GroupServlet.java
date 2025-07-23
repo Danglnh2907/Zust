@@ -317,7 +317,8 @@ public class GroupServlet extends HttpServlet {
                 break;
             }
             case "approve": //Approve join group request (group manager use case)
-            case "reject": { //Reject join group request (group manager use case)
+            case "reject": {
+                //Reject join group request (group manager use case)
                 //Both approve join group request and reject is the same core logic, just different value
                 //So we group them into one block for processing
                 try {
@@ -334,7 +335,8 @@ public class GroupServlet extends HttpServlet {
                 break;
             }
             case "accept-post": //Approve pending post (group manager use case)
-            case "dismiss-post": { //Dismiss pending post (group manager use case)
+            case "dismiss-post": {
+                //Dismiss pending post (group manager use case)
                 //Core logic is the same, just different value, so we group both in one process
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process posts for group ID: " + groupId);
@@ -356,7 +358,7 @@ public class GroupServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=pending");
                 return;
             }
-            case "accept-report":
+            case "accept-report": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Không có quyền xử lý báo cáo", StandardCharsets.UTF_8));
@@ -398,7 +400,8 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Lỗi khi xử lý báo cáo: " + e.getMessage(), StandardCharsets.UTF_8));
                     return;
                 }
-            case "dismiss-report":
+            }
+            case "dismiss-report": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to process reports for group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -415,7 +418,8 @@ public class GroupServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=report&error=" + URLEncoder.encode("Failed to dismiss report: " + e.getMessage(), StandardCharsets.UTF_8));
                     return;
                 }
-            case "kick_member":
+            }
+            case "kick_member": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to kick members in group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -439,7 +443,8 @@ public class GroupServlet extends HttpServlet {
                     return;
                 }
                 break;
-            case "promote_manager":
+            }
+            case "promote_manager": {
                 if (!groupDAO.isManager(userID, groupId) && !groupDAO.isLeader(userID, groupId)) {
                     logger.warning("User ID: " + userID + " does not have permission to promote managers in group ID: " + groupId);
                     response.sendRedirect(request.getContextPath() + "/group?id=" + groupId + "&tag=members&error=" + URLEncoder.encode("Permission denied", StandardCharsets.UTF_8));
@@ -463,9 +468,11 @@ public class GroupServlet extends HttpServlet {
                     return;
                 }
                 break;
-            default:
+            }
+            default: {
                 logger.warning("Invalid action: " + action + " for group ID: " + groupId);
                 break;
+            }
         }
         response.sendRedirect(request.getContextPath() + "/group?id=" + groupId);
     }

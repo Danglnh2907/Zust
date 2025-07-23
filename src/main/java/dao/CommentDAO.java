@@ -50,7 +50,7 @@ public class CommentDAO extends DBContext {
                 SELECT c.comment_id, c.comment_content, c.comment_image, c.comment_create_date, c.comment_last_update, c.account_id, \
                 (SELECT COUNT(*) FROM like_comment WHERE comment_id = c.comment_id) AS total_likes, \
                 a.username, a.avatar, c.post_id, c.reply_comment_id, \
-                CAST(CASE WHEN EXISTS (SELECT 1 FROM like_comment WHERE comment_id = c.comment_id AND account_id = ?) THEN 1 ELSE 0 END AS BIT) AS is_liked \
+                CAST(IIF(EXISTS (SELECT 1 FROM like_comment WHERE comment_id = c.comment_id AND account_id = ?), 1, 0) AS BIT) AS is_liked \
                 FROM comment c \
                 JOIN account a ON a.account_id = c.account_id \
                 WHERE c.post_id = ? AND c.comment_status = 0 \

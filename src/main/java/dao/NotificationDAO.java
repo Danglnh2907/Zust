@@ -25,9 +25,9 @@ public class NotificationDAO {
             conn.setAutoCommit(false);
 
             String sql = """
-                    INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id)
-                    VALUES (?, ?, ?, ?, ?)
-                    """;
+                    INSERT INTO notification (notification_title, notification_content, notification_create_date, \
+                                              notification_status, account_id) \
+                    VALUES (?, ?, ?, ?, ?)""";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, notification.getTitle());
             stmt.setString(2, notification.getContent());
@@ -60,7 +60,7 @@ public class NotificationDAO {
             }
 
             String sql = """
-                    SELECT n.*, a.username, a.avatar FROM notification n
+                    SELECT n.*, a.username, a.avatar FROM notification n \
                     JOIN account a ON a.account_id = ? ORDER BY n.notification_create_date DESC""";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
@@ -152,6 +152,7 @@ public class NotificationDAO {
                         System.out.println(notification.getContent());
                     }
                 }
+                case "" -> {}
             }
         }
     }
