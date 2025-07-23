@@ -291,6 +291,23 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.show();
         });
     });
+
+    // Profile dropdown menu logic
+    const profileNav = document.querySelector('.nav-profile');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+
+    profileNav.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!e.target.matches('.nav-profile, .nav-profile *')) {
+            if (dropdownMenu.classList.contains('show')) {
+                dropdownMenu.classList.remove('show');
+            }
+        }
+    });
 });
 
 function attachListener(postId) {
