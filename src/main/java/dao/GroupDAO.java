@@ -759,7 +759,6 @@ public class GroupDAO extends DBContext {
         }
     }
 
-
     /*=== Admin section ===*/
 
     public List<ResGroupDTO> getActiveGroups() {
@@ -920,7 +919,7 @@ public class GroupDAO extends DBContext {
 
             //Get all posts in the group
             PostDAO postDAO = new PostDAO();
-            ArrayList<RespPostDTO> posts = postDAO.getPostsInGroup(groupId, userID);
+            ArrayList<RespPostDTO> posts = postDAO.getPostsInGroup(userID, groupId);
 
             //Get all the reported post in database
             String postSQL = """
@@ -945,7 +944,10 @@ public class GroupDAO extends DBContext {
                     report.setReporterID(rs.getInt("account_id"));
                     report.setReporterUsername(rs.getString("username"));
                     report.setReporterAvatar(rs.getString("avatar"));
+
+                    System.out.println(report.getReportedPost());
                     reports.add(report);
+                    logger.info(reports.size() + " reports have been reported 1");
                 }
             }
 
@@ -953,7 +955,7 @@ public class GroupDAO extends DBContext {
 
             //Get all comment belongs to a group in database
             String cmtSQL = """
-                    SELECT rc.*, p.*, a.* FROM report_comment rc \
+                    SELECT rc.*, p.*, a.*, c.* FROM report_comment rc \
                     JOIN comment c ON c.comment_id = rc.comment_id \
                     JOIN post p ON p.post_id = c.post_id \
                     JOIN account a ON a.account_id = rc.account_id \
@@ -964,14 +966,14 @@ public class GroupDAO extends DBContext {
             while (cmtRs.next()) {
                 //Create RespCommentDTO
                 RespCommentDTO comment = new RespCommentDTO();
-                comment.setId(rs.getInt("comment_id"));
+                comment.setId(cmtRs.getInt("comment_id"));
                 comment.setContent(cmtRs.getString("comment_content"));
                 comment.setImage(cmtRs.getString("comment_image"));
                 comment.setCreatedAt(cmtRs.getTimestamp("comment_create_date") != null ?
-                                rs.getTimestamp("comment_create_date").toLocalDateTime() :
+                                cmtRs.getTimestamp("comment_create_date").toLocalDateTime() :
                                 null);
                 comment.setUpdatedAt(cmtRs.getTimestamp("comment_last_update") != null ?
-                        rs.getTimestamp("comment_last_update").toLocalDateTime() : null);
+                        cmtRs.getTimestamp("comment_last_update").toLocalDateTime() : null);
                 comment.setTotalLikes(0);
                 comment.setAccountID(cmtRs.getInt("account_id"));
                 comment.setUsername(cmtRs.getString("username"));
@@ -990,9 +992,12 @@ public class GroupDAO extends DBContext {
                 report.setReporterAvatar(cmtRs.getString("avatar"));
                 report.setReportedComment(comment);
                 reports.add(report);
+                logger.info(reports.size() + " reports have been reported 2");
             }
         } catch (Exception e) {
             logger.warning("Failed to get reports in group " + e.getMessage());
+            logger.warning(e.getStackTrace().toString());
+            return reports;
         }
         return reports;
     }
@@ -1041,8 +1046,7 @@ public class GroupDAO extends DBContext {
 
     public static void main(String[] args) {
         GroupDAO dao = new GroupDAO();
-        PostDAO postDao = new PostDAO();
-        System.out.println(dao.getMembers(1, 1));
-
+        System.out.println(dao.getReports(3, 1).size());
+        System.out.println();
     }
 }

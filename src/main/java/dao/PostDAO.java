@@ -698,6 +698,36 @@ public class PostDAO extends DBContext {
         return posts;
     }
 
+    public List<RespPostDTO> getPendingPosts(int groupId) {
+        ArrayList<RespPostDTO> posts = new ArrayList<>();
+        String SQL = """
+                SELECT p.post_id, p.account_id, p.post_content, a.username, a.avatar, p.post_last_update, p.repost_post_id, p.group_id, \
+                (SELECT COUNT(*) FROM like_post lp WHERE lp.post_id = p.post_id) AS like_count, \
+                (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id AND c.comment_status = 0) AS comment_count, \
+                (SELECT COUNT(*) FROM post WHERE repost_post_id = p.post_id AND post_status = 'published') AS repost_count, \
+                0 AS is_liked \
+                FROM post p JOIN account a ON p.account_id = a.account_id \
+                WHERE p.post_status = 'sent' AND p.group_id = ? ORDER BY p.post_create_date DESC""";
+
+        try {
+            if (connection == null) {
+                logger.warning("No connection available!");
+                return posts;
+            }
+            try (PreparedStatement stmt = connection.prepareStatement(SQL)) {
+                stmt.setInt(1, groupId);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    posts.add(mapResultSetToPost(rs, 1, connection));
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning(e.getMessage());
+        }
+
+        return posts;
+    }
+
     public static void main(String[] args) {
         PostDAO dao = new PostDAO();
         Scanner sc = new Scanner(System.in);

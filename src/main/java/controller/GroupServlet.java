@@ -126,7 +126,7 @@ public class GroupServlet extends HttpServlet {
                 return;
             }
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                request.setAttribute("pendingPosts", (new PostDAO()).getPendingPosts(userID, groupId));
+                request.setAttribute("pendingPosts", (new PostDAO()).getPendingPosts(groupId));
                 request.getRequestDispatcher("/WEB-INF/views/postApprove.jsp").forward(request, response);
             } else {
                 logger.warning("User ID: " + userID + " does not have permission to view pending posts for group ID: " + groupId);
@@ -152,7 +152,8 @@ public class GroupServlet extends HttpServlet {
         else if (tag.equals("report")) {
             logger.info("Fetching reported posts for group ID: " + groupId);
             if (groupDAO.isManager(userID, groupId) || groupDAO.isLeader(userID, groupId)) {
-                request.setAttribute("reportPostList", groupDAO.getReports(userID, groupId));
+                logger.info("Fetching reported posts for group ID: " + groupId + " with user ID: " + userID);
+                request.setAttribute("reportPostList", groupDAO.getReports(groupId, userID));
                 request.getRequestDispatcher("/WEB-INF/views/reported_group.jsp").forward(request, response);
             }
         }
