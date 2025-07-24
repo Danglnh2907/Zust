@@ -56,13 +56,13 @@
         .user-info .user-username { font-size: 0.9em; color: #777; }
         .clickable-avatar:hover { transform: scale(1.1); }
 
-        .bio-cell { white-space: normal; max-width: 250px;}
-        .bio-cell .bio-content { white-space: normal; max-width: 250px;}
+        .bio-cell { white-space: normal !important; max-width: 250px;}
+        .bio-cell .bio-content { white-space: normal !important; max-width: 250px;}
         .read-more-btn { background: none; border: none; padding: 0; font: inherit; color: var(--orange); text-decoration: underline; cursor: pointer; margin-left: 5px; font-size: 0.9em; }
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; text-transform: capitalize; }
         .status-active { background-color: #e4f8eb; color: var(--green); }
         .status-banned { background-color: #ffeeed; color: var(--red); }
-        .actions .btn-ban { background-color: var(--red); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+        .actions .btn-ban { background-color: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; }
 
         .hidden { display: none; }
 

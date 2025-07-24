@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Account;
 
 import java.io.IOException;
@@ -21,6 +22,13 @@ import java.util.logging.Logger;
 
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+            HttpSession session = request.getSession();
+            if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+                response.sendRedirect(request.getContextPath() + "/auth");
+                return;
+            }
+
             AccountDAO accountDAO = new AccountDAO();
             List<Account> accountList = accountDAO.getActiveAccounts();
             request.setAttribute("accountList", accountList);
@@ -30,6 +38,12 @@ import java.util.logging.Logger;
         @Override
         protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
             LOGGER.info("Handling POST request for /accountDashboard");
+
+            HttpSession session = request.getSession();
+            if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+                response.sendRedirect(request.getContextPath() + "/auth");
+                return;
+            }
 
             AccountDAO accountDAO = new AccountDAO();
             String action = request.getParameter("action");

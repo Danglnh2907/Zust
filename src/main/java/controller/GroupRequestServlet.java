@@ -1,6 +1,7 @@
 package controller;
 
 import dao.GroupDAO;
+import jakarta.servlet.http.HttpSession;
 import model.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,6 +21,13 @@ public class GroupRequestServlet extends HttpServlet {
     private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         GroupDAO dao = new GroupDAO();
         List<ResGroupDTO> groups = dao.getInactiveGroups();
         request.setAttribute("groups", groups);
@@ -28,6 +36,13 @@ public class GroupRequestServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         GroupDAO dao = new GroupDAO();
         try{
             int groupId = Integer.parseInt(request.getParameter("groupId"));

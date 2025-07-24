@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Account;
 import model.Notification;
 import model.ResReportAccountDTO;
@@ -30,6 +31,12 @@ public class ReportUserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         AccountDAO accountDAO = new AccountDAO();
         List<ResReportAccountDTO> reportPostList = accountDAO.getAllReports();
         LOGGER.info("Successfully retrieved " + reportPostList.size() + " report posts");
@@ -42,6 +49,13 @@ public class ReportUserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         AccountDAO accountDAO = new AccountDAO();
         String action = request.getParameter("action");
         if (action == null) {
@@ -54,8 +68,7 @@ public class ReportUserServlet extends HttpServlet {
             int reportId = Integer.parseInt(request.getParameter("reportId"));
             int reportedId = Integer.parseInt(request.getParameter("reportedId"));
             if ("ban".equalsIgnoreCase(action)) {
-                accountDAO.acceptReport(reportId);
-                accountDAO.banAccount(reportedId);
+                boolean success = accountDAO.acceptReport(reportId) && accountDAO.banAccount(reportedId);
                 LOGGER.info("Successfully ban user ID: " + reportId + " for post ID: " + reportId);
             } else if ("warn".equalsIgnoreCase(action)) {
 

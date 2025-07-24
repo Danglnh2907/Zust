@@ -71,10 +71,18 @@
         .status-active { background-color: #e4f8eb; color: var(--green); }
         .status-inactive { background-color: #f3f4f6; color: #6b7280; }
         .status-banned, .status-deleted { background-color: #ffeeed; color: var(--red); }
-        .actions { display: flex; flex-direction: column; gap: 8px; }
-        .actions .btn { text-decoration: none; color: white; padding: 6px 12px; border-radius: 5px; font-size: 0.85em; font-weight: 500; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-assign { background-color: var(--blue); }
-        .btn-disband { background-color: var(--red); }
+        .action-btn {
+            text-decoration: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            margin-right: 8px;
+        }
+        .action-btn:hover { opacity: 0.8; }
+        .btn-disband { background-color: var(--red);}
 
         /* No Data & Modal Styles (Reused) */
         .no-data-message { background-color: var(--white); border-radius: 10px; padding: 60px 40px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -211,10 +219,9 @@
                 <td><%= group.getCreateDate() != null ? group.getCreateDate().format(formatter) : "N/A" %></td>
                 <%-- Actions Cell --%>
                 <td class="actions">
-<%--                    <a href="#" class="btn btn-assign"><i class="fas fa-user-plus"></i>Assign</a>--%>
                     <form action="groupDashboard" method="post" onsubmit="return confirm('Are you sure you want to ban this group? This action cannot be undone.');">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
-                        <input type="submit" name="action" value="ban" class="btn btn-disband" >
+                        <input type="submit" name="action" value="Ban" class="action-btn btn-disband" >
                     </form>
                 </td>
             </tr>

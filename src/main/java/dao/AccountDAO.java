@@ -400,37 +400,48 @@ public class AccountDAO extends DBContext {
         return reports;
     }
 
-    public void acceptReport(int id) throws SQLException {
-        Connection conn = new DBContext().getConnection();
-        conn.setAutoCommit(false);
+    public boolean acceptReport(int id){
+        Connection conn;
         try {
+            conn = new DBContext().getConnection();
+            if (conn == null) {
+                return false;
+            }
+            conn.setAutoCommit(false);
             // Update report_status to 'accepted' in report_post
             String updateReportSql = "UPDATE report_account SET report_status = 'accepted' WHERE report_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(updateReportSql)) {
                 stmt.setInt(1, id);
-                stmt.executeUpdate();
+                int affectedRow = stmt.executeUpdate();
+                if (affectedRow == 0) {
+                    conn.rollback();
+                    return false;
+                }
+                conn.commit();
+                return true;
             }
-
-            conn.commit(); // Commit transaction
         } catch (SQLException e) {
-            conn.rollback(); // Rollback on error
-            throw new SQLException("Failed to accept report: " + e.getMessage(), e);
-        } finally {
-            conn.setAutoCommit(true); // Restore default auto-commit mode
+            return false;
         }
     }
 
-    public void dismissReport(int id) throws SQLException {
+    public boolean dismissReport(int id) throws SQLException {
         String sql = "UPDATE report_account SET report_status = 'rejected' WHERE report_id = ?";
         try (Connection conn = new DBContext().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected == 0) {
-                throw new SQLException("No report found with ID: " + id);
+                if (rowsAffected == 0) {
+                    logger.warning("No report found with ID: " + id);
+                    return false;
+                }
+                logger.info("Successfully dismissed report ID: " + id);
+                return true;
+            } catch (SQLException e) {
+                logger.severe("Failed to dismiss report ID: " + id + " - Error: " + e.getMessage());
+                return false;
             }
         }
-    }
 
     public static void main(String[] args) {
         AccountDAO dao = new AccountDAO();

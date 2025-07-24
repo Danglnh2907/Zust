@@ -2,6 +2,7 @@ package controller;
 
 import dao.PostDAO;
 import dao.ReportPostDAO;
+import jakarta.servlet.http.HttpSession;
 import model.ResReportPostDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,6 +28,12 @@ public class ReportPostServlet extends HttpServlet {
         ReportPostDAO reportPostDAO = new ReportPostDAO();
         LOGGER.info("Handling GET request for /report-posts");
 
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         try {
             // Retrieve all report posts
             List<ResReportPostDTO> reportPostList = reportPostDAO.getAll();
@@ -48,6 +55,12 @@ public class ReportPostServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LOGGER.info("Handling POST request for /report-posts");
 
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         ReportPostDAO reportPostDAO = new ReportPostDAO();
         String action = request.getParameter("action");
         if (action == null) {
@@ -57,36 +70,49 @@ public class ReportPostServlet extends HttpServlet {
         }
 
         try {
+            int reportId = Integer.parseInt(request.getParameter("reportId"));
             if ("accept".equalsIgnoreCase(action)) {
                 // Handle accept report form
-                int reportId = Integer.parseInt(request.getParameter("reportId"));
+
 
                 // Process the accept report
-                reportPostDAO.acceptReport(reportId);
-                LOGGER.info("Successfully accepted report ID: " + reportId + " for post ID: " + reportId);
+                boolean success = reportPostDAO.acceptReport(reportId);
+
+                if(success){
+                    LOGGER.info("Successfully accepted report ID: " + reportId);
+//                    request.setAttribute("msg", "Report accepted successfully");
+                    doGet(request, response);
+                } else {
+                    LOGGER.warning("Failed to accept report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to accept report ID: " + reportId);
+                    doGet(request, response);
+                }
+                return;
             } else if ("dismiss".equalsIgnoreCase(action)) {
                 // Handle dismiss report form
-                int reportId = Integer.parseInt(request.getParameter("reportId"));
-                reportPostDAO.dismissReport(reportId);
+                boolean success = reportPostDAO.dismissReport(reportId);
+                if (success) {
+                    LOGGER.info("Successfully dismissed report ID: " + reportId);
+//                    request.setAttribute("msg", "Report dismissed successfully");
+                } else {
+                    LOGGER.warning("Failed to dismiss report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to dismiss report ID: " + reportId);
+                }
                 LOGGER.info("Successfully dismissed report ID: " + reportId);
             } else {
                 LOGGER.warning("Invalid action specified: " + action);
+                response.sendRedirect(request.getContextPath() + "/reportPost");
+                LOGGER.info("Redirected to /report-posts after processing action: " + action);
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
                 return;
             }
-
-            // Redirect to the report posts page
-            response.sendRedirect(request.getContextPath() + "/reportPost");
-            LOGGER.info("Redirected to /report-posts after processing action: " + action);
         } catch (NumberFormatException e) {
             LOGGER.severe("Invalid number format in request parameters: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameter format");
-        } catch (SQLException e) {
-            LOGGER.severe("Database error processing report: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error processing report: " + e.getMessage());
-        } catch (Exception e) {
+        }catch (Exception e) {
             LOGGER.severe("Unexpected error processing report: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error processing report: " + e.getMessage());
         }
+        doGet(request, response);
     }
 }

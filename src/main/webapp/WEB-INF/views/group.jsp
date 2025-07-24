@@ -60,6 +60,10 @@
                 flex-direction: column;
                 gap: 15px;
             }
+
+            /*.feed {*/
+            /*  margin: 0;*/
+            /*}*/
         </style>
     </head>
 
