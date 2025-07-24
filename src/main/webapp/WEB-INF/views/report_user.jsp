@@ -157,7 +157,8 @@
                 </div>
                 <div class="report-actions">
                     <form action="reportUser" method="post" onsubmit="return confirm('Are you sure you want to ban this user? This action cannot be undone.');">
-                        <input type="hidden" name="id" value="<%= report.getReportedUser().getId()%>">
+                        <input type="hidden" name="reportedId" value="<%= report.getReportedUser().getId()%>">
+                        <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
                         <input type="hidden" name="action" value="ban">
                         <button class="btn btn-ban">Ban User</button>
                     </form>
@@ -169,6 +170,7 @@
                     <form action="reportUser" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
                         <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                        <input type="hidden" name="reportedId" value="<%= report.getReportedUser().getId()%>">
                         <button type="submit" class="btn btn-dismiss">Dismiss Report</button>
                     </form>
                 </div>
@@ -200,7 +202,7 @@
 </main>
 
 <!-- Image Modal -->
-<div id="imageModal" class="image-modal">
+<div id="imageModal" class="image-modal modal">
     <span class="modal-close">×</span>
     <img class="modal-content" id="modalImage">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
@@ -221,7 +223,7 @@
                 <input type="hidden" name="action" value="warn">
                 <input type="hidden" id="hiddenReportId" name="reportId">
                 <input type="hidden" id="hiddenReporterId" name="reporterId">
-                <input type="hidden" id="hiddenReportedId" name="reportedPostId">
+                <input type="hidden" id="hiddenReportedId" name="reportedId">
             </div>
             <div class="modal-footer">
                 <button type="submit" class="btn-submit">Confirm</button>

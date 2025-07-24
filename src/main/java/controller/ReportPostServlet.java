@@ -49,7 +49,6 @@ public class ReportPostServlet extends HttpServlet {
         LOGGER.info("Handling POST request for /report-posts");
 
         ReportPostDAO reportPostDAO = new ReportPostDAO();
-        PostDAO postDAO = new PostDAO();
         String action = request.getParameter("action");
         if (action == null) {
             LOGGER.warning("No action specified in POST request");

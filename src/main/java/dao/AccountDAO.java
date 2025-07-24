@@ -354,13 +354,14 @@ public class AccountDAO extends DBContext {
     public List<ResReportAccountDTO> getAllReports() {
         logger.info("Retrieving all sent account reports");
         List<ResReportAccountDTO> reports = new ArrayList<>();
-        String sql = "SELECT ra.report_id, ra.report_account_id, ra.reported_account_id, ra.report_content, ra.report_create_date, " +
-                "racc.username AS reporter_username, racc.avatar AS reporter_avatar, " +
-                "ruacc.username AS reported_username, ruacc.avatar AS reported_avatar " +
-                "FROM report_account ra " +
-                "INNER JOIN account racc ON ra.report_account_id = racc.account_id " +
-                "INNER JOIN account ruacc ON ra.reported_account_id = ruacc.account_id " +
-                "WHERE ra.report_status = 'sent' AND racc.account_status = 'active' AND ruacc.account_status = 'active'";
+        String sql = """
+                SELECT ra.report_id, ra.report_account_id, ra.reported_account_id, ra.report_content, ra.report_create_date, 
+                racc.username AS reporter_username, racc.avatar AS reporter_avatar, racc.fullname AS reporter_fullname, 
+                ruacc.username AS reported_username, ruacc.avatar AS reported_avatar, ruacc.username AS reported_fullname 
+                FROM report_account ra 
+                INNER JOIN account racc ON ra.report_account_id = racc.account_id 
+                INNER JOIN account ruacc ON ra.reported_account_id = ruacc.account_id 
+                WHERE ra.report_status = 'sent' AND racc.account_status = 'active' AND ruacc.account_status = 'active'""";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -374,6 +375,7 @@ public class AccountDAO extends DBContext {
                 reporter.setId(rs.getInt("report_account_id"));
                 reporter.setUsername(rs.getString("reporter_username"));
                 reporter.setAvatar(rs.getString("reporter_avatar"));
+                reporter.setFullname(rs.getString("reporter_fullname"));
                 report.setReporter(reporter);
 
                 // Set reported user
@@ -381,6 +383,7 @@ public class AccountDAO extends DBContext {
                 reportedUser.setId(rs.getInt("reported_account_id"));
                 reportedUser.setUsername(rs.getString("reported_username"));
                 reportedUser.setAvatar(rs.getString("reported_avatar"));
+                reportedUser.setFullname(rs.getString("reported_fullname"));
                 report.setReportedUser(reportedUser);
 
                 // Set report details
@@ -395,6 +398,38 @@ public class AccountDAO extends DBContext {
         }
 
         return reports;
+    }
+
+    public void acceptReport(int id) throws SQLException {
+        Connection conn = new DBContext().getConnection();
+        conn.setAutoCommit(false);
+        try {
+            // Update report_status to 'accepted' in report_post
+            String updateReportSql = "UPDATE report_account SET report_status = 'accepted' WHERE report_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(updateReportSql)) {
+                stmt.setInt(1, id);
+                stmt.executeUpdate();
+            }
+
+            conn.commit(); // Commit transaction
+        } catch (SQLException e) {
+            conn.rollback(); // Rollback on error
+            throw new SQLException("Failed to accept report: " + e.getMessage(), e);
+        } finally {
+            conn.setAutoCommit(true); // Restore default auto-commit mode
+        }
+    }
+
+    public void dismissReport(int id) throws SQLException {
+        String sql = "UPDATE report_account SET report_status = 'rejected' WHERE report_id = ?";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("No report found with ID: " + id);
+            }
+        }
     }
 
     public static void main(String[] args) {
