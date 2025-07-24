@@ -85,7 +85,7 @@
         .modal-close:hover { color: #333; }
         .modal-body textarea { width: 100%; height: 120px; padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 1rem; resize: vertical; }
         .modal-footer { text-align: right; margin-top: 20px; }
-        .modal-footer .btn-submit { background-color: var(--red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .modal-footer .btn-submit { background-color: var(--yellow); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; }
         .image-modal .modal-content-wrapper { background: none; box-shadow: none; width: auto; max-width: 80%; padding: 0; } /* Specific for image modal */
     </style>
 </head>
@@ -165,7 +165,7 @@
                             data-report-id="<%= report.getReportId() %>"
                             data-reporter-id="<%= reporter != null ? reporter.getId() : "0" %>"
                             data-reported-id="<%= report.getReportedUser() != null ? report.getReportedUser().getId() : "0" %>"
-                    >Warn User</button>
+                    >Warning User</button>
                     <form action="reportUser" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
                         <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
@@ -221,10 +221,10 @@
                 <input type="hidden" name="action" value="warn">
                 <input type="hidden" id="hiddenReportId" name="reportId">
                 <input type="hidden" id="hiddenReporterId" name="reporterId">
-                <input type="hidden" id="hiddenReportedPostId" name="reportedPostId">
+                <input type="hidden" id="hiddenReportedId" name="reportedPostId">
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn-suspend">Confirm</button>
+                <button type="submit" class="btn-submit">Confirm</button>
             </div>
         </form>
     </div>
