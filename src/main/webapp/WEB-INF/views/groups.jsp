@@ -1,14 +1,13 @@
 <%@ page import="model.InteractGroupDTO" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.time.LocalDateTime" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
-
 
 <%
     List<InteractGroupDTO> allGroups = (List<InteractGroupDTO>) request.getAttribute("allGroups");
 %>
+
+<!-- SEE ALL GROUP PAGE -->
 
 <!DOCTYPE html>
 <html>
@@ -267,7 +266,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -553,10 +552,8 @@
                         event.preventDefault();  // Prevent the card's link from firing
                         event.stopPropagation(); // Stop the event from bubbling up
 
-                        const groupId = this.dataset.groupId;
-
                         // Set the groupId in the modal's hidden form field
-                        joinForm.querySelector('#modalGroupId').value = groupId;
+                        joinForm.querySelector('#modalGroupId').value = this.dataset.groupId;
 
                         // Display the modal
                         joinModal.style.display = 'flex';
@@ -572,7 +569,7 @@
 
                 // Close modal by clicking background
                 window.addEventListener('click', (event) => {
-                    if (event.target == joinModal) {
+                    if (event.target === joinModal) {
                         closeModal(joinModal);
                     }
                 });

@@ -1,8 +1,6 @@
 <%@ page import="model.InteractGroupDTO" %>
 <%@ page import="model.RespPostDTO" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.time.LocalDateTime" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 
@@ -107,7 +105,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -231,7 +229,7 @@
                 <!-- Group section -->
                 <% if (group == null) { %>
                 <div class="no-data-message-post" style="margin-top: 20px;"><h2>Group Not Found</h2>
-                    <p>The requested group does not exist or it was deleted.</p></div>
+                    <p>The requested group does not exist, or it was deleted.</p></div>
                 <% } else {
                     InteractGroupDTO.InteractStatus interactStatus = group.getInteractStatus();
                 %>
@@ -445,7 +443,7 @@
                 });
                 window.addEventListener('click', (event) => {
                     allModals.forEach(modal => {
-                        if (event.target == modal) closeModal(modal);
+                        if (event.target === modal) closeModal(modal);
                     });
                 });
 

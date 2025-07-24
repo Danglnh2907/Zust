@@ -13,6 +13,10 @@ public class ReqGroupDTO {
         this.managerId = managerId;
     }
 
+    public ReqGroupDTO(){
+
+    }
+
     public String getGroupName() {
         return groupName;
     }

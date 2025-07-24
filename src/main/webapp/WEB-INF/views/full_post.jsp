@@ -3,14 +3,13 @@
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="model.RespCommentDTO" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="java.util.Map" %><%--
-  Created by IntelliJ IDEA.
-  User: Asus
-  Date: 6/20/2025
-  Time: 2:05 PM
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="model.InteractGroupDTO" %>
+<%@ page import="java.util.List" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+
+<!-- FULL POST PAGE -->
+
 <html>
     <head>
         <title>Title</title>
@@ -30,6 +29,8 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/composer.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/comment.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/group.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
     </head>
     <body>
         <%
@@ -86,8 +87,7 @@
                             </svg>
                             <span>Home</span>
                         </a></li>
-                        <%Account currentUser = (Account) request.getSession().getAttribute("users");%>
-                        <li><a href="${pageContext.request.contextPath}/profile?userId=<%=currentUser.getId()%>">
+                        <li><a href="${pageContext.request.contextPath}/profile?userId=<%=account.getId()%>">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -96,7 +96,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/sendCreateGroupRequest">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -105,39 +105,53 @@
                                 <line x1="12" y1="18" x2="12" y2="12"></line>
                                 <line x1="9" y1="15" x2="15" y2="15"></line>
                             </svg>
-                            <span>Create Request</span>
+                            <span>Create Group</span>
                         </a></li>
                     </ul>
                 </nav>
                 <div class="sidebar-divider"></div>
+
+                <% List<InteractGroupDTO> groups = (List<InteractGroupDTO>) request.getAttribute("joinedGroups");%>
                 <div class="groups-header">
                     <h2>My Groups</h2>
-                    <span class="groups-count">19</span>
+                    <span class="groups-count"><%= groups != null ? groups.size() : 0 %></span>
                 </div>
-                <div class="group-list">
-                    <div class="group-item">
-                        <img src="https://i.pravatar.cc/150?u=group1" alt="Group Avatar">
-                        <div class="group-item-info">
-                            <span>Websters Shivaji</span>
-                            <span class="members">764 members</span>
-                        </div>
+                <div class="scrollable-group-list">
+                    <%
+                        if (groups != null && !groups.isEmpty()) {
+                    %>
+                    <div class="group-list">
+                        <%
+                            for (InteractGroupDTO group : groups) {
+                                String status = group.getStatus() != null ? group.getStatus().toLowerCase() : "unknown";
+                        %>
+                        <a href="${pageContext.request.contextPath}/group?id=<%= group.getId() %>" class="group-link">
+                            <div class="group-item">
+                                <img src="${pageContext.request.contextPath}/static/images/<%= group.getCoverImage()%>"
+                                     alt="Group Avatar">
+                                <div class="group-item-info">
+                                    <span><%= group.getName()%></span>
+                                    <span class="members"><%= group.getMemberCount()%> members</span>
+                                    <span class="status-badge status-<%= status %>"><%= status %></span>
+                                </div>
+                            </div>
+                        </a>
+                        <%
+                            }
+                        %>
                     </div>
-                    <div class="group-item">
-                        <img src="https://i.pravatar.cc/150?u=group2" alt="Group Avatar">
-                        <div class="group-item-info">
-                            <span>Enactus Shivaji</span>
-                            <span class="members">804 members</span>
-                        </div>
+                    <%
+                    } else {
+                    %>
+                    <div class="no-data-message">
+                        <div class="icon"><i class="fas fa-search"></i></div>
+                        <h2>No Groups Found</h2>
                     </div>
-                    <div class="group-item">
-                        <img src="https://i.pravatar.cc/150?u=group3" alt="Group Avatar">
-                        <div class="group-item-info">
-                            <span>Women Development...</span>
-                            <span class="members">104 members</span>
-                        </div>
-                    </div>
+                    <%
+                        }
+                    %>
                 </div>
-                <button class="see-all-btn">See All</button>
+                <button class="see-all-btn" onclick="location.href='group'">See All</button>
             </aside>
 
             <main class="main-content">
@@ -168,15 +182,35 @@
                             </div>
                         </div>
                     </div>
-
+                    <%
+                        String linkAvatar = account.getAvatar();
+                    %>
                     <div class="nav-profile-container">
+                        <!-- Notification button -->
+                        <div class="notification-container">
+                            <button class="notification-btn" id="notification-btn" aria-label="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge hidden" id="notification-badge"></span>
+                            </button>
+                            <div class="notification-dropdown" id="notification-dropdown">
+                                <div class="notification-header">
+                                    <h3>Notifications</h3>
+                                    <button id="mark-all-read-btn">Mark all as read</button>
+                                </div>
+                                <div class="notification-list" id="notification-list">
+                                    <!-- Data will be populated by JS here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile and dropdown for logout here -->
                         <a href="#" class="nav-profile">
-                            <img src="${pageContext.request.contextPath}/static/images/<%=account.getAvatar()%>"
+                            <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
                                  alt="User Profile Picture">
                             <span><%=account.getFullname()%></span>
                         </a>
                         <div class="dropdown-menu">
-                            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Log out</a>
                         </div>
                     </div>
                 </header>
@@ -269,11 +303,29 @@
                 crossorigin="anonymous"></script>
         <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
         <script src="${pageContext.request.contextPath}/js/post.js"></script>
+        <script src="${pageContext.request.contextPath}/js/comment.js"></script>
         <script src="${pageContext.request.contextPath}/js/composer.js"></script>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
+        <script src="${pageContext.request.contextPath}/js/notification.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 attachListener(<%= post.getPostId() %>)
+                // Profile dropdown menu logic
+                const profileNav = document.querySelector('.nav-profile');
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+
+                profileNav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.matches('.nav-profile, .nav-profile *')) {
+                        if (dropdownMenu.classList.contains('show')) {
+                            dropdownMenu.classList.remove('show');
+                        }
+                    }
+                });
             });
         </script>
     </body>

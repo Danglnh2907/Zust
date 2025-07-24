@@ -66,7 +66,7 @@ public class UserProfileServlet extends HttpServlet {
                 ArrayList<RespPostDTO> totalPosts = postDAO.getPosts(requesterId, userProfile.getId());
 
                 //Filter between post and repost
-                ArrayList<RespPostDTO> posts = postDAO.getPosts(requesterId, userId);
+                ArrayList<RespPostDTO> posts = new ArrayList<>();
                 ArrayList<RespPostDTO> reposts = new ArrayList<>();
                 for (RespPostDTO post : totalPosts) {
                     if (post.getRepost() != null) {
@@ -85,11 +85,12 @@ public class UserProfileServlet extends HttpServlet {
                 //If the requester is currently visit their own page, get the list of friend request
                 if (Objects.equals(account.getId(), userProfile.getId())) {
                     List<FriendRequest> friendRequests = accountDAO.getFriendRequests(account.getId());
+                    logger.info("Friend requests found: " + friendRequests.size());
                     request.setAttribute("friendRequests", friendRequests);
                 }
                 //If the requester is currently visit other page
-                //get the list of user that are friend with requester,
-                //and the list of user that requester has sent friend requests but the other side still not reply
+                //get if the current profile is friend with requester, or if requester has sent friend request but
+                //other the current profile still not accept it (pending state)
                 else {
                     boolean areFriends = accountDAO.areFriends(account.getId(), userProfile.getId());
                     boolean friendRequestPending = accountDAO.isFriendRequestPending(account.getId(), userProfile.getId());
@@ -98,9 +99,9 @@ public class UserProfileServlet extends HttpServlet {
                 }
 
                 //Get list of joined groups (for UI render)
-                request.setAttribute("group", (new GroupDAO()).getJoinedGroups(account.getId()));
+                request.setAttribute("joinedGroups", (new GroupDAO()).getJoinedGroups(account.getId()));
 
-                request.getSession().setAttribute("userProfile", userProfile);
+                request.getSession().setAttribute("profile", userProfile);
                 request.getRequestDispatcher("/WEB-INF/views/user_profile.jsp").forward(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
@@ -200,13 +201,14 @@ public class UserProfileServlet extends HttpServlet {
                             }
                         }
 
-                        //Update new data to account
-                        account.setFullname(fullname);
-                        account.setPhone(phone);
-                        account.setGender(gender);
-                        account.setDob(dob);
-                        account.setAvatar(avatar);
-                        account.setCoverImage(coverImage);
+                        // Update new data to account, only if the new data is not null or empty
+                        if (fullname != null && !fullname.isEmpty()) account.setFullname(fullname);
+                        if (phone != null && !phone.isEmpty()) account.setPhone(phone);
+                        account.setGender(gender); // Gender is always present
+                        if (dob != null) account.setDob(dob);
+                        if (bio != null && !bio.isEmpty()) account.setBio(bio);
+                        if (avatar != null && !avatar.isEmpty()) account.setAvatar(avatar);
+                        if (coverImage != null && !coverImage.isEmpty()) account.setCoverImage(coverImage);
 
                         //Update data back in database
                         boolean success = (new AccountDAO()).updateAccount(account);

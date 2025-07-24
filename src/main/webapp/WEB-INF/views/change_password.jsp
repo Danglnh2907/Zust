@@ -1,4 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<!-- CHANGE PASSWORD PAGE -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

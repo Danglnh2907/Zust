@@ -1,10 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, java.util.ArrayList" %>
-<%@ page import="model.RespCommentDTO" %>
+<%@ page import="java.util.List" %>
 <%@ page import="model.Account" %>
 <%@ page import="model.ResReportCommentDTO" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 
+<!-- REPORT COMMENT HANDLING PAGE (ADMIN DASHBOARD)-->
 
 <%
     SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
@@ -135,7 +135,7 @@
                 <h3><i class="fas fa-envelope-open-text"></i> Report Reason</h3>
                 <div class="report-date">Date: <%= dt.format(report.getReportDate())%></div>
                 <div class="report-message">
-                    <% String message = report.getReportMessage();
+                    <% String message = report.getReportContent();
                         if (message != null && message.length() > 100) {
                             String shortMsg = message.substring(0, 100) + "..."; %>
                     <span class="short-text"><%= shortMsg %></span>
@@ -147,11 +147,7 @@
                     <form action="reportComment" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deleted this comment? This action cannot be undone.');">
                         <input type="hidden" name="action" value="accept">
                         <input type="hidden" name="reportId" value="<%= report.getId() %>">
-                        <input type="hidden" name="reportAccountId" value="<%= report.getReporter().getId() %>">
-                        <input type="hidden" name="reportedAccountId" value="<%= report.getCommenter().getId() %>">
-                        <input type="hidden" name="reportedId" value="<%= report.getCommentId() %>">
-                        <input type="hidden" name="notificationContent" value="<%= report.getReportMessage()%>">
-                        <button type="submit" class="btn btn-delete">Delete Comment</button>
+                        <button type="submit" class="btn btn-delete">Takedown Comment</button>
                     </form>
                     <form action="reportComment" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
@@ -201,7 +197,7 @@
 <!-- Image Modal -->
 <div id="imageModal" class="image-modal">
     <span class="modal-close">×</span>
-    <img class="modal-content" id="modalImage">
+    <img class="modal-content" id="modalImage" src="" alt="">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
 </div>
 
@@ -221,7 +217,7 @@
         });
         function closeModal() { modal.style.display = "none"; }
         modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
+        window.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
         // --- "Read More" Logic ---
         document.querySelectorAll('.read-more-btn').forEach(button => {

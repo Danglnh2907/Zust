@@ -2,14 +2,14 @@
 <%@ page import="model.RespPostDTO" %>
 <%@ page import="model.JoinGroupRequestDTO" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.time.LocalDateTime" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 
 <% InteractGroupDTO group = (InteractGroupDTO) request.getAttribute("group"); %>
 <% List<RespPostDTO> pendingPosts = (List<RespPostDTO>) request.getAttribute("pendingPosts"); %>
 <% List<RespPostDTO> groupPosts = (List<RespPostDTO>) request.getAttribute("posts"); %>
+
+<!-- JOIN REQUEST PAGE (GROUP MANAGER) -->
 
 <!DOCTYPE html>
 <html>
@@ -170,7 +170,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -291,7 +291,7 @@
                 <% if (group == null) { %>
                 <div class="no-data-message-post" style="margin-top: 20px;">
                     <h2>Group Not Found</h2>
-                    <p>The requested group does not exist or it was deleted.</p>
+                    <p>The requested group does not exist, or it was deleted.</p>
                 </div>
                 <% } else { %>
                 <% InteractGroupDTO.InteractStatus interactStatus = group.getInteractStatus(); %>
@@ -555,7 +555,7 @@
                 });
                 window.addEventListener('click', (event) => {
                     allModals.forEach(modal => {
-                        if (event.target == modal) closeModal(modal);
+                        if (event.target === modal) closeModal(modal);
                     });
                 });
 
@@ -593,8 +593,7 @@
                 const coverImageElement = document.querySelector('.clickable-cover');
                 if (coverImageElement) {
                     coverImageElement.addEventListener('click', function () {
-                        const imageUrl = this.dataset.imageUrl;
-                        document.getElementById('modalImage').src = imageUrl;
+                        document.getElementById('modalImage').src = this.dataset.imageUrl;
                         imageModal.style.display = 'flex';
                     });
                 }

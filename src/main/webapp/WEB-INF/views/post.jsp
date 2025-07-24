@@ -4,6 +4,9 @@
 <%@ page import="model.Account" %>
 <%@ page import="model.InteractGroupDTO" %>
 <%@ page import="java.util.List" %>
+
+<!-- HOMEPAGE (SHOW MAIN FEED) -->
+
 <html>
     <head>
         <meta charset="UTF-8">

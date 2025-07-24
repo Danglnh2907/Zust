@@ -1,6 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, java.util.ArrayList" %>
+<%@ page import="java.util.List" %>
 <%@ page import="model.Account" %>
+
+<!-- ADMIN DASHBOARD: account section -->
 
 <%
     List<Account> accountList = (List<Account>) request.getAttribute("accountList");
@@ -189,7 +191,7 @@
 <!-- Image Modal -->
 <div id="imageModal" class="image-modal">
     <span class="modal-close">×</span>
-    <img class="modal-content" id="modalImage">
+    <img class="modal-content" id="modalImage" alt="" src="">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
 </div>
 
@@ -269,7 +271,7 @@
 
         function closeModal() { modal.style.display = "none"; }
         modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
+        window.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
         // --- Initial filter on page load ---
         filterUsers();

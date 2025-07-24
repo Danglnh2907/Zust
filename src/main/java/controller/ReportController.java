@@ -4,14 +4,13 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
+import dao.AccountDAO;
 import dao.CommentDAO;
 import dao.PostDAO;
-import model.ReportCommentDTO;
-import model.ReportPostDTO;
+import model.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 import jakarta.servlet.ServletException;
-import model.Account;
 
 @WebServlet(name = "ReportControllerServlet", value = "/report")
 public class ReportController extends HttpServlet {
@@ -34,7 +33,7 @@ public class ReportController extends HttpServlet {
             return;
         }
 
-        //Get type and if
+        //Get type and id
         String type = "";
         int id = -1;
         try {
@@ -121,7 +120,19 @@ public class ReportController extends HttpServlet {
                     }
                 }
                 case "account" -> {
-
+                    AccountDAO accountDAO = new AccountDAO();
+                    ReportAccountDTO dto = new ReportAccountDTO();
+                    dto.setReporterId(account.getId());
+                    dto.setCreatedAt(LocalDateTime.now());
+                    dto.setReportedId(id);
+                    dto.setStatus("sent");
+                    dto.setContent(content);
+                    boolean success = accountDAO.report(dto);
+                    if (success) {
+                        response.setStatus(HttpServletResponse.SC_CREATED);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
                 }
             }
         } catch (NumberFormatException e) {

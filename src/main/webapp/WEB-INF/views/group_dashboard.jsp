@@ -7,8 +7,10 @@
 <%
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
     List<ResGroupDTO> groupList = (List<ResGroupDTO>) request.getAttribute("groupList");
-    String currentPage = "group";
+    //String currentPage = "group";
 %>
+
+<!-- GROUP DASHBOARD PAGE (ADMIN) -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -228,7 +230,7 @@
 <!-- Image Modal (Reused for all images) -->
 <div id="imageModal" class="image-modal">
     <span class="modal-close">×</span>
-    <img class="modal-content" id="modalImage">
+    <img class="modal-content" id="modalImage" src="" alt="">
     <div id="modal-caption"></div>
 </div>
 
@@ -270,7 +272,7 @@
             modal.style.display = "none";
         }
         closeBtn.addEventListener('click', closeModal);
-        window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
+        window.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
         // --- Prevent action buttons from triggering parent clicks (good practice) ---
         document.querySelectorAll('.actions .btn').forEach(button => {

@@ -1,6 +1,5 @@
 package dao;
 
-import model.AcceptReportDTO;
 import model.ResReportPostDTO;
 import model.RespPostDTO;
 import model.Account;
@@ -121,44 +120,14 @@ public class ReportPostDAO extends DBContext {
         return reportPostList;
     }
 
-    public void acceptReport(AcceptReportDTO acceptReportDTO) throws SQLException {
+    public void acceptReport(int id) throws SQLException {
         Connection conn = new DBContext().getConnection();
         conn.setAutoCommit(false);
         try {
             // Update report_status to 'accepted' in report_post
             String updateReportSql = "UPDATE report_post SET report_status = 'accepted' WHERE report_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(updateReportSql)) {
-                stmt.setInt(1, acceptReportDTO.getReportId());
-                stmt.executeUpdate();
-            }
-
-            // Update post_status to 'deleted' in post
-            String updatePostSql = "UPDATE post SET post_status = 'deleted' WHERE post_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(updatePostSql)) {
-                stmt.setInt(1, acceptReportDTO.getReportedId());
-                stmt.executeUpdate();
-            }
-
-            // Subtract 20 credits from the reported account
-            String subtractCreditSql = "UPDATE account SET credit = credit - 5 WHERE account_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(subtractCreditSql)) {
-                stmt.setInt(1, acceptReportDTO.getReportedAccountId());
-                stmt.executeUpdate();
-            }
-
-            // Add 3 credits to the reporter account
-            String addCreditSql = "UPDATE account SET credit = credit + 1 WHERE account_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(addCreditSql)) {
-                stmt.setInt(1, acceptReportDTO.getReportAccountId());
-                stmt.executeUpdate();
-            }
-
-            // Insert notification into notification table
-            String insertNotificationSql = "INSERT INTO notification (notification_title, notification_content, notification_create_date, notification_status, account_id) " +
-                    "VALUES ('Warning: Post get Deleted', ?, GETDATE(), 'sent', ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
-                stmt.setString(1, acceptReportDTO.getNotificationContent());
-                stmt.setInt(2, acceptReportDTO.getReportedAccountId());
+                stmt.setInt(1, id);
                 stmt.executeUpdate();
             }
 
@@ -185,6 +154,7 @@ public class ReportPostDAO extends DBContext {
 
     public static void main(String[] args) {
         ReportPostDAO reportPostDAO = new ReportPostDAO();
-//        System.out.println(reportPostDAO.getAll().get(0).getPost());
+        PostDAO postDAO = new PostDAO();
+//        System.out.println(postDAO.getPendingPosts(1, 3));
     }
 }

@@ -1,6 +1,8 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class ResReportCommentDTO {
     private int id;
@@ -9,17 +11,10 @@ public class ResReportCommentDTO {
     private int commentId;
     private String commentContent;
     private String commentImage;
-    private String reportMessage;
+    private List<String> reportContent;
     private Date reportDate;
 
     public ResReportCommentDTO() {
-        this.reporter = new Account();
-        this.commenter = new Account();
-        this.commentId = 0;
-        this.commentContent = "";
-        this.commentImage = "";
-        this.reportMessage = "";
-        this.reportDate = new Date();
     }
 
     // Getters and Setters
@@ -36,11 +31,7 @@ public class ResReportCommentDTO {
     }
 
     public void setReporter(Account reporter) {
-        if (reporter == null) {
-            this.reporter = new Account();
-        } else {
-            this.reporter = reporter;
-        }
+        this.reporter = reporter;
     }
 
     public Account getCommenter() {
@@ -48,11 +39,7 @@ public class ResReportCommentDTO {
     }
 
     public void setCommenter(Account commenter) {
-        if (commenter == null) {
-            this.commenter = new Account();
-        } else {
-            this.commenter = commenter;
-        }
+        this.commenter = commenter;
     }
 
     public int getCommentId() {
@@ -68,7 +55,7 @@ public class ResReportCommentDTO {
     }
 
     public void setCommentContent(String commentContent) {
-        this.commentContent = commentContent != null ? commentContent : "";
+        this.commentContent = commentContent;
     }
 
     public String getCommentImage() {
@@ -79,16 +66,16 @@ public class ResReportCommentDTO {
         this.commentImage = commentImage != null ? commentImage : "";
     }
 
-    public String getReportMessage() {
-        if (reportMessage == null) {
-            return "";
+    public String getReportContent() {
+        String result = "";
+        for (String content : reportContent) {
+            result += content + "<br>";
         }
-        // Replace # delimiter with <br> for display
-        return reportMessage.replace("#", ", ");
+        return result;
     }
 
-    public void setReportMessage(String reportMessage) {
-        this.reportMessage = reportMessage != null ? reportMessage : "";
+    public void setReportContent(String reportContent) {
+        this.reportContent = extractContent(reportContent);
     }
 
     public Date getReportDate() {
@@ -103,17 +90,15 @@ public class ResReportCommentDTO {
         }
     }
 
-    @Override
-    public String toString() {
-        return "ResReportCommentDTO{" +
-                "id=" + id +
-                ", reporter=" + (reporter != null ? "Account{id=" + reporter.getId() + ", username=" + reporter.getUsername() + "}" : "null") +
-                ", commenter=" + (commenter != null ? "Account{id=" + commenter.getId() + ", username=" + commenter.getUsername() + "}" : "null") +
-                ", commentId=" + commentId +
-                ", commentContent='" + commentContent + '\'' +
-                ", commentImage='" + commentImage + '\'' +
-                ", reportMessage='" + reportMessage + '\'' +
-                ", reportDate=" + reportDate +
-                '}';
+    public static List<String> extractContent(String content){
+        List<String> list = new ArrayList<>();
+        String[] lines = content.split("#");
+        for(String line : lines){
+            line = line.trim();
+            if(line.length() > 0){
+                list.add(line);
+            }
+        }
+        return list;
     }
 }

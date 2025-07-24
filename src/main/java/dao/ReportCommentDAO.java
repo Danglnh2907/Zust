@@ -1,6 +1,5 @@
 package dao;
 
-import model.AcceptReportDTO;
 import model.ResReportCommentDTO;
 import model.Account;
 import util.database.DBContext;
@@ -57,7 +56,7 @@ public class ReportCommentDAO extends DBContext {
                 // Set comment details
                 report.setCommentContent(rs.getString("comment_content"));
                 report.setCommentImage(rs.getString("comment_image"));
-                report.setReportMessage(rs.getString("report_content"));
+                report.setReportContent(rs.getString("report_content"));
                 report.setReportDate(rs.getTimestamp("report_create_date"));
 
                 reports.add(report);
@@ -70,14 +69,10 @@ public class ReportCommentDAO extends DBContext {
         return reports;
     }
 
-    public boolean acceptReport(AcceptReportDTO dto) {
-        logger.info("Accepting comment report ID: " + dto.getReportId() + " for comment ID: " + dto.getReportedId());
+    public boolean acceptReport(int id) {
+        logger.info("Accepting comment report ID: " + id);
         String updateReportSql = "UPDATE report_comment SET report_status = 'accepted' WHERE report_id = ?";
-        String updateCommentSql = "UPDATE comment SET comment_status = 1 WHERE comment_id = ?";
-        String reduceCommenterCreditSql = "UPDATE account SET credit = credit - 5 WHERE account_id = ?";
-        String increaseReporterCreditSql = "UPDATE account SET credit = credit + 1 WHERE account_id = ?";
-        String insertNotificationSql = "INSERT INTO notification (account_id, notification_title, notification_content, notification_create_date) " +
-                "VALUES (?, 'Warning: comment get deleted', ?, GETDATE())";
+
 
         Connection conn = null;
         try {
@@ -86,60 +81,18 @@ public class ReportCommentDAO extends DBContext {
 
             // Update report status
             try (PreparedStatement stmt = conn.prepareStatement(updateReportSql)) {
-                stmt.setInt(1, dto.getReportId());
+                stmt.setInt(1, id);
                 if (stmt.executeUpdate() == 0) {
-                    logger.warning("No report found with ID: " + dto.getReportId());
+                    logger.warning("No report found with ID: " + id);
                     conn.rollback();
                     return false;
                 }
             }
-
-            // Update comment status
-            try (PreparedStatement stmt = conn.prepareStatement(updateCommentSql)) {
-                stmt.setInt(1, dto.getReportedId());
-                if (stmt.executeUpdate() == 0) {
-                    logger.warning("No comment found with ID: " + dto.getReportedId());
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            // Reduce commenter credit
-            try (PreparedStatement stmt = conn.prepareStatement(reduceCommenterCreditSql)) {
-                stmt.setInt(1, dto.getReportedAccountId());
-                if (stmt.executeUpdate() == 0) {
-                    logger.warning("No account found with ID: " + dto.getReportedAccountId());
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            // Increase reporter credit
-            try (PreparedStatement stmt = conn.prepareStatement(increaseReporterCreditSql)) {
-                stmt.setInt(1, dto.getReportAccountId());
-                if (stmt.executeUpdate() == 0) {
-                    logger.warning("No account found with ID: " + dto.getReportAccountId());
-                    conn.rollback();
-                    return false;
-                }
-            }
-
-            // Insert notification
-            try (PreparedStatement stmt = conn.prepareStatement(insertNotificationSql)) {
-                stmt.setInt(1, dto.getReportedAccountId());
-                stmt.setString(2, dto.getNotificationContent());
-                if (stmt.executeUpdate() == 0) {
-                    logger.warning("Failed to insert notification for account ID: " + dto.getReportedAccountId());
-                    conn.rollback();
-                    return false;
-                }
-            }
-
             conn.commit();
-            logger.info("Successfully accepted report ID: " + dto.getReportId());
+            logger.info("Successfully accepted report ID: " + id);
             return true;
         } catch (SQLException e) {
-            logger.severe("Failed to accept report ID: " + dto.getReportId() + " - Error: " + e.getMessage());
+            logger.severe("Failed to accept report ID: " + id + " - Error: " + e.getMessage());
             if (conn != null) {
                 try {
                     conn.rollback();

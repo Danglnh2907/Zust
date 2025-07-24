@@ -1,7 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="model.Account" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+
+<!-- CREATE GROUP PAGE -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -91,9 +90,9 @@
             cursor: pointer; transition: background-color 0.2s; border: 2px solid transparent;
         }
         .manager-item:hover { background-color: #f5f5f5; }
-        .manager-item-label:has(input:checked) {
+/*        .manager-item-label:has(input:checked) {
             background-color: #fff8f2; border-color: var(--primary-color);
-        }
+        }*/
 
         .manager-item input[type="checkbox"] {
             margin-right: 15px; width: 18px; height: 18px; accent-color: var(--primary-color);
@@ -126,19 +125,19 @@
 
         .action-buttons-group {
             display: flex;
-            gap: 15px; /* Khoảng cách giữa 2 nút */
-            margin-top: 40px; /* Thêm khoảng cách với trường bên trên */
+            gap: 15px; /* Distance between 2 buttons */
+            margin-top: 40px; /* Add space between the above field */
         }
-        /* Style chung cho cả 2 nút */
+        /* Global Style for 2 buttons*/
         .btn {
-            flex: 1; /* Hai nút sẽ chia đều không gian */
+            flex: 1; /* 2 buttons will have the same even space */
             padding: 15px;
             border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            text-decoration: none; /* Loại bỏ gạch chân cho thẻ <a> */
+            text-decoration: none; /* Remove underline for hyperlink */
             transition: all 0.2s ease;
         }
         .btn:hover {
@@ -162,7 +161,7 @@
             border: 2px solid var(--primary-color);
         }
         .back-btn:hover {
-            background-color: #fff8f2; /* Màu nền cam rất nhạt khi hover */
+            background-color: #fff8f2; /* Orange background when hover */
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
         }
 
