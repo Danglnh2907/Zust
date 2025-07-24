@@ -23,7 +23,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
             crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/post.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -92,6 +91,253 @@
         /*.modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }*/
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
         .clickable-image:hover { transform: scale(1.1); }
+
+        .feed {
+            padding: 24px;
+            max-width: 680px;
+            /* A bit wider for the main content area */
+            margin: 0 auto;
+            /* Center the feed column */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- Post Component Styles --- */
+        .post {
+            background-color: var(--white);
+            border: 1px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            position: relative;
+        }
+
+        .post-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .post-user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-user-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .post-user-handle {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .post-timestamp {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            margin-left: 8px;
+        }
+
+        .post-repost-text {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .post-group-separator {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .post-options {
+            margin-left: auto;
+        }
+
+        .options-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--dark-gray);
+        }
+
+        .options-btn:hover {
+            background-color: rgba(29, 161, 242, 0.1);
+            color: var(--primary-color);
+        }
+
+        .options-menu {
+            position: absolute;
+            top: 45px;
+            right: 16px;
+            background-color: var(--white);
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            display: none;
+            overflow: hidden;
+        }
+
+        .options-menu.show {
+            display: block;
+        }
+
+        .options-menu a {
+            display: block;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #14171a;
+            font-size: 0.9rem;
+        }
+
+        .options-menu a:hover {
+            background-color: var(--medium-gray);
+        }
+
+        .options-menu a.delete {
+            color: var(--like-color);
+        }
+
+        .post-content {
+            padding: 0 16px 16px 16px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #14171a;
+        }
+
+        .post-content p {
+            margin: 0 0 1em 0;
+        }
+
+        .post-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .post-media {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            max-height: 600px;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .carousel-btn.hidden {
+            display: none;
+        }
+
+        .carousel-btn.prev {
+            left: 10px;
+        }
+
+        .carousel-btn.next {
+            right: 10px;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 16px;
+            margin-top: 12px;
+        }
+
+        .action-btn-group {
+            display: flex;
+            align-items: center;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 9999px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .action-btn .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .action-btn-group .count {
+            margin-left: 8px;
+        }
+
+        .like-btn-group:hover .action-btn,
+        .like-btn.liked {
+            color: var(--like-color);
+        }
+
+        .comment-btn-group:hover .action-btn {
+            color: var(--primary-color);
+        }
+
+        .repost-btn-group:hover .action-btn {
+            color: var(--repost-color);
+        }
+
+        .icon-heart-filled {
+            display: none;
+        }
+
+        .like-btn.liked .icon-heart-filled {
+            display: block;
+        }
+
+        .like-btn.liked .icon-heart-outline {
+            display: none;
+        }
+        a.post-user-name {
+            pointer-events: none;
+            cursor: default;
+            text-decoration: none;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -167,15 +413,11 @@
                     <% } %>
                 </div>
                 <div class="report-actions">
-<%--                    <button class="btn btn-takedown">Take Down Post</button>--%>
-<%--                    <button class="btn btn-dismiss">Dismiss Report</button>--%>
-                    <button class="btn btn-takedown"
-                            data-report-id="<%= report.getReportId() %>"
-                            data-reporter-id="<%= reporter != null ? reporter.getId() : "0" %>"
-                            data-reported-id="<%= report.getPost().getUsername() != null ? report.getPost().getUsername() : "0" %>"
-                            data-reported-post-id="<%= report.getPost().getPostId()%>">
-                        Takedown Post
-                    </button>
+                    <form action="reportPost" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deleted this comment? This action cannot be undone.');">
+                        <input type="hidden" name="action" value="accept">
+                        <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                        <button type="submit" class="btn btn-takedown">Takedown Post</button>
+                    </form>
                     <form action="reportPost" method="POST" style="display: inline;">
                         <input type="hidden" name="action" value="dismiss">
                         <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
@@ -208,32 +450,6 @@
     <span class="modal-close">×</span>
     <img class="modal-content" id="modalImage" src="" alt="">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
-</div>
-
-<!-- NEW: Suspend User Modal -->
-<div id="suspendModal" class="modal">
-    <div class="modal-content-wrapper">
-        <div class="modal-header">
-            <h2>Take-down Post</h2>
-            <span class="modal-close">×</span>
-        </div>
-        <form id="suspendForm" action="reportPost" method="POST">
-            <div class="modal-body">
-                <p>Enter a message for the reported user. This will be sent as a notification.</p>
-                <textarea name="suspensionMessage" required placeholder="E.g., Your post has been deleted for violating community guidelines..."></textarea>
-
-                <!-- Hidden fields to be populated by JavaScript -->
-                <input type="hidden" name="action" value="accept">
-                <input type="hidden" id="hiddenReportId" name="reportId">
-                <input type="hidden" id="hiddenReporterId" name="reporterId">
-                <input type="hidden" id="hiddenReportedId" name="reportedUsename">
-                <input type="hidden" id="hiddenReportedPostId" name="reportedPostId">
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn-submit">Confirm</button>
-            </div>
-        </form>
-    </div>
 </div>
 
 <!-- JavaScript for Interactivity -->
@@ -299,31 +515,7 @@
 
 
         const imageModal = document.getElementById("imageModal");
-        const suspendModal = document.getElementById("suspendModal");
         const allModals = document.querySelectorAll('.modal');
-
-        const suspendForm = document.getElementById('suspendForm');
-        document.querySelectorAll('.btn-takedown').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault(); // Stop default button action
-
-                // Get data from the clicked button
-                const reportId = this.dataset.reportId;
-                const reporterId = this.dataset.reporterId;
-                const reportedId = this.dataset.reportedId;
-                const reportedPostId = this.dataset.reportedPostId;
-
-                // Populate the hidden fields in the modal form
-                suspendForm.querySelector('#hiddenReportId').value = reportId;
-                suspendForm.querySelector('#hiddenReporterId').value = reporterId;
-                suspendForm.querySelector('#hiddenReportedId').value = reportedId;
-                suspendForm.querySelector('#hiddenReportedPostId').value = reportedPostId;
-
-                // Show the modal
-                suspendModal.style.display = 'flex';
-            });
-        });
-
         // --- Image Modal Logic ---
         const modalImg = document.getElementById("modalImage");
         const captionText = document.getElementById("modal-caption");
@@ -334,10 +526,6 @@
                 captionText.textContent = this.dataset.caption;
             });
         });
-
-        // function closeModal() { modal.style.display = "none"; }
-        // modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        // window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
 
         // Generic function to close any modal
         function closeModal(modal) {

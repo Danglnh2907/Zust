@@ -1,62 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList" %>
+<%@ page import="model.ResReportAccountDTO" %>
+<%@ page import="java.lang.reflect.AccessFlag" %>
+<%@ page import="model.Account" %>
 
-<!-- REPORT USER HANDLING PAGE (ADMIN DASHBOARD)-->
-
-<%--
-  ================================================================================
-  1. DEFINE DATA MODELS (POJOs)
-  ================================================================================
---%>
-<%!
-    // A SimpleUser class enhanced with a status field
-    public class SimpleUser {
-        private String avatarUrl, fullName, username, status;
-        public SimpleUser(String avatar, String fname, String uname, String status) {
-            this.avatarUrl=avatar; this.fullName=fname; this.username=uname; this.status=status;
-        }
-        public String getAvatarUrl() { return avatarUrl; }
-        public String getFullName() { return fullName; }
-        public String getUsername() { return username; }
-        public String getStatus() { return status; }
-    }
-
-    // The main UserReport object
-    public class UserReport {
-        private int reportId;
-        private SimpleUser reporter;
-        private SimpleUser reportedUser;
-        private String reportMessage;
-        private String reportDate;
-        public UserReport(int id, SimpleUser r, SimpleUser ru, String msg, String date) {
-            this.reportId=id; this.reporter=r; this.reportedUser=ru; this.reportMessage=msg; this.reportDate=date;
-        }
-        public int getReportId() { return reportId; }
-        public SimpleUser getReporter() { return reporter; }
-        public SimpleUser getReportedUser() { return reportedUser; }
-        public String getReportMessage() { return reportMessage; }
-        public String getReportDate() { return reportDate; }
-    }
-%>
-
-<%--
-  ================================================================================
-  2. SIMULATE DATA RETRIEVAL
-  ================================================================================
---%>
 <%
-    List<UserReport> reportList = new ArrayList<>();
-
-    // --- Create some sample users ---
-    SimpleUser userA = new SimpleUser("https://i.pravatar.cc/150?img=33", "Mia Foster", "mia_f", "active");
-    SimpleUser userB = new SimpleUser("https://i.pravatar.cc/150?img=45", "Noah Patel", "noah_p", "active");
-    SimpleUser userC = new SimpleUser("https://i.pravatar.cc/150?img=50", "Liam Chen", "liam_c", "suspended");
-
-    // --- Create sample reports ---
-    reportList.add(new UserReport(701, userA, userB, "This user is sending me threatening private messages. Their behavior is unacceptable and they are creating a hostile environment. I have blocked them but I believe their account requires administrative review for repeated policy violations.", "2023-11-03"));
-    reportList.add(new UserReport(702, userB, userC, "This user's profile picture and bio are inappropriate and violate the community guidelines.", "2023-11-02"));
-
-    String currentPage = "report";
+    List<ResReportAccountDTO> reportList = (List<ResReportAccountDTO>) request.getAttribute("reportPostList");
 %>
 
 <!DOCTYPE html>
@@ -107,6 +56,7 @@
         .report-actions .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; }
         .btn-dismiss { background-color: var(--gray); color: white; }
         .btn-suspend { background-color: var(--yellow); color: white; }
+        .btn-ban { background-color: var(--red); color: white; }
         .btn-view {background-color: var(--orange); color: white; }
         .report-section .report-actions { margin-top: 10px; display: flex; gap: 10px; }
 
@@ -126,6 +76,17 @@
         .modal-close { position: absolute; top: 20px; right: 40px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
         @keyframes zoomIn { from {transform: scale(0.5);} to {transform: scale(1);} }
         .clickable-image:hover { transform: scale(1.1); }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
+        .modal-content-wrapper { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); animation: zoomIn 0.3s ease; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; }
+        .modal-close { font-size: 2rem; font-weight: bold; cursor: pointer; color: #aaa; }
+        .modal-close:hover { color: #333; }
+        .modal-body textarea { width: 100%; height: 120px; padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 1rem; resize: vertical; }
+        .modal-footer { text-align: right; margin-top: 20px; }
+        .modal-footer .btn-submit { background-color: var(--yellow); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .image-modal .modal-content-wrapper { background: none; box-shadow: none; width: auto; max-width: 80%; padding: 0; } /* Specific for image modal */
     </style>
 </head>
 <body>
@@ -158,23 +119,23 @@
     <% if (reportList == null || reportList.isEmpty()) { %>
     <div class="no-data-message">
         <div class="icon"><i class="fas fa-search"></i></div>
-        <h2>No Groups Found</h2>
-        <p>There are no groups to display at this time.</p>
+        <h2>No Report Found</h2>
+        <p>There are no report to display at this time.</p>
     </div>
     <% } else { %>
 
     <div class="report-list">
-        <% for (UserReport report : reportList) { %>
+        <% for (ResReportAccountDTO report : reportList) { %>
         <div class="report-card">
             <!-- Column 1: Reporter Info -->
             <div class="report-section reporter-info">
                 <h3><i class="fas fa-user-shield"></i> Reported By</h3>
-                <% SimpleUser reporter = report.getReporter();
+                <% Account reporter = report.getReporter();
                     if (reporter != null) { %>
                 <div class="user-block">
-                    <img src="<%= reporter.getAvatarUrl()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullName() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= reporter.getAvatar()%>" alt="Avatar" class="avatar clickable-image" data-caption="<%= reporter.getFullname() %>">
                     <div>
-                        <div class="user-name"><%= reporter.getFullName() %></div>
+                        <div class="user-name"><%= reporter.getFullname() %></div>
                         <div class="user-username">@<%= reporter.getUsername() %></div>
                     </div>
                 </div>
@@ -184,9 +145,9 @@
             <!-- Column 2: Report Details -->
             <div class="report-section report-details">
                 <h3><i class="fas fa-envelope-open-text"></i> Report Reason</h3>
-                <div class="report-date">Date: <%= report.getReportDate() %></div>
+                <div class="report-date">Date: <%= report.getReportDate().toLocalDate() %></div>
                 <div class="report-message">
-                    <% String message = report.getReportMessage();
+                    <% String message = report.getReportContent();
                         if (message != null && message.length() > 100) {
                             String shortMsg = message.substring(0, 100) + "..."; %>
                     <span class="short-text"><%= shortMsg %></span>
@@ -195,27 +156,41 @@
                     <% } else { %><%= message != null ? message : "N/A" %><% } %>
                 </div>
                 <div class="report-actions">
-                    <button class="btn btn-suspend">Suspend User</button>
-                    <button class="btn btn-dismiss">Dismiss Report</button>
+                    <form action="reportUser" method="post" onsubmit="return confirm('Are you sure you want to ban this user? This action cannot be undone.');">
+                        <input type="hidden" name="reportedId" value="<%= report.getReportedUser().getId()%>">
+                        <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                        <input type="hidden" name="action" value="ban">
+                        <button class="btn btn-ban">Ban User</button>
+                    </form>
+                    <button class="btn btn-suspend"
+                            data-report-id="<%= report.getReportId() %>"
+                            data-reporter-id="<%= reporter != null ? reporter.getId() : "0" %>"
+                            data-reported-id="<%= report.getReportedUser() != null ? report.getReportedUser().getId() : "0" %>"
+                    >Warning User</button>
+                    <form action="reportUser" method="POST" style="display: inline;">
+                        <input type="hidden" name="action" value="dismiss">
+                        <input type="hidden" name="reportId" value="<%= report.getReportId() %>">
+                        <input type="hidden" name="reportedId" value="<%= report.getReportedUser().getId()%>">
+                        <button type="submit" class="btn btn-dismiss">Dismiss Report</button>
+                    </form>
                 </div>
             </div>
 
             <!-- Column 3: Reported User -->
             <div class="report-section reported-user">
                 <h3><i class="fas fa-user"></i> Reported User</h3>
-                <% SimpleUser reportedUser = report.getReportedUser();
+                <% Account reportedUser = report.getReportedUser();
                     if (reportedUser != null) { %>
                 <div class="user-block">
-                    <img src="<%= reportedUser.getAvatarUrl() != null ? reportedUser.getAvatarUrl() : "https://via.placeholder.com/45/EEEEEE/AAAAAA?text=?" %>" alt="Reported User Avatar" class="avatar clickable-image" data-caption="<%= reportedUser.getFullName() %>">
+                    <img src="${pageContext.request.contextPath}/static/images/<%= reportedUser.getAvatar()%>" alt="Reported User Avatar" class="avatar clickable-image" data-caption="<%= reportedUser.getFullname() %>">
                     <div>
-                        <div class="user-name"><%= reportedUser.getFullName() %></div>
+                        <div class="user-name"><%= reportedUser.getFullname() %></div>
                         <div class="user-username">@<%= reportedUser.getUsername() %></div>
                     </div>
                 </div>
-                <span class="status-badge status-<%= reportedUser.getStatus() %>"><%= reportedUser.getStatus() %></span>
-                <div class="report-actions">
-                    <button class="btn btn-view">View Detail</button>
-                </div>
+<%--                <div class="report-actions">--%>
+<%--                    <button class="btn btn-view">View Detail</button>--%>
+<%--                </div>--%>
                 <% } else { %>
                 <p>Reported user data is unavailable.</p>
                 <% } %>
@@ -227,29 +202,94 @@
 </main>
 
 <!-- Image Modal -->
-<div id="imageModal" class="image-modal">
+<div id="imageModal" class="image-modal modal">
     <span class="modal-close">×</span>
     <img class="modal-content" id="modalImage">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
+</div>
+
+<div id="suspendModal" class="modal">
+    <div class="modal-content-wrapper">
+        <div class="modal-header">
+            <h2>Warning User</h2>
+            <span class="modal-close">×</span>
+        </div>
+        <form id="suspendForm" action="reportUser" method="POST">
+            <div class="modal-body">
+                <p>Enter a message for the reported user. This will be sent as a notification.</p>
+                <textarea name="message" required placeholder="E.g., Your post has been deleted for violating community guidelines..."></textarea>
+
+                <!-- Hidden fields to be populated by JavaScript -->
+                <input type="hidden" name="action" value="warn">
+                <input type="hidden" id="hiddenReportId" name="reportId">
+                <input type="hidden" id="hiddenReporterId" name="reporterId">
+                <input type="hidden" id="hiddenReportedId" name="reportedId">
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn-submit">Confirm</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- JavaScript for Interactivity -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- Image Modal Logic ---
-        const modal = document.getElementById("imageModal");
+        const imageModal = document.getElementById("imageModal");
+        const suspendModal = document.getElementById("suspendModal");
+        const allModals = document.querySelectorAll('.modal');
+
+        const suspendForm = document.getElementById('suspendForm');
+        document.querySelectorAll('.btn-suspend').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop default button action
+
+                // Get data from the clicked button
+                const reportId = this.dataset.reportId;
+                const reporterId = this.dataset.reporterId;
+                const reportedId = this.dataset.reportedId;
+
+                // Populate the hidden fields in the modal form
+                suspendForm.querySelector('#hiddenReportId').value = reportId;
+                suspendForm.querySelector('#hiddenReporterId').value = reporterId;
+                suspendForm.querySelector('#hiddenReportedId').value = reportedId;
+
+                // Show the modal
+                suspendModal.style.display = 'flex';
+            });
+        });
+
+        // --- Image Modal Logic ---
         const modalImg = document.getElementById("modalImage");
         const captionText = document.getElementById("modal-caption");
         document.querySelectorAll('.clickable-image').forEach(image => {
             image.addEventListener('click', function() {
-                modal.style.display = "flex";
+                imageModal.style.display = "flex";
                 modalImg.src = this.src;
                 captionText.textContent = this.dataset.caption;
             });
         });
-        function closeModal() { modal.style.display = "none"; }
-        modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
+
+        function closeModal(modal) {
+            if (modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Setup close buttons for all modals
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.closest('.modal')));
+        });
+
+        // Close modal by clicking background
+        window.addEventListener('click', e => {
+            allModals.forEach(modal => {
+                if (e.target == modal) {
+                    closeModal(modal);
+                }
+            });
+        });
 
         // --- "Read More" Logic ---
         document.querySelectorAll('.read-more-btn').forEach(button => {

@@ -1,7 +1,6 @@
 package controller;
 
 import dao.ReportCommentDAO;
-import model.AcceptReportDTO;
 import model.ResReportCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -57,35 +56,8 @@ public class ReportCommentServlet extends HttpServlet {
         logger.info("Processing POST action: " + action + " for report ID: " + reportId);
         switch (action) {
             case "accept":
-                // Get additional parameters for accept action
-                String reportAccountIdParam = request.getParameter("reportAccountId");
-                String reportedAccountIdParam = request.getParameter("reportedAccountId");
-                String reportedIdParam = request.getParameter("reportedId");
-                String notificationContent = request.getParameter("notificationContent");
-
-                int reportAccountId, reportedAccountId, reportedId;
-                try {
-                    reportAccountId = Integer.parseInt(reportAccountIdParam);
-                    reportedAccountId = Integer.parseInt(reportedAccountIdParam);
-                    reportedId = Integer.parseInt(reportedIdParam);
-                } catch (NumberFormatException e) {
-                    logger.warning("Invalid parameters for accept action: reportAccountId=" + reportAccountIdParam +
-                            ", reportedAccountId=" + reportedAccountIdParam + ", reportedId=" + reportedIdParam);
-                    request.setAttribute("msg", "Fail to accept report: Invalid ID");
-                    doGet(request, response);
-                    return;
-                }
-
-                // Create AcceptReportDTO
-                AcceptReportDTO acceptDTO = new AcceptReportDTO();
-                acceptDTO.setReportId(reportId);
-                acceptDTO.setReportAccountId(reportAccountId);
-                acceptDTO.setReportedAccountId(reportedAccountId);
-                acceptDTO.setReportedId(reportedId);
-                acceptDTO.setNotificationContent("Your comment get deleted because of: " +  notificationContent);
-
                 // Process accept action
-                boolean acceptSuccess = reportCommentDAO.acceptReport(acceptDTO);
+                boolean acceptSuccess = reportCommentDAO.acceptReport(reportId);
                 if (acceptSuccess) {
                     logger.info("Successfully accepted report ID: " + reportId);
 //                    request.setAttribute("msg", "Report accepted successfully");
