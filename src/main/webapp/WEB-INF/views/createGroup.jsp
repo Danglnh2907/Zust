@@ -207,7 +207,7 @@
 
         <div class="form-group">
             <label for="groupDesc" class="label-title">Group Description</label>
-            <textarea id="groupDesc" name="groupDescription" class="form-control" placeholder="What is this group about?" minlength="10"></textarea>
+            <textarea id="groupDesc" name="groupDescription" class="form-control" placeholder="What is this group about?" minlength="10" required></textarea>
         </div>
         <div class="form-group action-buttons-group">
             <a href="${pageContext.request.contextPath}/" class="btn back-btn">Back to Home</a>

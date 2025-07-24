@@ -27,9 +27,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <style>
             /* --- STYLES FOR THE MAIN CONTENT --- */
-            .main-content {
-                padding: 20px;
-            }
+            .main-content { padding: 0 20px; }
 
             .main-header {
                 display: flex;
