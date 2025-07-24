@@ -34,7 +34,7 @@ public class ReportController extends HttpServlet {
             return;
         }
 
-        //Get type and if
+        //Get type and id
         String type = "";
         int id = -1;
         try {

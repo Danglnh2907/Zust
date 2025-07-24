@@ -229,7 +229,7 @@ public class AccountDAO extends DBContext {
     public List<FriendRequest> getFriendRequests(int userId) {
         List<FriendRequest> requests = new ArrayList<>();
         String sql = """
-                SELECT fr.*, a.username as sender_username, a.avatar as sender_avatar \
+                SELECT fr.*, a.username as sender_username, a.fullname as sender_fullname, a.avatar as sender_avatar \
                 FROM friend_request fr \
                 JOIN account a ON fr.send_account_id = a.account_id \
                 WHERE receive_account_id = ? AND friend_request_status = 'sent' AND a.account_status = 'active'""";
@@ -246,6 +246,7 @@ public class AccountDAO extends DBContext {
                     Account sender = new Account();
                     sender.setId(rs.getInt("send_account_id"));
                     sender.setUsername(rs.getString("sender_username"));
+                    sender.setFullname(rs.getString("sender_fullname"));
                     sender.setAvatar(rs.getString("sender_avatar"));
 
                     request.setSendAccount(sender);

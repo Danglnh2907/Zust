@@ -129,6 +129,8 @@ public class PostController extends HttpServlet {
                 logger.severe("Error fetching post " + idRaw + ": " + e.getMessage());
                 request.setAttribute("message", "Error loading post/comments");
             }
+            List<InteractGroupDTO> groups = (new GroupDAO()).getJoinedGroups(userID);
+            request.setAttribute("joinedGroups", groups);
             request.getRequestDispatcher("/WEB-INF/views/full_post.jsp").forward(request, response);
         }
     }

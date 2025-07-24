@@ -2,7 +2,6 @@ package controller;
 
 import dao.AccountDAO;
 import model.Account;
-import model.FriendRequest;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,29 +9,21 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
+import java.util.logging.Logger;
 
 @WebServlet(name = "FriendRequestServlet", urlPatterns = {"/friend_request"})
 public class FriendRequestServlet extends HttpServlet {
 
     private AccountDAO accountDAO;
+    private final Logger logger = Logger.getLogger(FriendRequestServlet.class.getName());
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         accountDAO = new AccountDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Account currentUser = (Account) request.getSession().getAttribute("users");
-        if (currentUser == null) {
-            response.sendRedirect("login.jsp"); // Redirect to login if not logged in
-            return;
-        }
-
-        List<FriendRequest> friendRequests = accountDAO.getFriendRequests(currentUser.getId());
-        request.setAttribute("friendRequests", friendRequests);
-        request.getRequestDispatcher("/WEB-INF/views/friend_requests.jsp").forward(request, response);
     }
     
     @Override
@@ -40,8 +31,8 @@ public class FriendRequestServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        String action = request.getParameter("action");
         try {
-            String action = request.getParameter("action");
             Account currentUser = (Account) request.getSession().getAttribute("users");
 
             if (currentUser == null) {
@@ -103,7 +94,7 @@ public class FriendRequestServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"status\":\"error\",\"message\":\"An unexpected error occurred.\"}");
-            e.printStackTrace();
+            logger.warning("Failed to process request with action: " + action + ". Reason: " + e.getMessage());
         }
     }
 }

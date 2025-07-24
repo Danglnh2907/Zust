@@ -1,6 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, java.util.ArrayList" %>
 
+<!-- REPORT USER HANDLING PAGE (ADMIN DASHBOARD)-->
+
 <%--
   ================================================================================
   1. DEFINE DATA MODELS (POJOs)

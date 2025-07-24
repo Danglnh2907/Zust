@@ -7,8 +7,10 @@
 <%
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
     List<ResGroupDTO> groups = (List<ResGroupDTO>) request.getAttribute("groups");
-    String currentPage = "creategroup";
+    //String currentPage = "create group";
 %>
+
+<!-- PENDING GROUP DASHBOARD (ADMIN) -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -125,7 +127,6 @@
             left: 0; top: 0;
             width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.85);
-            display: none; /* Re-set to be sure */
             align-items: center;
             justify-content: center;
         }
@@ -261,7 +262,7 @@
                 <td>
                     <div class="creator-info">
                         <%-- Nested null check: first check if creator object exists, then check its properties --%>
-                        <% Account creator = group.getManagers().get(0);
+                        <% Account creator = group.getManagers().getFirst();
                             if (creator != null) { %>
                         <%-- Null check for avatar --%>
                         <% if (creator.getAvatar() != null) { %>
@@ -315,7 +316,7 @@
 </main>
 <div id="imageModal" class="image-modal">
     <span class="modal-close">×</span>
-    <img class="modal-content" id="modalImage">
+    <img class="modal-content" id="modalImage" src="" alt="">
 </div>
 <!-- ======================= JAVASCRIPT ENHANCEMENTS ======================= -->
 <script>
@@ -360,7 +361,7 @@
 
     // Also close modal when clicking on the background
     window.addEventListener('click', function(event) {
-        if (event.target == modal) {
+        if (event.target === modal) {
             closeModal();
         }
     });

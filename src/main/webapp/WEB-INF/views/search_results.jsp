@@ -2,16 +2,12 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="model.Group" %>
-<%@ page import="dao.PostDAO" %>
 <%@ page import="model.InteractGroupDTO" %>
-<%@ page import="model.RespPostDTO" %><%--
-  Created by IntelliJ IDEA.
-  User: Asus
-  Date: 7/5/2025
-  Time: 9:09 PM
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="model.RespPostDTO" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+
+<!-- SEARCH RESULT PAGE (WHEN CLICK ALL THE SEE ALL RESULT IN THE LIVE SEARCH) -->
+
 <html>
     <head>
         <title>Title</title>
@@ -269,7 +265,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -486,14 +482,11 @@
                         if (searchRes.get("posts_content").isEmpty() && searchRes.get("posts_hashtag").isEmpty()) {
                             out.println("<p style=\"color: red;\">No posts found</p>");
                         } else {
-                            PostDAO dao = new PostDAO();
                             for (Object post : searchRes.get("posts_content")) {
-//                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
                                 out.println((RespPostDTO)post);
                             }
 
                             for (Object post : searchRes.get("posts_hashtag")) {
-//                                out.println(dao.getPost(((Post) post).getId(), account.getId()));
                                 out.println((RespPostDTO)post);
                             }
                         }

@@ -2,14 +2,7 @@
 <%@ page import="model.Group" %>
 <%@ page import="java.util.*" %>
 <%@ page import="model.InteractGroupDTO" %>
-<%--
-Created by IntelliJ IDEA.
-  User: Asus
-  Date: 7/5/2025
-  Time: 9:09 PM
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
     <head>
         <title>Title</title>
@@ -243,7 +236,7 @@ Created by IntelliJ IDEA.
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -328,19 +321,36 @@ Created by IntelliJ IDEA.
                             </div>
                         </div>
                     </div>
-
                     <%
                         Account account = (Account) request.getSession().getAttribute("users");
                         String linkAvatar = account.getAvatar();
                     %>
                     <div class="nav-profile-container">
+                        <!-- Notification button -->
+                        <div class="notification-container">
+                            <button class="notification-btn" id="notification-btn" aria-label="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge hidden" id="notification-badge"></span>
+                            </button>
+                            <div class="notification-dropdown" id="notification-dropdown">
+                                <div class="notification-header">
+                                    <h3>Notifications</h3>
+                                    <button id="mark-all-read-btn">Mark all as read</button>
+                                </div>
+                                <div class="notification-list" id="notification-list">
+                                    <!-- Data will be populated by JS here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile and dropdown for logout here -->
                         <a href="#" class="nav-profile">
                             <img src="${pageContext.request.contextPath}/static/images/<%=linkAvatar%>"
                                  alt="User Profile Picture">
                             <span><%=account.getFullname()%></span>
                         </a>
                         <div class="dropdown-menu">
-                            <a href="${pageContext.request.contextPath}/logout">Log out</a>
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Log out</a>
                         </div>
                     </div>
                 </header>

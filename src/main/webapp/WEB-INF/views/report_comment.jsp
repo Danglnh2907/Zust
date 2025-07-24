@@ -1,10 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, java.util.ArrayList" %>
-<%@ page import="model.RespCommentDTO" %>
+<%@ page import="java.util.List" %>
 <%@ page import="model.Account" %>
 <%@ page import="model.ResReportCommentDTO" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 
+<!-- REPORT COMMENT HANDLING PAGE (ADMIN DASHBOARD)-->
 
 <%
     SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
@@ -201,7 +201,7 @@
 <!-- Image Modal -->
 <div id="imageModal" class="image-modal">
     <span class="modal-close">×</span>
-    <img class="modal-content" id="modalImage">
+    <img class="modal-content" id="modalImage" src="" alt="">
     <div id="modal-caption" style="color: #ccc; text-align: center; padding: 15px 0;"></div>
 </div>
 
@@ -221,7 +221,7 @@
         });
         function closeModal() { modal.style.display = "none"; }
         modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        window.addEventListener('click', e => { if (e.target == modal) closeModal(); });
+        window.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
         // --- "Read More" Logic ---
         document.querySelectorAll('.read-more-btn').forEach(button => {

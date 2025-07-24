@@ -1,8 +1,6 @@
 <%@ page import="model.InteractGroupDTO" %>
 <%@ page import="model.MemberDTO" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.time.LocalDateTime" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="model.Account" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
@@ -14,6 +12,8 @@
     List<MemberDTO> managerList = (List<MemberDTO>) request.getAttribute("managers");
     List<MemberDTO> memberList = (List<MemberDTO>) request.getAttribute("members");
 %>
+
+<!-- MEMBER PAGES (GROUP MANAGER) -->
 
 <!DOCTYPE html>
 <html>
@@ -210,7 +210,7 @@
                 color: #28a745;
             }
 
-            /* Màu xanh cho promote */
+            /* Blue for promote */
         </style>
     </head>
 
@@ -239,7 +239,7 @@
                             </svg>
                             <span>My Profile</span>
                         </a></li>
-                        <li><a href="${pageContext.request.contextPath}/createGroup">
+                        <li><a href="${pageContext.request.contextPath}/group?action=create">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round">
@@ -362,7 +362,7 @@
 
                 <% if (group == null) { %>
                 <div class="no-data-message" style="margin-top: 20px;"><h2>Group Not Found</h2>
-                    <p>The requested group does not exist or you do not have permission to view it.</p></div>
+                    <p>The requested group does not exist, or you do not have permission to view it.</p></div>
                 <% } else {
                     InteractGroupDTO.InteractStatus interactStatus = group.getInteractStatus();
                 %>
@@ -449,7 +449,7 @@
                     <h2>Group Members</h2>
                     <div class="search-box">
                         <input type="text" id="memberSearchInput" placeholder=" Find a member..."
-                               style="font-family: 'Inter', FontAwesome;">
+                               style="font-family: 'Inter', FontAwesome,sans-serif;">
                     </div>
                 </div>
 
@@ -651,7 +651,7 @@
                 });
                 window.addEventListener('click', (event) => {
                     allModals.forEach(modal => {
-                        if (event.target == modal) closeModal(modal);
+                        if (event.target === modal) closeModal(modal);
                     });
                 });
 
@@ -699,7 +699,7 @@
                     addFriendModal.style.display = 'none';
                 });
                 window.addEventListener('click', (event) => {
-                    if (event.target == addFriendModal) {
+                    if (event.target === addFriendModal) {
                         addFriendModal.style.display = 'none';
                     }
                 });
@@ -715,8 +715,7 @@
 
                 if (coverImageElement) {
                     coverImageElement.addEventListener('click', function () {
-                        const imageUrl = this.dataset.imageUrl;
-                        modalImage.src = imageUrl;
+                        modalImage.src = this.dataset.imageUrl;
                         imageModal.style.display = 'flex';
                     });
                 }
@@ -729,7 +728,7 @@
                     });
                 });
 
-                // Xử lý click ngoài để đóng menu
+                // Click outside to close menu
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.menu')) {
                         document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));

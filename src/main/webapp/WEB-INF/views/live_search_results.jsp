@@ -1,13 +1,16 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="java.util.*" %>
 <%@ page import="model.*" %>
 <%@ page import="model.RespPostDTO" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
+
+<!-- LIVE SEARCH RESULTS (THE DROPDOWN THAT SHOW SEARCH RESULTS)
 
 <%
     Map<String, List<?>> searchResults = (Map<String, List<?>>) request.getAttribute("searchResults");
     String keyword = (String) request.getAttribute("keyword");
 
-    boolean hasResults = false;
+    boolean hasResults;
 
     if (searchResults != null) {
         List<?> users = searchResults.get("users");
@@ -161,7 +164,7 @@
 
 <!-- View All Footer -->
 <div style="padding: 12px 16px; text-align: center; border-top: 1px solid #e4e6ea; background: #f8f9fa;">
-    <a href="${pageContext.request.contextPath}/search?keyword=<%= java.net.URLEncoder.encode(keyword != null ? keyword : "", "UTF-8") %>"
+    <a href="${pageContext.request.contextPath}/search?keyword=<%= java.net.URLEncoder.encode(keyword != null ? keyword : "", StandardCharsets.UTF_8) %>"
        style="color: #1877f2; text-decoration: none; font-weight: 500; font-size: 14px;">
         View all results for "<%= keyword != null ? keyword.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : "" %>"
     </a>

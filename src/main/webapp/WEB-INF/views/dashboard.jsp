@@ -1,9 +1,11 @@
 <%@ page import="model.Account" %>
-<%@ page import="java.util.ArrayList" %>
 <%@ page import="model.Group" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<!-- STATISTICS DASHBOARD PAGE (ADMIN) -->
+
 <%
     int totalUsers = (int)request.getAttribute("total_users");
     int totalGroups = (int)request.getAttribute("total_groups");

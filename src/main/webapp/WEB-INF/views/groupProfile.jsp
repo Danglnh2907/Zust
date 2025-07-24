@@ -1,16 +1,12 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: thang
-  Date: 6/18/2025
-  Time: 5:44 PM
-  Refactored for a modern UI.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="model.Group" %>
 <%
     // Get the group object from the request. It might be null.
     Group group = (Group) request.getAttribute("group");
 %>
+
+<!-- EDIT GROUP PROFILE PAGE (GROUP MANAGER) -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
