@@ -60,7 +60,7 @@ public class ReportUserServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) {
             LOGGER.warning("No action specified in POST request");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action parameter is required");
+            response.sendRedirect(request.getContextPath() + "/reportPost");
             return;
         }
 
@@ -69,7 +69,15 @@ public class ReportUserServlet extends HttpServlet {
             int reportedId = Integer.parseInt(request.getParameter("reportedId"));
             if ("ban".equalsIgnoreCase(action)) {
                 boolean success = accountDAO.acceptReport(reportId) && accountDAO.banAccount(reportedId);
-                LOGGER.info("Successfully ban user ID: " + reportId + " for post ID: " + reportId);
+
+                if(success){
+                    LOGGER.info("Successfully accepted report ID: " + reportId + "ban user ID: " + reportedId);
+//                    request.setAttribute("msg", "Report accepted successfully");
+                } else {
+                    LOGGER.warning("Failed to accept report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to accept report ID: " + reportId);
+                }
+
             } else if ("warn".equalsIgnoreCase(action)) {
 
                 String message = request.getParameter("message");
@@ -81,21 +89,32 @@ public class ReportUserServlet extends HttpServlet {
                 notification.setAccountId(reportedId);
 
                 NotificationDAO notificationDAO = new NotificationDAO();
-                notificationDAO.addNotification(notification);
-                accountDAO.acceptReport(reportId);
+                boolean success = notificationDAO.addNotification(notification) && accountDAO.acceptReport(reportId);
+                if(success){
+                    LOGGER.info("Successfully accepted report ID: " + reportId + "send notification user ID: " + reportedId);
+//                    request.setAttribute("msg", "Report accepted successfully");
+                    doGet(request, response);
+                } else {
+                    LOGGER.warning("Failed to accept report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to accept report ID: " + reportId);
+                }
 
-                LOGGER.info("Successfully dismissed report ID: " + reportId);
             } else if ("dismiss".equalsIgnoreCase(action)) {
 
-                accountDAO.dismissReport(reportId);
-
+                boolean success = accountDAO.dismissReport(reportId);
+                if(success){
+                    LOGGER.info("Successfully dismiss report ID: " + reportId + "send notification user ID: " + reportedId);
+//                    request.setAttribute("msg", "Report dismiss successfully");
+                    doGet(request, response);
+                } else {
+                    LOGGER.warning("Failed to dismiss report ID: " + reportId);
+                    request.setAttribute("msg", "Failed to dismiss report ID: " + reportId);
+                }
             } else {
                 LOGGER.warning("Invalid action specified: " + action);
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
+                response.sendRedirect(request.getContextPath() + "/reportUser");
                 return;
             }
-            response.sendRedirect(request.getContextPath() + "/reportUser");
-            LOGGER.info("Redirected to /report-posts after processing action: " + action);
         } catch (NumberFormatException e) {
             LOGGER.severe("Invalid number format in request parameters: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameter format");
@@ -106,5 +125,6 @@ public class ReportUserServlet extends HttpServlet {
             LOGGER.severe("Unexpected error processing report: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error processing report: " + e.getMessage());
         }
+        doGet(request, response);
     }
 }

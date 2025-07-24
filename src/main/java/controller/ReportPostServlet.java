@@ -65,7 +65,7 @@ public class ReportPostServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) {
             LOGGER.warning("No action specified in POST request");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action parameter is required");
+            response.sendRedirect(request.getContextPath() + "/reportPost");
             return;
         }
 
@@ -81,13 +81,10 @@ public class ReportPostServlet extends HttpServlet {
                 if(success){
                     LOGGER.info("Successfully accepted report ID: " + reportId);
 //                    request.setAttribute("msg", "Report accepted successfully");
-                    doGet(request, response);
                 } else {
                     LOGGER.warning("Failed to accept report ID: " + reportId);
                     request.setAttribute("msg", "Failed to accept report ID: " + reportId);
-                    doGet(request, response);
                 }
-                return;
             } else if ("dismiss".equalsIgnoreCase(action)) {
                 // Handle dismiss report form
                 boolean success = reportPostDAO.dismissReport(reportId);
@@ -102,8 +99,6 @@ public class ReportPostServlet extends HttpServlet {
             } else {
                 LOGGER.warning("Invalid action specified: " + action);
                 response.sendRedirect(request.getContextPath() + "/reportPost");
-                LOGGER.info("Redirected to /report-posts after processing action: " + action);
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
                 return;
             }
         } catch (NumberFormatException e) {
