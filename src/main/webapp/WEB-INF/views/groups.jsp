@@ -503,21 +503,21 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // --- Live Search for Groups ---
-                const searchInput = document.getElementById('groupSearchInput');
+                // const searchInput = document.getElementById('groupSearchInput');
                 const groupContainer = document.getElementById('allGroupsContainer');
                 const groupCards = groupContainer.querySelectorAll('.group-card-wrapper');
 
-                searchInput.addEventListener('input', function () {
-                    const searchTerm = this.value.toLowerCase();
-                    groupCards.forEach(card => {
-                        const groupName = card.dataset.groupName;
-                        if (groupName.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
+                // searchInput.addEventListener('input', function () {
+                //     const searchTerm = this.value.toLowerCase();
+                //     groupCards.forEach(card => {
+                //         const groupName = card.dataset.groupName;
+                //         if (groupName.includes(searchTerm)) {
+                //             card.style.display = 'block';
+                //         } else {
+                //             card.style.display = 'none';
+                //         }
+                //     });
+                // });
 
                 // --- "Read More" for Descriptions ---
                 document.querySelectorAll('.read-more-btn').forEach(button => {
