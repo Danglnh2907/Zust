@@ -23,7 +23,7 @@ public class DashboardServlet extends HttpServlet {
 
     private void getStatistics(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-        if (!((boolean) session.getAttribute("isAdminLoggedIn"))) {
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
             resp.sendRedirect(req.getContextPath() + "/auth");
             return;
         }

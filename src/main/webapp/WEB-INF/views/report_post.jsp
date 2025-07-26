@@ -562,6 +562,14 @@
             });
         });
     });
+
+    <%
+            if(request.getAttribute("msg") != null){
+        %>
+    alert("<%= request.getAttribute("msg")%>");
+    <%
+        }
+    %>
 </script>
 </body>
 </html>

@@ -209,6 +209,7 @@ public class GroupServlet extends HttpServlet {
                 }
             }
             doGet(request, response);
+            return;
         }
 
         // Get form parameters

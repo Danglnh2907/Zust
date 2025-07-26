@@ -1,6 +1,7 @@
 package controller;
 
 import dao.ReportCommentDAO;
+import jakarta.servlet.http.HttpSession;
 import model.ResReportCommentDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -22,6 +23,13 @@ public class ReportCommentServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         ReportCommentDAO reportCommentDAO = new ReportCommentDAO();
         List<ResReportCommentDTO> reports = reportCommentDAO.getAll();
         request.setAttribute("reports", reports);
@@ -31,6 +39,13 @@ public class ReportCommentServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         ReportCommentDAO reportCommentDAO = new ReportCommentDAO();
         String action = request.getParameter("action");
         String reportIdParam = request.getParameter("reportId");

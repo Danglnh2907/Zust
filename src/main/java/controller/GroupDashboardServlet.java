@@ -1,5 +1,6 @@
 package controller;
 
+import jakarta.servlet.http.HttpSession;
 import model.ResGroupDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,6 +27,13 @@ public class GroupDashboardServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         GroupDAO dao = new GroupDAO();
         List<ResGroupDTO> groups = dao.getActiveGroups();
         request.setAttribute("groupList", groups);
@@ -34,6 +42,12 @@ public class GroupDashboardServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        if (session.getAttribute("isAdminLoggedIn") == null || !((boolean) session.getAttribute("isAdminLoggedIn"))) {
+            response.sendRedirect(request.getContextPath() + "/auth");
+            return;
+        }
+
         GroupDAO dao = new GroupDAO();
         String action = request.getParameter("action");
         if(action.equalsIgnoreCase("ban")) {

@@ -26,9 +26,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <style>
             /* --- STYLES FOR THE MAIN CONTENT --- */
-            .main-content {
-                padding: 20px;
-            }
+            .main-content { padding: 0 20px; }
 
             .main-header {
                 display: flex;
@@ -433,14 +431,14 @@
                                         if (interactStatus == InteractGroupDTO.InteractStatus.UNJOINED) { %>
                                     <%-- THIS IS NO LONGER A FORM. It's a button to open the modal. --%>
                                     <button type="button" class="btn btn-join btn-open-modal"
-                                            data-group-id="<%= group.getId() %>">Join
+                                            data-group-id="<%= group.getId() %>">Join Group
                                     </button>
                                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED ||
                                                   interactStatus == InteractGroupDTO.InteractStatus.MANAGER) { %>
                                     <form method="POST">
                                         <input type="hidden" name="groupId" value="<%= group.getId() %>">
                                         <input type="hidden" name="action" value="leave">
-                                        <button type="submit" class="btn btn-leave">Leave</button>
+                                        <button type="submit" class="btn btn-leave">Leave Group</button>
                                     </form>
                                     <%} else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
                                     <form method="POST" style="display:inline;">
@@ -488,7 +486,7 @@
                     <div class="modal-body">
                         <p>You can include an optional message to the group manager(s).</p>
                         <textarea name="joinMessage"
-                                  placeholder="E.g., Hi, I'm interested in joining because..."></textarea>
+                                  placeholder="E.g., Hi, I'm interested in joining because..." required></textarea>
 
                         <!-- Hidden fields to be populated by JavaScript -->
                         <input type="hidden" name="action" value="join">
@@ -504,21 +502,21 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // --- Live Search for Groups ---
-                const searchInput = document.getElementById('groupSearchInput');
+                // const searchInput = document.getElementById('groupSearchInput');
                 const groupContainer = document.getElementById('allGroupsContainer');
                 const groupCards = groupContainer.querySelectorAll('.group-card-wrapper');
 
-                searchInput.addEventListener('input', function () {
-                    const searchTerm = this.value.toLowerCase();
-                    groupCards.forEach(card => {
-                        const groupName = card.dataset.groupName;
-                        if (groupName.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
+                // searchInput.addEventListener('input', function () {
+                //     const searchTerm = this.value.toLowerCase();
+                //     groupCards.forEach(card => {
+                //         const groupName = card.dataset.groupName;
+                //         if (groupName.includes(searchTerm)) {
+                //             card.style.display = 'block';
+                //         } else {
+                //             card.style.display = 'none';
+                //         }
+                //     });
+                // });
 
                 // --- "Read More" for Descriptions ---
                 document.querySelectorAll('.read-more-btn').forEach(button => {
