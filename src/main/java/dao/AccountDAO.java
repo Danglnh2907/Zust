@@ -52,7 +52,7 @@ public class AccountDAO extends DBContext {
     public Account getAccountById(int id) {
         Account account = null;
         try {
-            String sql = "SELECT * FROM account WHERE account_id = ?";
+            String sql = "SELECT * FROM account WHERE account_id = ? AND account_status = 'active'";
             PreparedStatement stmt = new DBContext().getConnection().prepareStatement(sql);
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
