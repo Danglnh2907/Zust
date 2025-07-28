@@ -1,7 +1,6 @@
 package controller;
 
 import dao.CommentDAO;
-import model.ReportCommentDTO;
 import model.ReqCommentDTO;
 import model.RespCommentDTO;
 import jakarta.servlet.ServletException;
@@ -121,7 +120,6 @@ public class CommentController extends HttpServlet {
          * /comment?action=delete&commentID=comment_id
          * /comment?action=like&commentID=comment_id
          * /comment?action=unlike&commentID=comment_id
-         * /comment?action=report&commentID=comment_id
          */
 
         //Get session
@@ -212,28 +210,6 @@ public class CommentController extends HttpServlet {
                 try {
                     int commentID = Integer.parseInt(request.getParameter("commentID"));
                     boolean success = commentDAO.unlikeComment(account.getId(), commentID);
-                    if (success) {
-                        response.setStatus(HttpServletResponse.SC_CREATED);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Failed to parse postID from request parameter: " + e.getMessage());
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                }
-            }
-            case "report" -> {
-                try {
-                    int commentID = Integer.parseInt(request.getParameter("commentID"));
-                    String content = request.getParameter("content");
-
-                    ReportCommentDTO dto = new ReportCommentDTO();
-                    dto.setCommentID(commentID);
-                    dto.setContent(content);
-                    dto.setCreatedAt(LocalDateTime.now());
-                    dto.setStatus("sent");
-                    dto.setAccountID(account.getId());
-                    boolean success = commentDAO.report(dto);
                     if (success) {
                         response.setStatus(HttpServletResponse.SC_CREATED);
                     } else {

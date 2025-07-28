@@ -145,7 +145,6 @@ public class PostController extends HttpServlet {
          * /post?action=like&postID=post_id: like post
          * /post?action=unlike&postID=post_id: unlike a post
          * /post?action=repost&postID=post_id: repost a post
-         * /post?action=report&postID=post_id: report a post
          */
 
         //Set response content type for JSON responses
@@ -299,28 +298,6 @@ public class PostController extends HttpServlet {
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         response.getWriter().write("{\"error\":\"Post not found or permission denied\"}");
-                    }
-                }
-                case "report" -> {
-                    try {
-                        int postID = Integer.parseInt(request.getParameter("postID"));
-                        String content = request.getParameter("content");
-
-                        ReportPostDTO dto = new ReportPostDTO();
-                        dto.setContent(content);
-                        dto.setAccountID(userID);
-                        dto.setPostID(postID);
-                        dto.setCreatedAt(LocalDateTime.now());
-                        dto.setStatus("sent");
-                        boolean success = postDAO.report(dto);
-                        if (success) {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                        } else {
-                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                        }
-                    } catch (NumberFormatException e) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        response.getWriter().write("{\"error\":\"Post ID is improper for report\"}");
                     }
                 }
                 default -> {
