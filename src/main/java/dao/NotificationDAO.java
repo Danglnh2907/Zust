@@ -61,7 +61,9 @@ public class NotificationDAO {
 
             String sql = """
                     SELECT n.*, a.username, a.avatar FROM notification n \
-                    JOIN account a ON a.account_id = ? ORDER BY n.notification_create_date DESC""";
+                    JOIN account a ON a.account_id = n.account_id
+                    WHERE a.account_id = ? 
+                    ORDER BY n.notification_create_date DESC""";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
