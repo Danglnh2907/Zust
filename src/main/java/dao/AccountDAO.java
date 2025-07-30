@@ -358,7 +358,7 @@ public class AccountDAO extends DBContext {
         String sql = """
                 SELECT ra.report_id, ra.report_account_id, ra.reported_account_id, ra.report_content, ra.report_create_date, 
                 racc.username AS reporter_username, racc.avatar AS reporter_avatar, racc.fullname AS reporter_fullname, 
-                ruacc.username AS reported_username, ruacc.avatar AS reported_avatar, ruacc.username AS reported_fullname 
+                ruacc.username AS reported_username, ruacc.avatar AS reported_avatar, ruacc.fullname AS reported_fullname 
                 FROM report_account ra 
                 INNER JOIN account racc ON ra.report_account_id = racc.account_id 
                 INNER JOIN account ruacc ON ra.reported_account_id = ruacc.account_id 
