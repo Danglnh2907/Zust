@@ -692,7 +692,8 @@
                                 <li>
                                     <i class="fas fa-venus-mars"></i>
                                     <span>
-                                        <%= userProfile.getGender() ? "Male" : "Female" %>
+                                        <%= userProfile.getGender() == null ? "N/A" :
+                                                (userProfile.getGender() ? "Male" : "Female") %>
                                     </span>
                                 </li>
                                 <li>
