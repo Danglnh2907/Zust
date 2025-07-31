@@ -484,6 +484,153 @@ public class AuthDAO extends DBContext{
 		return googleOAuthService.getAuthorizationUrl("register");
 	}
 
+	// Forgot Password Methods
+	public boolean initiatePasswordReset(String email) throws Exception {
+		LOGGER.info("Initiating password reset for email: {}", email);
+
+		try (Connection conn = new DBContext().getConnection()) {
+			// Check if account exists with this email
+			Account account = getAccountByEmail(email, conn);
+			if (account == null) {
+				LOGGER.warn("Password reset requested for non-existent email: {}", email);
+				return false; // Don't reveal if email exists or not
+			}
+
+			// Generate reset token
+			String resetToken = generateToken();
+			Instant now = Instant.now();
+			Instant expiresAt = now.plusSeconds(60 * 60); // 1 hour
+
+			// Save reset token
+			Token token = new Token();
+			token.setAccount(account);
+			token.setTokenContent(resetToken);
+			token.setExpiresAt(expiresAt);
+			token.setCreatedAt(now);
+			token.setTokenStatus(false);
+
+			saveToken(token, conn);
+
+			// Send password reset email
+			try {
+				sendPasswordResetEmail(account, resetToken);
+				LOGGER.info("Password reset email sent successfully to: {}", email);
+				return true;
+			} catch (Exception emailException) {
+				LOGGER.error("Failed to send password reset email to {}: {}", email, emailException.getMessage());
+				throw new Exception("Failed to send password reset email. Please try again later.", emailException);
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Database error during password reset initiation: {}", e.getMessage(), e);
+			throw e;
+		}
+	}
+
+	public boolean resetPassword(String tokenContent, String newPassword) throws SQLException {
+		LOGGER.info("Resetting password with token");
+
+		try (Connection conn = new DBContext().getConnection()) {
+			// Verify token
+			String query = "SELECT token_id, account_id, expires_at FROM token WHERE token_content = ? AND token_status = 0 AND expires_at > CURRENT_TIMESTAMP";
+
+			Token token = null;
+			try (PreparedStatement stmt = conn.prepareStatement(query)) {
+				stmt.setString(1, tokenContent.trim());
+				try (ResultSet rs = stmt.executeQuery()) {
+					if (rs.next()) {
+						token = new Token();
+						token.setId(rs.getInt("token_id"));
+						Account account = new Account();
+						account.setId(rs.getInt("account_id"));
+						token.setAccount(account);
+						token.setExpiresAt(rs.getTimestamp("expires_at").toInstant());
+					}
+				}
+			}
+
+			if (token == null) {
+				LOGGER.warn("Invalid or expired reset token: {}", tokenContent);
+				return false;
+			}
+
+			// Update password
+			String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+			try (PreparedStatement stmt = conn.prepareStatement("UPDATE account SET password = ? WHERE account_id = ?")) {
+				stmt.setString(1, hashedPassword);
+				stmt.setInt(2, token.getAccount().getId());
+				if (stmt.executeUpdate() == 0) {
+					LOGGER.error("Failed to update password for account ID: {}", token.getAccount().getId());
+					return false;
+				}
+			}
+
+			// Mark token as used
+			try (PreparedStatement stmt = conn.prepareStatement("UPDATE token SET token_status = 1, updated_at = CURRENT_TIMESTAMP WHERE token_id = ?")) {
+				stmt.setInt(1, token.getId());
+				stmt.executeUpdate();
+			}
+
+			LOGGER.info("Password reset successfully for account ID: {}", token.getAccount().getId());
+			return true;
+		} catch (SQLException e) {
+			LOGGER.error("Database error during password reset: {}", e.getMessage(), e);
+			throw e;
+		}
+	}
+
+	private void sendPasswordResetEmail(Account account, String resetToken) throws Exception {
+		// Validate inputs
+		if (account == null) {
+			throw new IllegalArgumentException("Account cannot be null.");
+		}
+		if (account.getEmail() == null || account.getEmail().trim().isEmpty()) {
+			throw new IllegalArgumentException("Account email cannot be null or empty.");
+		}
+		if (resetToken == null || resetToken.trim().isEmpty()) {
+			throw new IllegalArgumentException("Reset token cannot be null or empty.");
+		}
+
+		// Get base URL from environment
+		String baseUrl = dotenv.get("APP_BASE_URL", "http://localhost:8080/zust");
+		if (baseUrl.isBlank()) {
+			LOGGER.warn("APP_BASE_URL is not configured, using default: http://localhost:8080/zust");
+			baseUrl = "http://localhost:8080/zust";
+		}
+
+		// Prepare template variables
+		Map<String, Object> variables = new HashMap<>();
+		variables.put("fullName", account.getFullname() != null ? account.getFullname() : account.getUsername());
+		variables.put("username", account.getUsername());
+		variables.put("resetLink", baseUrl + "zust/auth/reset-password?token=" + resetToken);
+		variables.put("supportEmail", dotenv.get("SUPPORT_EMAIL", "zust.developer@gmail.com"));
+		variables.put("companyName", "Zust Social Media");
+		variables.put("currentYear", String.valueOf(java.time.Year.now().getValue()));
+
+		// Prepare image attachments for email template
+		List<String> imageAttachments = Arrays.asList(
+				"948015252763872ed01b79cbbbb7c68b.png", // Header background
+				"f8d71b6c42f7300871f9e091c6a737e3.jpg", // Email icon
+				"4d3b20f647cbdeb288013a15cce39fdf.jpg", // Text/SMS icon
+				"1cd2ff272e2531b8041264de38db1b5f.png", // X/Twitter icon
+				"51a2644c1491853d60a9688ed8f4fa9e.png", // Instagram icon
+				"7575b9251670cd15f3423fd911239179.png"  // Facebook icon
+		);
+
+		try {
+			emailService.sendEmail(
+					account.getEmail().trim(),
+					"Reset Your Zust Social Media Password",
+					"password-reset", // Template name (will look for password-reset.html)
+					variables,
+					imageAttachments
+			);
+			LOGGER.info("Password reset email sent successfully to: {}", account.getEmail());
+		} catch (Exception e) {
+			LOGGER.error("Failed to send password reset email to {}: {}", account.getEmail(), e.getMessage(), e);
+			throw new Exception("Failed to send password reset email: " + e.getMessage(), e);
+		}
+	}
+
 	private Account createAccountFromGoogle(GoogleOAuthService.GoogleUserInfo googleUserInfo) throws SQLException, IOException {
 		Account account = new Account();
 

@@ -502,7 +502,7 @@
 
     <!-- Login Form -->
     <div id="login" class="form-container ${activeTab == 'login' || empty activeTab ? 'active' : ''}">
-        <c:if test="${not empty successMessage}">
+        <c:if test="${not empty successMessage && (activeTab == 'login' || empty activeTab)}">
             <div class="alert alert-success">
                 <span>✅</span>
                 <span><c:out value="${successMessage}"/></span>
@@ -514,7 +514,7 @@
                 <span><c:out value="${errorMessage}"/></span>
             </div>
         </c:if>
-        <c:if test="${not empty param.error}">
+        <c:if test="${not empty param.error && (activeTab == 'login' || empty activeTab)}">
             <div class="alert alert-error">
                 <span>❌</span>
                 <span><c:out value="${param.error}"/></span>
@@ -578,6 +578,12 @@
             <div class="alert alert-error">
                 <span>❌</span>
                 <span><c:out value="${errorMessage}"/></span>
+            </div>
+        </c:if>
+        <c:if test="${not empty param.error && activeTab == 'register'}">
+            <div class="alert alert-error">
+                <span>❌</span>
+                <span><c:out value="${param.error}"/></span>
             </div>
         </c:if>
 

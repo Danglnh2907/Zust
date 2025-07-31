@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/auth", "/verify", "/auth/google", "/auth/google/callback", "/logout"})
+@WebServlet(urlPatterns = {"/auth", "/verify", "/auth/google", "/auth/google/callback", "/logout", "/auth/reset-password"})
 @MultipartConfig(
 		fileSizeThreshold = 1024 * 1024 * 2,
 		maxFileSize = 1024 * 1024 * 10,
@@ -39,6 +39,13 @@ public class AuthServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String path = request.getServletPath();
+		String queryString = request.getQueryString();
+
+		// Handle reset password page
+		if (path.equals("/auth") && queryString != null && queryString.contains("reset-password")) {
+			showResetPasswordPage(request, response);
+			return;
+		}
 
 		switch (path) {
 			case "/verify":
@@ -49,6 +56,9 @@ public class AuthServlet extends HttpServlet {
 				break;
 			case "/auth/google/callback":
 				handleGoogleCallback(request, response);
+				break;
+			case "/auth/reset-password":
+				showResetPasswordPage(request, response);
 				break;
 			case "/logout":
 				handleLogout(request, response);
@@ -74,6 +84,10 @@ public class AuthServlet extends HttpServlet {
 			handleLogin(request, response);
 		} else if ("register".equals(action)) {
 			handleRegistration(request, response);
+		} else if ("forgot-password".equals(action)) {
+			handleForgotPassword(request, response);
+		} else if ("reset-password".equals(action)) {
+			handleResetPassword(request, response);
 		} else {
 			response.sendRedirect(request.getContextPath() + "/auth");
 		}
@@ -90,6 +104,11 @@ public class AuthServlet extends HttpServlet {
 			request.setAttribute("successMessage", successMessage);
 		}
 
+		// Set default active tab to login if not specified
+		if (request.getAttribute("activeTab") == null) {
+			request.setAttribute("activeTab", "login");
+		}
+
 		// Set Google OAuth URL
 		try {
 			String googleAuthUrl = authDAO.getGoogleAuthUrl();
@@ -99,6 +118,18 @@ public class AuthServlet extends HttpServlet {
 		}
 
 		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
+	}
+
+	private void showResetPasswordPage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String token = request.getParameter("token");
+		if (token == null || token.trim().isEmpty()) {
+			response.sendRedirect(request.getContextPath() + "/auth?error=" + 
+				java.net.URLEncoder.encode("Invalid reset link. Please request a new password reset.", StandardCharsets.UTF_8));
+			return;
+		}
+
+		request.setAttribute("token", token);
+		request.getRequestDispatcher("/WEB-INF/views/reset_password.jsp").forward(request, response);
 	}
 
 	private void handleGoogleAuth(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -324,5 +355,81 @@ public class AuthServlet extends HttpServlet {
 		request.setAttribute("statusMessage", statusMessage);
 		request.setAttribute("isSuccess", isSuccess);
 		request.getRequestDispatcher("/WEB-INF/views/verify_status.jsp").forward(request, response);
+	}
+
+	private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String email = request.getParameter("email");
+		String errorMessage = null;
+		String successMessage = null;
+
+		if (email == null || email.trim().isEmpty()) {
+			errorMessage = "Email address is required.";
+		} else {
+			try {
+				if (authDAO.initiatePasswordReset(email.trim())) {
+					successMessage = "If an account with this email exists, you will receive a password reset link within a few minutes. Please check your inbox and spam folder.";
+				} else {
+					// Don't reveal if email exists or not for security
+					successMessage = "If an account with this email exists, you will receive a password reset link within a few minutes. Please check your inbox and spam folder.";
+				}
+			} catch (Exception e) {
+				LOGGER.error("Error during password reset initiation for email: {}", email, e);
+				errorMessage = "An error occurred while processing your request. Please try again later.";
+			}
+		}
+
+		request.setAttribute("errorMessage", errorMessage);
+		request.setAttribute("successMessage", successMessage);
+		request.setAttribute("email", email);
+		request.setAttribute("activeTab", "forgot");
+
+		// Set Google OAuth URL for the page
+		try {
+			String googleAuthUrl = authDAO.getGoogleAuthUrl();
+			request.setAttribute("googleAuthUrl", googleAuthUrl);
+		} catch (Exception e) {
+			LOGGER.error("Failed to generate Google OAuth URL: {}", e.getMessage(), e);
+		}
+
+		request.getRequestDispatcher("/WEB-INF/views/auth.jsp").forward(request, response);
+	}
+
+	private void handleResetPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String token = request.getParameter("token");
+		String newPassword = request.getParameter("newPassword");
+		String confirmPassword = request.getParameter("confirmPassword");
+		String errorMessage = null;
+		String successMessage = null;
+
+		if (token == null || token.trim().isEmpty()) {
+			errorMessage = "Reset token is missing.";
+		} else if (newPassword == null || newPassword.trim().isEmpty()) {
+			errorMessage = "New password is required.";
+		} else if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
+			errorMessage = "Password confirmation is required.";
+		} else if (!newPassword.equals(confirmPassword)) {
+			errorMessage = "Passwords do not match.";
+		} else if (newPassword.length() < 6) {
+			errorMessage = "Password must be at least 6 characters long.";
+		} else {
+			try {
+				if (authDAO.resetPassword(token.trim(), newPassword)) {
+					successMessage = "Password reset successfully! You can now login with your new password.";
+					// Redirect to login page after successful reset
+					response.sendRedirect(request.getContextPath() + "/auth?successMessage=" + 
+						java.net.URLEncoder.encode(successMessage, StandardCharsets.UTF_8));
+					return;
+				} else {
+					errorMessage = "Password reset failed. The token might be invalid or expired.";
+				}
+			} catch (SQLException e) {
+				LOGGER.error("Database error during password reset: {}", e.getMessage(), e);
+				errorMessage = "An error occurred during password reset. Please try again later.";
+			}
+		}
+
+		request.setAttribute("errorMessage", errorMessage);
+		request.setAttribute("token", token);
+		request.getRequestDispatcher("/WEB-INF/views/reset_password.jsp").forward(request, response);
 	}
 }
