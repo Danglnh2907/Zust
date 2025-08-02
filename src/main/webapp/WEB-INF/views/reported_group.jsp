@@ -317,7 +317,7 @@
                             <%-- Existing Admin/Feedback Buttons --%>
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
                             <a href="${pageContext.request.contextPath}/groupProfile?groupId=<%= group.getId() %>"
-                               class="btn btn-edit">Edit Profile</a>
+                               class="btn btn-edit" style="background-color: #f56a00">Edit Profile</a>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
                             <button type="button" class="btn btn-feedback" id="openFeedbackModal">Send Feedback</button>
                             <% } %>

@@ -745,12 +745,12 @@
                                 <label class="form-label">Gender</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="gender" id="male"
-                                           value="true" <%= acc.getGender() ? "checked" : "" %>>
+                                           value="<%= acc.getGender() != null ? (acc.getGender() ? "checked" : "") : "true" %>">
                                     <label class="form-check-label" for="male">Male</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="gender" id="female"
-                                           value="false" <%= !acc.getGender() ? "checked" : "" %>>
+                                           value="<%= acc.getGender() != null ? (acc.getGender() ? "checked" : "") : "false" %>">
                                     <label class="form-check-label" for="female">Female</label>
                                 </div>
                             </div>
@@ -776,7 +776,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" form="editProfileForm" class="btn btn-primary">Save changes</button>
+                        <button type="submit" form="editProfileForm" class="btn btn-primary" style="background-color: #f56a00">
+                            Save changes
+                        </button>
                     </div>
                 </div>
             </div>
@@ -801,7 +803,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="sendFriendRequestBtn">Send Request</button>
+                        <button type="button" class="btn btn-primary" id="sendFriendRequestBtn" style="background-color: #f56a00">
+                            Send Request
+                        </button>
                     </div>
                 </div>
             </div>

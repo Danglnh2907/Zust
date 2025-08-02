@@ -35,6 +35,16 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
         <style>
+            /*Add modal-close style*/
+            .modal-close {
+                font-size: 1.8rem;
+                font-weight: bold;
+                cursor: pointer;
+                color: #aaa;
+                background: none;
+                border: none;
+            }
+
             .post-feed-section {
                 margin-top: 20px;
             }
@@ -254,7 +264,7 @@
                         <div class="group-actions">
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.UNJOINED) { %>
                             <button type="button" class="btn btn-join" id="openJoinModal"
-                                    data-group-id="<%= group.getId() %>">Join Group
+                                    data-group-id="<%= group.getId() %>" style="background-color: #f56a00">Join Group
                             </button>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED || interactStatus == InteractGroupDTO.InteractStatus.MANAGER) { %>
                             <form method="POST" style="display:inline;">
@@ -279,7 +289,7 @@
                             <%-- Existing Admin/Feedback Buttons --%>
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
                             <a href="${pageContext.request.contextPath}/group?tag=edit&id=<%= group.getId() %>"
-                               class="btn btn-edit">Edit Profile</a>
+                               class="btn btn-edit" style="background-color: #f56a00">Edit Profile</a>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
                             <button type="button" class="btn btn-feedback" id="openFeedbackModal">Send Feedback</button>
                             <% } %>
@@ -382,11 +392,13 @@
                         <input type="hidden" name="groupId" value="<%= group != null ? group.getId() : "0" %>">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn-submit">Send</button>
+                        <button type="submit" class="btn-submit" style="background-color: #f56a00">Send</button>
                     </div>
                 </form>
             </div>
         </div>
+
+
         <div id="joinRequestModal" class="modal">
             <div class="modal-content-wrapper">
                 <div class="modal-header">
@@ -402,11 +414,12 @@
                         <input type="hidden" id="modalGroupId" name="groupId" value="">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn-submit join-btn">Send Request</button>
+                        <button type="submit" class="btn-submit join-btn" style="background-color: #f56a00">Send Request</button>
                     </div>
                 </form>
             </div>
         </div>
+
         <div id="imageModal" class="modal">
             <button class="modal-close">×</button>
             <img class="modal-content-image" id="modalImage" src="" alt="Group Cover Image">

@@ -31,6 +31,16 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/notification.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search.css">
         <style>
+            /*Add modal-close style*/
+            .modal-close {
+                font-size: 1.8rem;
+                font-weight: bold;
+                cursor: pointer;
+                color: #aaa;
+                background: none;
+                border: none;
+            }
+
             /* --- STYLES FOR MEMBER LIST PAGE --- */
             .members-header {
                 display: flex;
@@ -383,7 +393,7 @@
                         <div class="group-actions">
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.UNJOINED) { %>
                             <button type="button" class="btn btn-join" id="openJoinModal"
-                                    data-group-id="<%= group.getId() %>">Join Group
+                                    data-group-id="<%= group.getId() %>" style="background-color: #f56a00">Join Group
                             </button>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED || interactStatus == InteractGroupDTO.InteractStatus.MANAGER) { %>
                             <form style="display:inline;">
@@ -408,7 +418,7 @@
                             <%-- Existing Admin/Feedback Buttons --%>
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
                             <a href="${pageContext.request.contextPath}/groupProfile?id=<%= group.getId() %>"
-                               class="btn btn-edit">Edit Profile</a>
+                               class="btn btn-edit" style="background-color: #f56a00">Edit Profile</a>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
                             <button type="button" class="btn btn-feedback" id="openFeedbackModal">Send Feedback</button>
                             <% } %>
@@ -448,8 +458,7 @@
                 <div class="members-header">
                     <h2>Group Members</h2>
                     <div class="search-box">
-                        <input type="text" id="memberSearchInput" placeholder=" Find a member..."
-                               style="font-family: 'Inter', FontAwesome,sans-serif;">
+                        <input type="text" id="memberSearchInput" placeholder="Find a member...">
                     </div>
                 </div>
 
@@ -543,26 +552,26 @@
                 title="Search Results Loader">
         </iframe>
 
-        <!-- Add Friend Modal -->
-        <div id="addFriendModal" class="modal">
-            <div class="modal-content-wrapper">
-                <div class="modal-header">
-                    <h2 id="addFriendModalTitle">Send Friend Request</h2>
-                    <button class="modal-close">×</button>
-                </div>
-                <form id="addFriendForm" action="${pageContext.request.contextPath}/friendAction" method="POST">
-                    <div class="modal-body">
-                        <p>You can include an optional message with your request.</p>
-                        <textarea name="message" placeholder="E.g., Hi, we're in the same group!"></textarea>
-                        <input type="hidden" name="action" value="add_friend">
-                        <input type="hidden" id="modalFriendId" name="friendId" value="">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn-submit">Send Request</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+<%--        <!-- Add Friend Modal -->--%>
+<%--        <div id="addFriendModal" class="modal">--%>
+<%--            <div class="modal-content-wrapper">--%>
+<%--                <div class="modal-header">--%>
+<%--                    <h2 id="addFriendModalTitle">Send Friend Request</h2>--%>
+<%--                    <button class="modal-close">×</button>--%>
+<%--                </div>--%>
+<%--                <form id="addFriendForm" action="${pageContext.request.contextPath}/friendAction" method="POST">--%>
+<%--                    <div class="modal-body">--%>
+<%--                        <p>You can include an optional message with your request.</p>--%>
+<%--                        <textarea name="message" placeholder="E.g., Hi, we're in the same group!"></textarea>--%>
+<%--                        <input type="hidden" name="action" value="add_friend">--%>
+<%--                        <input type="hidden" id="modalFriendId" name="friendId" value="">--%>
+<%--                    </div>--%>
+<%--                    <div class="modal-footer">--%>
+<%--                        <button type="submit" class="btn-submit" style="background-color: #f56a00">Send Request</button>--%>
+<%--                    </div>--%>
+<%--                </form>--%>
+<%--            </div>--%>
+<%--        </div>--%>
 
         <div id="feedbackModal" class="modal">
             <div class="modal-content-wrapper">
@@ -578,7 +587,7 @@
                         <input type="hidden" name="groupId" value="<%= group != null ? group.getId() : "0" %>">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn-submit">Send</button>
+                        <button type="submit" class="btn-submit" style="background-color: #f56a00">Send</button>
                     </div>
                 </form>
             </div>
@@ -598,7 +607,7 @@
                         <input type="hidden" id="modalGroupId" name="groupId" value="">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn-submit join-btn">Send Request</button>
+                        <button type="submit" class="btn-submit join-btn" style="background-color: #f56a00">Send Request</button>
                     </div>
                 </form>
             </div>

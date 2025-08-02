@@ -431,7 +431,7 @@
                                         if (interactStatus == InteractGroupDTO.InteractStatus.UNJOINED) { %>
                                     <%-- THIS IS NO LONGER A FORM. It's a button to open the modal. --%>
                                     <button type="button" class="btn btn-join btn-open-modal"
-                                            data-group-id="<%= group.getId() %>">Join Group
+                                            data-group-id="<%= group.getId() %>" style="background-color: #f56a00">Join Group
                                     </button>
                                     <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED ||
                                                   interactStatus == InteractGroupDTO.InteractStatus.MANAGER) { %>
@@ -493,7 +493,7 @@
                         <input type="hidden" id="modalGroupId" name="groupId" value="">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn-submit">Send Request</button>
+                            <button type="submit" class="btn-submit" style="background-color: #f56a00">Send Request</button>
                     </div>
                 </form>
             </div>

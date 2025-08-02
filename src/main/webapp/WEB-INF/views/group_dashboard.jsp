@@ -223,7 +223,7 @@
                 <td class="actions">
                     <form action="groupDashboard" method="post" onsubmit="return confirm('Are you sure you want to ban this group? This action cannot be undone.');">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
-                        <input type="submit" name="action" value="Ban" class="action-btn btn-disband" >
+                        <input type="submit" name="action" value="Ban" class="action-btn btn-disband" style="border: 1px">
                     </form>
                 </td>
             </tr>
