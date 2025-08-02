@@ -301,8 +301,8 @@
                 <td class="actions">
                     <form action="groupRequest" method="post">
                         <input type="hidden" name="groupId" value="<%= group.getId()%>">
-                        <input type="submit" name="action" value="Accept" class="action-btn btn-accept">
-                        <input type="submit" name="action" value="Reject" class="action-btn btn-reject">
+                        <input type="submit" name="action" value="Accept" class="action-btn btn-accept" style="border: 1px">
+                        <input type="submit" name="action" value="Reject" class="action-btn btn-reject" style="border: 1px">
                     </form>
                 </td>
             </tr>
