@@ -101,6 +101,10 @@
                 resize: vertical;
                 min-height: 80px;
             }
+
+            .disabled-area {
+                pointer-events: none;
+            }
         </style>
     </head>
 
@@ -389,7 +393,13 @@
                                         if (report.getReportedPost() != null) {
                                             out.println(report.getReportedPost());
                                         } else if (report.getReportedComment() != null) {
-                                            out.println(report.getReportedComment());
+                                    %>
+
+                                    <div class="disabled-area">
+                                    <%= report.getReportedComment()%>
+                                    </div>
+
+                                    <%
                                         }
                                     %>
                                 </div>
@@ -584,13 +594,68 @@
                     }
                 });
             });
+
+            const tracks = document.querySelectorAll('.carousel-track');
+            tracks.forEach(track => {
+                const slides = Array.from(track.children);
+                const nextButton = track.parentElement.querySelector('.carousel-btn.next');
+                const prevButton = track.parentElement.querySelector('.carousel-btn.prev');
+
+                if (slides.length > 1) {
+                    const slideWidth = slides[0].getBoundingClientRect().width;
+                    let currentIndex = 0;
+
+                    // Arrange the slides next to one another
+                    const setSlidePosition = (slide, index) => {
+                        slide.style.left = slideWidth * index + 'px';
+                    };
+                    slides.forEach(setSlidePosition);
+
+                    const moveToSlide = (currentTrack, targetIndex) => {
+                        currentTrack.style.transform = 'translateX(-' + (slideWidth * targetIndex) + 'px)';
+                        currentIndex = targetIndex;
+                        updateNavButtons();
+                    }
+
+                    const updateNavButtons = () => {
+                        prevButton.classList.remove('hidden');
+                        nextButton.classList.remove('hidden');
+                        if (currentIndex === 0) {
+                            prevButton.classList.add('hidden');
+                        } else if (currentIndex === slides.length - 1) {
+                            nextButton.classList.add('hidden');
+                        }
+                    }
+
+                    // Initially hide the prev button
+                    updateNavButtons();
+
+                    // When I click right, move slides to the right
+                    nextButton.addEventListener('click', e => {
+                        if (currentIndex < slides.length - 1) {
+                            moveToSlide(track, currentIndex + 1);
+                        }
+                    });
+
+                    // When I click left, move slides to the left
+                    prevButton.addEventListener('click', e => {
+                        if (currentIndex > 0) {
+                            moveToSlide(track, currentIndex - 1);
+                        }
+                    });
+                } else {
+                    // Hide buttons if only one or no images
+                    nextButton.classList.add('hidden');
+                    prevButton.classList.add('hidden');
+                }
+            });
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
                 integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
                 crossorigin="anonymous"></script>
-        <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-        <script src="${pageContext.request.contextPath}/js/post.js"></script>
-        <script src="${pageContext.request.contextPath}/js/composer.js"></script>
+<%--        <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>--%>
+<%--        <script src="${pageContext.request.contextPath}/js/post.js"></script>--%>
+<%--        <script src="${pageContext.request.contextPath}/js/composer.js"></script>--%>
         <script src="${pageContext.request.contextPath}/js/search.js"></script>
         <script src="${pageContext.request.contextPath}/js/notification.js"></script>
     </body>
