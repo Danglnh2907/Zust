@@ -417,7 +417,7 @@
 
                             <%-- Existing Admin/Feedback Buttons --%>
                             <% if (interactStatus == InteractGroupDTO.InteractStatus.MANAGER || interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                            <a href="${pageContext.request.contextPath}/groupProfile?id=<%= group.getId() %>"
+                            <a href="${pageContext.request.contextPath}/group?tag=edit&id=<%= group.getId() %>"
                                class="btn btn-edit" style="background-color: #f56a00">Edit Profile</a>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.JOINED) {%>
                             <button type="button" class="btn btn-feedback" id="openFeedbackModal">Send Feedback</button>
@@ -552,27 +552,6 @@
                 title="Search Results Loader">
         </iframe>
 
-<%--        <!-- Add Friend Modal -->--%>
-<%--        <div id="addFriendModal" class="modal">--%>
-<%--            <div class="modal-content-wrapper">--%>
-<%--                <div class="modal-header">--%>
-<%--                    <h2 id="addFriendModalTitle">Send Friend Request</h2>--%>
-<%--                    <button class="modal-close">×</button>--%>
-<%--                </div>--%>
-<%--                <form id="addFriendForm" action="${pageContext.request.contextPath}/friendAction" method="POST">--%>
-<%--                    <div class="modal-body">--%>
-<%--                        <p>You can include an optional message with your request.</p>--%>
-<%--                        <textarea name="message" placeholder="E.g., Hi, we're in the same group!"></textarea>--%>
-<%--                        <input type="hidden" name="action" value="add_friend">--%>
-<%--                        <input type="hidden" id="modalFriendId" name="friendId" value="">--%>
-<%--                    </div>--%>
-<%--                    <div class="modal-footer">--%>
-<%--                        <button type="submit" class="btn-submit" style="background-color: #f56a00">Send Request</button>--%>
-<%--                    </div>--%>
-<%--                </form>--%>
-<%--            </div>--%>
-<%--        </div>--%>
-
         <div id="feedbackModal" class="modal">
             <div class="modal-content-wrapper">
                 <div class="modal-header">
@@ -683,35 +662,6 @@
                         }
                     });
                 }
-
-                // --- "Add Friend" Modal Logic ---
-                const addFriendModal = document.getElementById('addFriendModal');
-                const modalTitle = document.getElementById('addFriendModalTitle');
-                const modalFriendIdInput = document.getElementById('modalFriendId');
-
-                document.querySelectorAll('.btn-open-friend-modal').forEach(button => {
-                    button.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        const friendId = this.dataset.friendId;
-                        const friendName = this.dataset.friendName;
-
-                        modalFriendIdInput.value = friendId;
-                        modalTitle.textContent = 'Send Friend Request to ' + friendName;
-                        addFriendModal.style.display = 'flex';
-                    });
-                });
-
-                // --- Generic Modal Close Logic ---
-                addFriendModal.querySelector('.modal-close').addEventListener('click', () => {
-                    addFriendModal.style.display = 'none';
-                });
-                window.addEventListener('click', (event) => {
-                    if (event.target === addFriendModal) {
-                        addFriendModal.style.display = 'none';
-                    }
-                });
 
                 // --- Prevent actions from triggering card link ---
                 document.querySelectorAll('.member-card-action form, .member-card-action button').forEach(el => {
