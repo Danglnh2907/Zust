@@ -69,6 +69,12 @@
                 gap: 15px;
             }
 
+            .disabled-area {
+                pointer-events: none;
+                opacity: 0.7;
+            }
+
+
             /*.feed {*/
             /*  margin: 0;*/
             /*}*/
@@ -330,7 +336,7 @@
                 <% if (pendingPosts != null && !pendingPosts.isEmpty()) { %>
                 <div class="post-feed-section">
                     <h2 class="feed-header">Your Pending Posts</h2>
-                    <div class="feed">
+                    <div class="feed disabled-area">
                         <% for (RespPostDTO post : pendingPosts) {
                             out.println(post);
                         } %>
