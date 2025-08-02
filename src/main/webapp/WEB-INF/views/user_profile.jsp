@@ -744,13 +744,13 @@
                             <div class="mb-3">
                                 <label class="form-label">Gender</label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="gender" id="male"
-                                           value="<%= acc.getGender() != null ? (acc.getGender() ? "checked" : "") : "true" %>">
+                                    <input class="form-check-input" type="radio" name="gender" id="male" value="true"
+                                           <%=(acc.getGender() != null && acc.getGender() ? "checked" : "")%>>
                                     <label class="form-check-label" for="male">Male</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="gender" id="female"
-                                           value="<%= acc.getGender() != null ? (acc.getGender() ? "checked" : "") : "false" %>">
+                                    <input class="form-check-input" type="radio" name="gender" id="female" value="false"
+                                           <%=(acc.getGender() != null && !acc.getGender() ? "checked" : "")%>>
                                     <label class="form-check-label" for="female">Female</label>
                                 </div>
                             </div>
