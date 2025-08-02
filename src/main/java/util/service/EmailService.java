@@ -29,19 +29,19 @@ import java.util.Map;
 import java.util.Properties;
 
 public class EmailService {
-	private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
+	public static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 
-	private static final String SMTP_USERNAME_ENV = "SMTP_USERNAME";
-	private static final String SMTP_PASSWORD_ENV = "SMTP_PASSWORD";
-	private static final String SMTP_HOST_ENV = "SMTP_HOST";
-	private static final String SMTP_PORT_ENV = "SMTP_PORT";
-	private static final String APP_BASE_URL_ENV = "APP_BASE_URL";
+	public static final String SMTP_USERNAME_ENV = "SMTP_USERNAME";
+	public static final String SMTP_PASSWORD_ENV = "SMTP_PASSWORD";
+	public static final String SMTP_HOST_ENV = "SMTP_HOST";
+	public static final String SMTP_PORT_ENV = "SMTP_PORT";
+	public static final String APP_BASE_URL_ENV = "APP_BASE_URL";
 
-	private final FileService fileService;
-	private final TemplateEngine templateEngine;
-	private final Session mailSession;
-	private final String appBaseUrl;
-	private final String senderEmail;
+	public final FileService fileService;
+	public final TemplateEngine templateEngine;
+	public final Session mailSession;
+	public final String appBaseUrl;
+	public final String senderEmail;
 
 	public EmailService(FileService fileService) {
 		this.fileService = fileService;
@@ -52,7 +52,7 @@ public class EmailService {
 		LOGGER.info("EmailService initialized with sender: {}", senderEmail);
 	}
 
-	private TemplateEngine initializeTemplateEngine() {
+	public TemplateEngine initializeTemplateEngine() {
 		TemplateEngine engine = new TemplateEngine();
 		FileTemplateResolver resolver = new FileTemplateResolver();
 		resolver.setPrefix(fileService.getLocationPath() + "/templates/");
@@ -63,7 +63,7 @@ public class EmailService {
 		return engine;
 	}
 
-	private String initializeSenderEmail() {
+	public String initializeSenderEmail() {
 		Dotenv dotenv = Dotenv.configure().filename("save.env").ignoreIfMissing().load();
 		String username = dotenv.get(SMTP_USERNAME_ENV);
 		if (username == null) {
@@ -76,7 +76,7 @@ public class EmailService {
 		return username;
 	}
 
-	private Session initializeMailSession() {
+	public Session initializeMailSession() {
 		Dotenv dotenv = Dotenv.configure().filename("save.env").ignoreIfMissing().load();
 
 		String username = dotenv.get(SMTP_USERNAME_ENV);
@@ -116,7 +116,7 @@ public class EmailService {
 		});
 	}
 
-	private String loadAppBaseUrl() {
+	public String loadAppBaseUrl() {
 		Dotenv dotenv = Dotenv.configure().filename("save.env").ignoreIfMissing().load();
 		String baseUrl = dotenv.get(APP_BASE_URL_ENV);
 
@@ -221,7 +221,7 @@ public class EmailService {
 		}
 	}
 
-	private String ensureHtmlExtension(String templateName) {
+	public String ensureHtmlExtension(String templateName) {
 		return templateName.toLowerCase().endsWith(".html") ? templateName : templateName + ".html";
 	}
 }
