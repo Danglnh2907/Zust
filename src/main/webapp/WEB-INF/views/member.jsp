@@ -401,12 +401,6 @@
                                 <input type="hidden" name="action" value="leave">
                                 <button type="submit" class="btn btn-leave">Leave Group</button>
                             </form>
-                            <% } else if (interactStatus == InteractGroupDTO.InteractStatus.LEADER) { %>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="groupId" value="<%= group.getId() %>">
-                                <input type="hidden" name="action" value="leave">
-                                <button type="submit" class="btn btn-leave">Disband Group</button>
-                            </form>
                             <% } else if (interactStatus == InteractGroupDTO.InteractStatus.SENT) { %>
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
