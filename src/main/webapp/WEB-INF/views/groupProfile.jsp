@@ -67,6 +67,7 @@
             <form action="<%= request.getContextPath() %>/group?action=edit" method="post" enctype="multipart/form-data">
                 <%-- Hidden field to pass the group ID --%>
                 <input type="hidden" name="groupId" value="<%= group.getId() %>">
+                <input type="hidden" name="oldImage" value="<%= group.getGroupCoverImage() %>">
 
                 <div class="form-group">
                     <label for="groupName">Group Name</label>

@@ -287,6 +287,9 @@ public class GroupServlet extends HttpServlet {
                     for (Part part : request.getParts()) {
                         imagePath = handleImagePart(part, uploadDir);
                     }
+                    if(imagePath == null || imagePath.trim().isEmpty()) {
+                        imagePath = request.getParameter("oldImage");
+                    }
                     Group group = new Group();
                     group.setId(Integer.parseInt(request.getParameter("groupId")));
                     group.setGroupName(groupName);
