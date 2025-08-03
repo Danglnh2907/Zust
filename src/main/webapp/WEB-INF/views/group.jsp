@@ -326,11 +326,12 @@
                     <% } %>
                 </div>
 
+                <% if(interactStatus != InteractGroupDTO.InteractStatus.UNJOINED) { %>
                 <div class="create-post-bar">
-                    <%--      <img src="${pageContext.request.contextPath}/static/images/default_avatar.png" alt="Your Avatar">--%>
                     <a href="${pageContext.request.contextPath}/post?action=create&groupId=<%= group.getId() %>"
                        class="create-post-link">What's on your mind?</a>
                 </div>
+                <% } %>
 
                 <!-- Your Pending Posts Section -->
                 <% if (pendingPosts != null && !pendingPosts.isEmpty()) { %>

@@ -97,6 +97,11 @@ public class PostController extends HttpServlet {
             try {
                 if (groupIdParam != null && !groupIdParam.isEmpty()) {
                     groupId = Integer.parseInt(groupIdParam);
+                    GroupDAO groupDAO = new GroupDAO();
+                    if(!groupDAO.isMember(userID, groupId)) {
+                        response.sendRedirect(request.getContextPath() + "/group?id=" + groupId);
+                        return;
+                    }
                 }
             } catch (NumberFormatException e) {
                 logger.warning("Invalid GroupID: " + groupIdParam);

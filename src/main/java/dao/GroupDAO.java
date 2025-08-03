@@ -410,6 +410,29 @@ public class GroupDAO extends DBContext {
         }
     }
 
+    public boolean isMember(int accountId, int groupId) {
+        logger.info("Checking if account ID: " + accountId + " is a manager for group ID: " + groupId);
+        String sql = "SELECT 1 FROM participate WHERE account_id = ? AND group_id = ?";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            stmt.setInt(2, groupId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    logger.info("Account ID: " + accountId + " is a manager for group ID: " + groupId);
+                    return true;
+                } else {
+                    logger.info("Account ID: " + accountId + " is not a manager for group ID: " + groupId);
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to check manager status for account ID: " + accountId + " and group ID: " + groupId + " - Error: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean isLeader(int accountId, int groupId) {
         logger.info("Checking if account ID: " + accountId + " is the leader for group ID: " + groupId);
         String sql = "SELECT 1 FROM [group] WHERE account_id = ? AND group_id = ?";
